@@ -134,6 +134,59 @@ Open `http://<LAN_IP>:8766` from another device.
 
 Warning: this exposes your shell to anyone on your LAN. Add auth before exposing beyond trusted networks.
 
+## Diagram: host vs container filesystem
+
+```
+Host filesystem                       Container filesystem
+-----------------                     ----------------------
+~/ProjectsLFS/PaperAgent  <----bind---->  /workspace
+~/.ssh (host)            (only if you mount it)
+
+Image layer (ubuntu:22.04) + container writable layer
+exists only inside the container unless you mount paths.
+```
+
+Summary:
+- The container has its own filesystem by default.
+- Host files are only visible inside the container if you bind-mount them (`-v host:container`).
+- Changes under `/workspace` are shared with the host because of the bind mount.
+
+## Share this setup with others (Dockerfile)
+
+You can make a reusable Docker image so others can run the same toolchain.
+
+Example `Dockerfile` (save as `Dockerfile.sandbox`):
+
+```
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+  texlive-full \
+  latexmk \
+  python3 python3-pip \
+  r-base \
+  git \
+  make \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+```
+
+Build and run:
+
+```
+docker build -t paperagent-sandbox -f Dockerfile.sandbox .
+docker run -d --name paperagent-sandbox \
+  --network host \
+  -v "$PWD":/workspace \
+  -w /workspace \
+  -it paperagent-sandbox sleep infinity
+```
+
+Now anyone can build the image and run the same environment.
+
 ## Troubleshooting: common errors
 
 ### Error: `No such container: paperagent-sandbox`
@@ -169,6 +222,12 @@ apt-get install -y texlive-full latexmk python3 python3-pip r-base git make
 exit
 ```
 
+If you want to avoid confusion, run it as a single command:
+
+```
+docker exec -u 0 paperagent-sandbox bash -lc "apt-get update && apt-get install -y texlive-full latexmk python3 python3-pip r-base git make"
+```
+
 ### Error: `permission denied` running Docker
 
 You are not in the `docker` group or need to re-login. Options:
@@ -185,6 +244,10 @@ If you still get permission denied, the Docker daemon may not be running:
 ```
 sudo systemctl enable --now docker
 ```
+
+If you ran `newgrp docker` and later see permission denied again, you may have exited the subshell. Run `newgrp docker` again or open a new terminal after logging out/in.
+
+If you are still stuck, use `sudo docker ...` to proceed immediately, then fix group membership later.
 
 ## File ownership gotcha
 
