@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <title>PaperAgent Terminal</title>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <div class="title">PaperAgent Terminal</div>
+          <div class="subtitle">Local shell over WebSocket</div>
+        </div>
+      </div>
+      <div class="status-wrap">
+        <span id="status" class="status">disconnected</span>
+        <button id="reconnect" class="btn">Reconnect</button>
+      </div>
+    </header>
+
+    <main class="stage">
+      <section class="panel">
+        <div id="terminal" class="terminal"></div>
+      </section>
+      <section class="hint">
+        <div class="pill">Scope: localhost only</div>
+        <div class="meta">Run: python server.py --host 127.0.0.1</div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>
