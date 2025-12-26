@@ -134,6 +134,58 @@ Open `http://<LAN_IP>:8766` from another device.
 
 Warning: this exposes your shell to anyone on your LAN. Add auth before exposing beyond trusted networks.
 
+## Troubleshooting: common errors
+
+### Error: `No such container: paperagent-sandbox`
+
+This means the container was never created or is stopped. Create it first:
+
+```
+cd ~/ProjectsLFS/PaperAgent
+docker run -d --name paperagent-sandbox \
+  --network host \
+  -v "$PWD":/workspace \
+  -v "$HOME":/host-home \
+  -w /workspace \
+  -it ubuntu:22.04 sleep infinity
+```
+
+If it already exists but is stopped:
+
+```
+docker start paperagent-sandbox
+```
+
+### Error: apt lock or permission denied
+
+This happens when you ran `apt-get` on the host (not inside the container) or without root.
+
+Fix it by entering the container and running `apt-get` as root:
+
+```
+docker exec -it paperagent-sandbox bash
+apt-get update
+apt-get install -y texlive-full latexmk python3 python3-pip r-base git make
+exit
+```
+
+### Error: `permission denied` running Docker
+
+You are not in the `docker` group or need to re-login. Options:
+
+```
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+Or just prefix Docker commands with `sudo`.
+
+If you still get permission denied, the Docker daemon may not be running:
+
+```
+sudo systemctl enable --now docker
+```
+
 ## File ownership gotcha
 
 If the container runs as root, files created in your project may become root-owned. You can fix this by running as your user:
