@@ -43,7 +43,8 @@ class TerminalWebSocket(tornado.websocket.WebSocketHandler):
             host = urlparse(origin).hostname
         except Exception:
             return False
-        return host in ("localhost", "127.0.0.1")
+        request_host = self.request.host.split(":")[0]
+        return host in ("localhost", "127.0.0.1", "::1", request_host)
 
     def open(self):
         self.master_fd, slave_fd = pty.openpty()
