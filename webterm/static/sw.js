@@ -1,4 +1,4 @@
-const CACHE_NAME = "paperterm-v56";
+const CACHE_NAME = "paperterm-v57";
 const ASSETS = [
   "/",
   "/static/styles.css",
