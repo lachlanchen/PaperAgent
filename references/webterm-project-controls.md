@@ -73,6 +73,17 @@ hash -r
 command -v codex >/dev/null 2>&1 && codex --version || true
 ```
 
+### Install CUDA Toolkit
+
+Installs the Ubuntu CUDA toolkit inside the container (requires host NVIDIA driver + `--gpus all` at container start):
+
+```
+apt-get update
+apt-get install -y nvidia-cuda-toolkit
+nvcc --version
+nvidia-smi
+```
+
 ## PDF preview panel
 
 The right panel loads the compiled PDF directly from the container. It fetches:

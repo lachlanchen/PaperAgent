@@ -18,6 +18,10 @@ TEXLIVE_PROFILE="${TEXLIVE_PROFILE:-full}"
 USE_HOST_NETWORK="${USE_HOST_NETWORK:-auto}"
 MOUNT_HOME="${MOUNT_HOME:-1}"
 CODEX_USER="${CODEX_USER:-root}"
+INSTALL_NVIDIA="${INSTALL_NVIDIA:-0}"
+USE_GPU="${USE_GPU:-0}"
+INSTALL_CUDA="${INSTALL_CUDA:-0}"
+CUDA_PACKAGE="${CUDA_PACKAGE:-nvidia-cuda-toolkit}"
 
 if [[ "$(uname -s)" != "Linux" ]]; then
   USE_HOST_NETWORK="0"
@@ -41,6 +45,43 @@ install_docker() {
   log "Installing Docker (docker.io)..."
   $SUDO apt-get update
   $SUDO apt-get install -y docker.io
+}
+
+install_nvidia_host() {
+  if [[ "$INSTALL_NVIDIA" != "1" ]]; then
+    return
+  fi
+  if [[ "$(uname -s)" != "Linux" ]]; then
+    log "Skipping NVIDIA driver install (non-Linux host)."
+    return
+  fi
+  if command -v nvidia-smi >/dev/null 2>&1; then
+    log "NVIDIA driver already installed."
+  else
+    log "Installing NVIDIA driver (may require reboot)."
+    $SUDO apt-get update
+    $SUDO apt-get install -y ubuntu-drivers-common
+    $SUDO ubuntu-drivers autoinstall || true
+  fi
+
+  log "Installing NVIDIA Container Toolkit."
+  $SUDO apt-get update
+  $SUDO apt-get install -y ca-certificates curl gnupg
+  distribution="$(
+    . /etc/os-release
+    echo "${ID}${VERSION_ID}"
+  )"
+  curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | \
+    $SUDO gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+  curl -fsSL "https://nvidia.github.io/libnvidia-container/${distribution}/libnvidia-container.list" | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#' | \
+    $SUDO tee /etc/apt/sources.list.d/nvidia-container-toolkit.list >/dev/null
+  $SUDO apt-get update
+  $SUDO apt-get install -y nvidia-container-toolkit
+  if command -v nvidia-ctk >/dev/null 2>&1; then
+    $SUDO nvidia-ctk runtime configure --runtime=docker || true
+  fi
+  $SUDO systemctl restart docker || true
 }
 
 ensure_docker_running() {
@@ -85,6 +126,11 @@ log "Creating container $CONTAINER_NAME from $IMAGE."
     network_args=(--network host)
   fi
 
+  gpu_args=()
+  if [[ "$USE_GPU" == "1" ]]; then
+    gpu_args=(--gpus all)
+  fi
+
   mount_args=(-v "$PROJECT_ROOT":/workspace -w /workspace)
   if [[ "$MOUNT_HOME" == "1" ]]; then
     mount_args+=(-v "$HOME":/host-home)
@@ -92,6 +138,7 @@ log "Creating container $CONTAINER_NAME from $IMAGE."
 
   "${DOCKER_BIN[@]}" run -d --name "$CONTAINER_NAME" \
     "${network_args[@]}" \
+    "${gpu_args[@]}" \
     "${mount_args[@]}" \
     -it "$IMAGE" sleep infinity
 }
@@ -102,6 +149,11 @@ install_container_packages() {
     texlive_packages="texlive-full"
   else
     texlive_packages="texlive-latex-extra texlive-bibtex-extra texlive-fonts-recommended texlive-xetex"
+  fi
+
+  cuda_packages=""
+  if [[ "$INSTALL_CUDA" == "1" ]]; then
+    cuda_packages="$CUDA_PACKAGE"
   fi
 
   "${DOCKER_BIN[@]}" exec -u 0 "$CONTAINER_NAME" bash -lc \
@@ -115,7 +167,8 @@ install_container_packages() {
       git \
       make \
       curl \
-      ca-certificates && \
+      ca-certificates \
+      ${cuda_packages} && \
     rm -rf /var/lib/apt/lists/*"
 }
 
@@ -169,6 +222,7 @@ install_codex() {
 
 main() {
   install_docker
+  install_nvidia_host
   ensure_docker_running
   ensure_docker_group
   pick_docker_cmd
@@ -182,6 +236,9 @@ main() {
   log "Done."
   log "Container: $CONTAINER_NAME"
   log "Workspace mount: $PROJECT_ROOT -> /workspace"
+  if [[ "$USE_GPU" == "1" ]]; then
+    log "GPU: enabled (--gpus all). Ensure NVIDIA driver + toolkit are installed."
+  fi
   log "Tip: run 'newgrp docker' or re-login if docker group was just added."
 }
 

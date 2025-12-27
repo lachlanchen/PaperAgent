@@ -41,6 +41,7 @@ In dev mode, the PWA service worker is disabled to avoid stale assets.
 - The editor panel uses CodeMirror (loaded from CDN) and reads/writes files via `/api/file`.
 - The file tree loads from `/api/tree` (defaults to depth 5) and lets you click to open a file.
 - The control panel includes an installer button for NVM + Node LTS + `@openai/codex`.
+- The control panel includes a CUDA toolkit install button (requires GPU-enabled container).
 
 ## LAN access (unsafe unless you trust the network)
 

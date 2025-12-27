@@ -31,6 +31,36 @@ sudo usermod -aG docker $USER
 newgrp docker
 ```
 
+### GPU support (NVIDIA, optional)
+
+Yes, Docker can use the host GPU, but it requires:
+
+1) NVIDIA driver installed on the host
+2) NVIDIA Container Toolkit installed on the host
+3) `docker run --gpus all` when starting the container
+
+Install driver + toolkit (Ubuntu/Debian):
+
+```
+sudo apt-get update
+sudo apt-get install -y ubuntu-drivers-common
+sudo ubuntu-drivers autoinstall
+
+sudo apt-get install -y ca-certificates curl gnupg
+distribution=$(. /etc/os-release; echo "${ID}${VERSION_ID}")
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | \
+  sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+curl -fsSL "https://nvidia.github.io/libnvidia-container/${distribution}/libnvidia-container.list" | \
+  sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#' | \
+  sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list >/dev/null
+sudo apt-get update
+sudo apt-get install -y nvidia-container-toolkit
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+```
+
+After installing drivers, reboot if `nvidia-smi` does not work.
+
 ### One-shot bootstrap (host + container)
 
 If you want a single script to install Docker on the host, create the sandbox
@@ -46,6 +76,10 @@ Optional environment variables:
 CONTAINER_NAME=paperagent-sandbox
 IMAGE=ubuntu:22.04
 TEXLIVE_PROFILE=full   # set to "minimal" for a lighter install
+INSTALL_NVIDIA=0       # set to 1 to install host NVIDIA driver + toolkit (Ubuntu)
+USE_GPU=0              # set to 1 to add --gpus all to docker run
+INSTALL_CUDA=0         # set to 1 to install CUDA toolkit inside the container
+CUDA_PACKAGE=nvidia-cuda-toolkit
 CODEX_USER=root        # user inside container to install Codex for
 PROJECT_USER=paperagent
 PROJECT_ID=demo-paper
@@ -86,6 +120,7 @@ docker run -d --name paperagent-sandbox \
 
 Notes:
 - `--network host` only works on Linux. On macOS/Windows, remove it and use the default bridge network.
+- For GPU access, add `--gpus all` (requires NVIDIA driver + toolkit).
 - `-v "$PWD":/workspace` exposes your project files inside the container.
 - `-v "$HOME":/host-home` is optional and gives access to your home directory.
 
@@ -117,6 +152,12 @@ exit
 ```
 
 This makes the container heavy but complete. If you want a smaller image, install only what you need.
+
+If you need CUDA inside the container (for `nvcc`), install:
+
+```
+apt-get install -y nvidia-cuda-toolkit
+```
 
 ## Step 3: Connect the web terminal to the container
 

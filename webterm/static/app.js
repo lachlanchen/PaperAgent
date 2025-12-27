@@ -9,6 +9,7 @@
   const initLatexBtn = document.getElementById("initLatex");
   const compileLatexBtn = document.getElementById("compileLatex");
   const installCodexBtn = document.getElementById("installCodex");
+  const installCudaBtn = document.getElementById("installCuda");
   const pathPreview = document.getElementById("pathPreview");
   const projectStatus = document.getElementById("projectStatus");
   const pdfFrame = document.getElementById("pdfFrame");
@@ -202,6 +203,17 @@
       "npm install -g @openai/codex",
       "hash -r",
       "command -v codex >/dev/null 2>&1 && codex --version || true",
+    ].join("\n");
+  }
+
+  function buildCudaInstallCommand() {
+    return [
+      'if ! command -v apt-get >/dev/null 2>&1; then echo "apt-get not found"; exit 1; fi',
+      'if command -v sudo >/dev/null 2>&1; then SUDO=sudo; else SUDO=""; fi',
+      '$SUDO apt-get update',
+      '$SUDO apt-get install -y nvidia-cuda-toolkit',
+      "nvcc --version || true",
+      "nvidia-smi || true",
     ].join("\n");
   }
 
@@ -855,6 +867,14 @@
   if (installCodexBtn) {
     installCodexBtn.addEventListener("click", () => {
       const command = buildCodexInstallCommand();
+      sendCommand(`${command}\n`);
+      term.focus();
+    });
+  }
+
+  if (installCudaBtn) {
+    installCudaBtn.addEventListener("click", () => {
+      const command = buildCudaInstallCommand();
       sendCommand(`${command}\n`);
       term.focus();
     });
