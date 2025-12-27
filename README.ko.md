@@ -33,6 +33,14 @@ PaperAgent는 연구의 잡무에서 모두를 해방해 ‘Only Ideas’에 집
 - PDF 미리보기와 로그
 - 깔끔한 PWA 인터페이스
 
+## 프로젝트 상태
+
+- PWA 워크스페이스: 웹 터미널, PDF 미리보기, 편집기.
+- 프로젝트 컨트롤: 워크스페이스 생성, LaTeX 초기화, 컴파일, Git/SSH 도우미.
+- Codex Bridge: 세션 재개, DB 기록 목록, /status 동기화 토글.
+- 파일 트리 + CodeMirror 편집기(저장/감시).
+- Docker 기반 실행(선택), LaTeX/Python/R 툴체인.
+
 ## 데모
 
 ![PaperAgent 데모](figures/demo-full.png)

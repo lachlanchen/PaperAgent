@@ -33,6 +33,14 @@ Tú te concentras en la idea y la narrativa; PaperAgent maneja los bucles de eje
 - Previsualización PDF con logs
 - Interfaz PWA limpia y mínima
 
+## Estado del proyecto
+
+- Espacio PWA: terminal web, vista previa PDF, editor.
+- Controles del proyecto: crear espacio, init LaTeX, compilar, ayudas Git/SSH.
+- Codex Bridge: reanudar sesión, lista de historial en DB, toggle de /status.
+- Árbol de archivos + editor CodeMirror (guardar/monitoreo).
+- Ejecución con Docker (opcional) con toolchain LaTeX/Python/R.
+
 ## Demo
 
 ![Demo PaperAgent](figures/demo-full.png)

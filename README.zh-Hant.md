@@ -33,6 +33,14 @@ PaperAgent 的願景是讓每個人從研究的瑣事中解放，回到「只有
 - PDF 預覽與編譯日誌
 - 簡潔的 PWA 介面
 
+## 專案狀態
+
+- PWA 工作台：Web 終端、PDF 預覽、編輯器。
+- 專案控制：建立工作區、初始化 LaTeX、編譯、Git/SSH 輔助。
+- Codex Bridge：會話復原、DB 歷史列表、/status 同步開關。
+- 檔案樹 + CodeMirror 編輯器（儲存/監看）。
+- Docker 後端執行（可選），含 LaTeX/Python/R 工具鏈。
+
 ## 示範
 
 ![PaperAgent 示範](figures/demo-full.png)

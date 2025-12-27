@@ -33,6 +33,14 @@ You focus on the idea and the narrative; PaperAgent handles the execution loops.
 - PDF preview with logs
 - A clean, minimal PWA interface
 
+## Project status
+
+- PWA workspace: web terminal, PDF preview, editor.
+- Project Controls: create workspace, init LaTeX, compile, Git/SSH helpers.
+- Codex Bridge: session resume, DB history list, /status sync toggle.
+- File tree + CodeMirror editor with save/watch.
+- Docker-backed execution (optional) with LaTeX/Python/R toolchain.
+
 ## Demo
 
 ![PaperAgent demo](figures/demo-full.png)

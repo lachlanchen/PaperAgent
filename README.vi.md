@@ -33,6 +33,14 @@ Bạn tập trung vào ý tưởng và câu chuyện, PaperAgent lo các vòng l
 - Xem trước PDF và log
 - Giao diện PWA gọn gàng
 
+## Trạng thái dự án
+
+- Không gian làm việc PWA: terminal web, xem PDF, trình soạn thảo.
+- Project Controls: tạo workspace, khởi tạo LaTeX, biên dịch, tiện ích Git/SSH.
+- Codex Bridge: khôi phục phiên, danh sách lịch sử DB, công tắc đồng bộ /status.
+- Cây thư mục + editor CodeMirror (lưu/giám sát).
+- Chạy qua Docker (tùy chọn) với toolchain LaTeX/Python/R.
+
 ## Demo
 
 ![PaperAgent demo](figures/demo-full.png)
