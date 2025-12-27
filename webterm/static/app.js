@@ -8,6 +8,7 @@
   const createProjectBtn = document.getElementById("createProject");
   const initLatexBtn = document.getElementById("initLatex");
   const compileLatexBtn = document.getElementById("compileLatex");
+  const installCodexBtn = document.getElementById("installCodex");
   const pathPreview = document.getElementById("pathPreview");
   const projectStatus = document.getElementById("projectStatus");
   const pdfFrame = document.getElementById("pdfFrame");
@@ -22,6 +23,9 @@
   const saveFileBtn = document.getElementById("saveFile");
   const editorStatus = document.getElementById("editorStatus");
   const watchFileToggle = document.getElementById("watchFile");
+  const fileTreeEl = document.getElementById("fileTree");
+  const refreshTreeBtn = document.getElementById("refreshTree");
+  const fileTreeStatus = document.getElementById("fileTreeStatus");
 
   const DEFAULT_USER = "paperagent";
   const DEFAULT_PROJECT = "demo-paper";
@@ -29,6 +33,7 @@
   const PATH_MISSING_MARKER = "__WEBTERM_PATH_MISSING__";
   const PDF_NAME_RE = /^[a-zA-Z0-9._-]+\.pdf$/i;
   const DEFAULT_EDITOR_FILE = "latex/main.tex";
+  const DEFAULT_TREE_DEPTH = 5;
 
   const term = new Terminal({
     cursorBlink: true,
@@ -57,6 +62,8 @@
   let editorLoadTimer = null;
   let lastRemoteMtime = null;
   let editorLoading = false;
+  let activeTreePath = null;
+  let treeLoadTimer = null;
 
   function sanitizeSegment(value, fallback) {
     const trimmed = String(value || "").trim();
@@ -138,6 +145,15 @@
     return `/api/pdf?${params.toString()}`;
   }
 
+  function buildTreeUrl({ user, project, depth }) {
+    const params = new URLSearchParams({
+      user,
+      project,
+      depth: String(depth),
+    });
+    return `/api/tree?${params.toString()}`;
+  }
+
   function buildLatexInitCommand(basePath) {
     const latexDir = `${basePath}/latex`;
     const texPath = `${latexDir}/main.tex`;
@@ -171,6 +187,20 @@
       "ls -lh main.pdf",
       "pwd",
     ].join(" && ");
+  }
+
+  function buildCodexInstallCommand() {
+    return [
+      'export NVM_DIR="$HOME/.nvm"',
+      'if [ ! -s "$NVM_DIR/nvm.sh" ]; then',
+      '  if ! command -v curl >/dev/null 2>&1; then apt-get update && apt-get install -y curl ca-certificates; fi',
+      '  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash',
+      "fi",
+      '. "$NVM_DIR/nvm.sh"',
+      "nvm install --lts",
+      "nvm use --lts",
+      "npm install -g @openai/codex",
+    ].join("\n");
   }
 
   function updatePathPreview() {
@@ -234,6 +264,109 @@
     }
   }
 
+  function setTreeStatus(text, state) {
+    if (!fileTreeStatus) {
+      return;
+    }
+    fileTreeStatus.textContent = text;
+    fileTreeStatus.classList.remove("ready", "loading", "error");
+    if (state) {
+      fileTreeStatus.classList.add(state);
+    }
+  }
+
+  function setActiveTreePath(path) {
+    activeTreePath = path;
+    if (!fileTreeEl) {
+      return;
+    }
+    const active = fileTreeEl.querySelector(".tree-file.active");
+    if (active && active.dataset.path !== path) {
+      active.classList.remove("active");
+    }
+    if (path) {
+      const target = fileTreeEl.querySelector(`.tree-file[data-path="${path}"]`);
+      if (target) {
+        target.classList.add("active");
+      }
+    }
+  }
+
+  function buildTree(entries) {
+    const root = { name: "", type: "dir", children: new Map() };
+    (entries || []).forEach((entry) => {
+      if (!entry || !entry.path) {
+        return;
+      }
+      const parts = entry.path.split("/").filter(Boolean);
+      if (!parts.length) {
+        return;
+      }
+      let node = root;
+      parts.forEach((part, index) => {
+        if (!node.children.has(part)) {
+          node.children.set(part, {
+            name: part,
+            type: "dir",
+            children: new Map(),
+          });
+        }
+        node = node.children.get(part);
+        if (index === parts.length - 1) {
+          node.type = entry.type === "dir" ? "dir" : "file";
+        }
+      });
+    });
+    return root;
+  }
+
+  function sortTreeEntries(entries) {
+    return entries.sort((a, b) => {
+      if (a.type !== b.type) {
+        return a.type === "dir" ? -1 : 1;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }
+
+  function renderTreeNode(node, container, depth, prefix) {
+    const items = sortTreeEntries(Array.from(node.children.values()));
+    items.forEach((item) => {
+      const fullPath = prefix ? `${prefix}/${item.name}` : item.name;
+      if (item.type === "dir") {
+        const details = document.createElement("details");
+        details.className = "tree-dir";
+        details.open = depth < 2;
+        const summary = document.createElement("summary");
+        summary.textContent = item.name;
+        details.appendChild(summary);
+        const children = document.createElement("div");
+        children.className = "tree-children";
+        details.appendChild(children);
+        renderTreeNode(item, children, depth + 1, fullPath);
+        container.appendChild(details);
+      } else {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "tree-file";
+        button.dataset.path = fullPath;
+        button.textContent = item.name;
+        if (activeTreePath === fullPath) {
+          button.classList.add("active");
+        }
+        container.appendChild(button);
+      }
+    });
+  }
+
+  function renderFileTree(entries) {
+    if (!fileTreeEl) {
+      return;
+    }
+    fileTreeEl.innerHTML = "";
+    const tree = buildTree(entries);
+    renderTreeNode(tree, fileTreeEl, 0, "");
+  }
   function setEditorDirty(isDirty) {
     editorDirty = isDirty;
     if (editorDirty) {
@@ -398,6 +531,7 @@
       editorDirty = false;
       lastRemoteMtime = payload.mtime || null;
       setEditorStatus(`Status: loaded (${relPath})`, "ready");
+      setActiveTreePath(relPath);
       editorLoading = false;
     } catch (err) {
       editorLoading = false;
@@ -434,6 +568,8 @@
       editorDirty = false;
       lastRemoteMtime = payload.mtime || null;
       setEditorStatus(`Status: saved (${relPath})`, "ready");
+      setActiveTreePath(relPath);
+      loadFileTree({ silent: true });
       if (relPath.toLowerCase().endsWith(".tex")) {
         schedulePdfRefresh(1200);
       }
@@ -487,6 +623,44 @@
     }, delay);
   }
 
+  function scheduleTreeLoad(delay = 0) {
+    clearTimeout(treeLoadTimer);
+    treeLoadTimer = setTimeout(() => {
+      loadFileTree({ silent: true });
+    }, delay);
+  }
+
+  async function loadFileTree({ silent } = {}) {
+    if (!fileTreeEl) {
+      return;
+    }
+    const { user, project } = buildBasePath();
+    if (!silent) {
+      setTreeStatus("Status: loading", "loading");
+    }
+    try {
+      const url = buildTreeUrl({
+        user,
+        project,
+        depth: DEFAULT_TREE_DEPTH,
+      });
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("missing");
+      }
+      const payload = await response.json();
+      renderFileTree(payload.entries || []);
+      setTreeStatus(
+        `Status: ${payload.entries?.length || 0} items`,
+        "ready"
+      );
+    } catch (err) {
+      if (!silent) {
+        setTreeStatus("Status: project not found", "error");
+      }
+    }
+  }
+
   function connect() {
     if (socket && socket.readyState === WebSocket.OPEN) {
       return;
@@ -502,6 +676,7 @@
       sendResize();
       autoCdOnConnect();
       schedulePdfRefresh(300);
+      scheduleTreeLoad(400);
     });
 
     socket.addEventListener("message", (event) => {
@@ -626,6 +801,7 @@
       sendCommand(`${command}\n`);
       term.focus();
       schedulePdfRefresh(800);
+      scheduleTreeLoad(800);
     });
   }
 
@@ -640,6 +816,7 @@
       sendCommand(`${command}\n`);
       term.focus();
       schedulePdfRefresh(400);
+      scheduleTreeLoad(400);
     });
   }
 
@@ -654,6 +831,7 @@
       sendCommand(`${command}\n`);
       term.focus();
       schedulePdfRefresh(600);
+      scheduleTreeLoad(600);
     });
   }
 
@@ -668,6 +846,15 @@
       sendCommand(`${command}\n`);
       term.focus();
       schedulePdfRefresh(1500);
+      scheduleTreeLoad(1200);
+    });
+  }
+
+  if (installCodexBtn) {
+    installCodexBtn.addEventListener("click", () => {
+      const command = buildCodexInstallCommand();
+      sendCommand(`${command}\n`);
+      term.focus();
     });
   }
 
@@ -685,11 +872,40 @@
 
   if (editorPathInput) {
     editorPathInput.addEventListener("change", () => {
-      editorPathInput.value = sanitizeRelPath(
+      const nextPath = sanitizeRelPath(
         editorPathInput.value,
         DEFAULT_EDITOR_FILE
       );
+      editorPathInput.value = nextPath;
+      setActiveTreePath(nextPath);
       scheduleEditorLoad(200);
+    });
+  }
+
+  if (fileTreeEl) {
+    fileTreeEl.addEventListener("click", (event) => {
+      const target = event.target.closest(".tree-file");
+      if (!target) {
+        return;
+      }
+      const nextPath = sanitizeRelPath(
+        target.dataset.path,
+        DEFAULT_EDITOR_FILE
+      );
+      if (!nextPath) {
+        return;
+      }
+      if (editorPathInput) {
+        editorPathInput.value = nextPath;
+      }
+      setActiveTreePath(nextPath);
+      loadEditorFile();
+    });
+  }
+
+  if (refreshTreeBtn) {
+    refreshTreeBtn.addEventListener("click", () => {
+      loadFileTree();
     });
   }
 
@@ -724,12 +940,16 @@
       setProjectStatus("unknown");
       schedulePdfRefresh(500);
       scheduleEditorLoad(700);
+      scheduleTreeLoad(800);
+      setActiveTreePath(null);
     });
     projectInput.addEventListener("input", () => {
       updatePathPreview();
       setProjectStatus("unknown");
       schedulePdfRefresh(500);
       scheduleEditorLoad(700);
+      scheduleTreeLoad(800);
+      setActiveTreePath(null);
     });
   }
 
@@ -737,11 +957,13 @@
   setProjectStatus("unknown");
   setPdfStatus("Status: idle");
   setEditorStatus("Status: idle");
+  setTreeStatus("Status: idle");
   fitAddon.fit();
   ensureEditor();
   connect();
   scheduleEditorLoad(400);
   startEditorWatch();
+  loadFileTree({ silent: true });
   maybeStartDevReload().finally(() => {
     if (devMode) {
       return;

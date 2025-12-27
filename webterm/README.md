@@ -39,6 +39,8 @@ In dev mode, the PWA service worker is disabled to avoid stale assets.
 - Resize events are forwarded to the PTY so full-screen tools behave correctly.
 - The PDF preview panel fetches `/api/pdf?user=<user>&project=<project>&file=main.pdf` and streams it from the container.
 - The editor panel uses CodeMirror (loaded from CDN) and reads/writes files via `/api/file`.
+- The file tree loads from `/api/tree` (defaults to depth 5) and lets you click to open a file.
+- The control panel includes an installer button for NVM + Node LTS + `@openai/codex`.
 
 ## LAN access (unsafe unless you trust the network)
 

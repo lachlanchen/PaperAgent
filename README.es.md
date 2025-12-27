@@ -33,6 +33,10 @@ Tú te concentras en la idea y la narrativa; PaperAgent maneja los bucles de eje
 - Previsualización PDF con logs
 - Interfaz PWA limpia y mínima
 
+## Demo
+
+![Demo PaperAgent](figures/demo.png)
+
 ## Proyecto principal
 
 - https://github.com/lachlanchen/the-art-of-lazying

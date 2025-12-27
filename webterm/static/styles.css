@@ -362,6 +362,130 @@ body {
   animation: fadeUp 0.8s ease 0.1s both;
 }
 
+.editor-layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.file-tree {
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--soft-shadow);
+  display: flex;
+  flex-direction: column;
+  min-height: 48vh;
+}
+
+.file-tree-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(15, 118, 110, 0.08);
+}
+
+.file-tree-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--accent-2);
+}
+
+.file-tree-body {
+  padding: 8px 10px 12px;
+  overflow: auto;
+  flex: 1;
+  height: 52vh;
+}
+
+.file-tree-status {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 8px 12px 12px;
+}
+
+.file-tree-status.ready {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.file-tree-status.loading {
+  color: #0ea5e9;
+  font-weight: 600;
+}
+
+.file-tree-status.error {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.tree-dir {
+  margin: 2px 0;
+}
+
+.tree-dir summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+  padding: 4px 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tree-dir summary::-webkit-details-marker {
+  display: none;
+}
+
+.tree-dir summary::before {
+  content: "▸";
+  color: var(--accent-2);
+  transition: transform 0.15s ease;
+}
+
+.tree-dir[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.tree-dir summary:hover {
+  background: rgba(15, 118, 110, 0.1);
+}
+
+.tree-children {
+  padding-left: 16px;
+  border-left: 1px dashed rgba(15, 23, 42, 0.12);
+  margin-left: 6px;
+}
+
+.tree-file {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 4px 6px;
+  font-size: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #111827;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.tree-file:hover {
+  background: rgba(15, 118, 110, 0.12);
+}
+
+.tree-file.active {
+  background: rgba(15, 118, 110, 0.2);
+  color: var(--accent-2);
+  font-weight: 700;
+}
+
 .editor-header {
   display: flex;
   align-items: flex-start;
@@ -385,6 +509,11 @@ body {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.btn.small {
+  padding: 6px 10px;
+  font-size: 12px;
 }
 
 .toggle {
@@ -522,6 +651,14 @@ body {
 
   .terminal {
     height: 60vh;
+  }
+
+  .editor-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .file-tree {
+    min-height: 32vh;
   }
 
   .editor-body {

@@ -33,6 +33,10 @@ PaperAgent 的願景是讓每個人從研究的瑣事中解放，回到「只有
 - PDF 預覽與編譯日誌
 - 簡潔的 PWA 介面
 
+## 示範
+
+![PaperAgent 示範](figures/demo.png)
+
 ## 主專案
 
 - https://github.com/lachlanchen/the-art-of-lazying

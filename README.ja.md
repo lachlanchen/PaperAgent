@@ -33,6 +33,10 @@ PaperAgent は研究の雑務から人を解放し、「Only Ideas」に戻す�
 - PDF プレビューとログ
 - シンプルでミニマルな PWA UI
 
+## デモ
+
+![PaperAgent デモ](figures/demo.png)
+
 ## メインプロジェクト
 
 - https://github.com/lachlanchen/the-art-of-lazying

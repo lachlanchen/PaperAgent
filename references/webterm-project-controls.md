@@ -55,6 +55,22 @@ mkdir -p /home/<user>/Projects/<project>/latex && \
   pwd
 ```
 
+### Install NVM + Codex
+
+Runs a multi-line install script inside the container:
+
+```
+export NVM_DIR="$HOME/.nvm"
+if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+  if ! command -v curl >/dev/null 2>&1; then apt-get update && apt-get install -y curl ca-certificates; fi
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+fi
+. "$NVM_DIR/nvm.sh"
+nvm install --lts
+nvm use --lts
+npm install -g @openai/codex
+```
+
 ## PDF preview panel
 
 The right panel loads the compiled PDF directly from the container. It fetches:
@@ -75,6 +91,10 @@ POST /api/file
 ```
 
 The **Watch** toggle polls every ~3s and reloads when it detects a newer mtime (unless you have unsaved edits).
+
+## File tree
+
+The editor includes a left file tree that lists files under `/home/<user>/Projects/<project>` (default depth 5). Click a file to load it into the editor.
 
 ## Defaults
 

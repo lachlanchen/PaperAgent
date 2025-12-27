@@ -70,6 +70,7 @@
           <button id="createProject" class="btn primary">Create Project + cd</button>
           <button id="initLatex" class="btn ghost">Init LaTeX</button>
           <button id="compileLatex" class="btn ghost">Compile LaTeX</button>
+          <button id="installCodex" class="btn ghost">Install NVM + Codex</button>
         </div>
 
         <div class="helper">
@@ -77,6 +78,7 @@
         </div>
         <div class="helper">Init: latex/main.tex + latex/latex_figures</div>
         <div class="helper">Compile: latexmk in latex/</div>
+        <div class="helper">Install: nvm + Node LTS + @openai/codex</div>
         <div class="helper code">
           mkdir -p /home/&lt;user&gt;/Projects/&lt;project&gt;/...
         </div>
@@ -135,8 +137,18 @@
           </label>
         </div>
       </div>
-      <div class="editor-body">
-        <textarea id="editorText"></textarea>
+      <div class="editor-layout">
+        <aside class="file-tree">
+          <div class="file-tree-header">
+            <div class="file-tree-title">Files</div>
+            <button id="refreshTree" class="btn ghost small">Refresh</button>
+          </div>
+          <div id="fileTree" class="file-tree-body"></div>
+          <div id="fileTreeStatus" class="file-tree-status">Status: idle</div>
+        </aside>
+        <div class="editor-body">
+          <textarea id="editorText"></textarea>
+        </div>
       </div>
       <div id="editorStatus" class="editor-status">Status: idle</div>
     </section>

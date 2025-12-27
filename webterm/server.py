@@ -159,6 +159,72 @@ def read_file_meta(path):
     return None
 
 
+def list_tree_entries(base_path, depth):
+    container = resolve_container_name()
+    if container and shutil.which("docker"):
+        check = subprocess.run(
+            ["docker", "exec", container, "sh", "-c", 'test -d "$1"', "_", base_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        if check.returncode != 0:
+            return None
+        result = subprocess.run(
+            [
+                "docker",
+                "exec",
+                container,
+                "find",
+                base_path,
+                "-maxdepth",
+                str(depth),
+                "-mindepth",
+                "1",
+                "-printf",
+                "%y\t%P\n",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        if result.returncode != 0:
+            return None
+        entries = []
+        for line in result.stdout.decode("utf-8", errors="ignore").splitlines():
+            if "\t" not in line:
+                continue
+            kind, rel = line.split("\t", 1)
+            if not rel:
+                continue
+            if kind == "d":
+                entry_type = "dir"
+            elif kind == "f":
+                entry_type = "file"
+            else:
+                continue
+            entries.append({"path": rel, "type": entry_type})
+        return entries
+    if not os.path.isdir(base_path):
+        return None
+    entries = []
+    base_depth = base_path.rstrip(os.sep).count(os.sep)
+    for root, dirs, files in os.walk(base_path):
+        current_depth = root.count(os.sep) - base_depth
+        if current_depth >= depth:
+            dirs[:] = []
+            continue
+        rel_root = os.path.relpath(root, base_path)
+        rel_root = "" if rel_root == "." else rel_root
+        for directory in dirs:
+            rel = os.path.join(rel_root, directory) if rel_root else directory
+            entries.append({"path": rel, "type": "dir"})
+        for file_name in files:
+            rel = os.path.join(rel_root, file_name) if rel_root else file_name
+            entries.append({"path": rel, "type": "file"})
+    return entries
+
+
 def compute_dev_version():
     paths = [os.path.abspath(__file__)]
     for root, _, files in os.walk(STATIC_DIR):
@@ -300,6 +366,28 @@ class FileHandler(tornado.web.RequestHandler):
         )
 
 
+class TreeHandler(tornado.web.RequestHandler):
+    def get(self):
+        user = sanitize_segment(self.get_argument("user", "paperagent"), "paperagent")
+        project = sanitize_segment(self.get_argument("project", "demo-paper"), "demo-paper")
+        depth_value = self.get_argument("depth", "4")
+        try:
+            depth = int(depth_value)
+        except ValueError:
+            depth = 4
+        depth = max(1, min(depth, 8))
+        base_path = f"/home/{user}/Projects/{project}"
+        entries = list_tree_entries(base_path, depth)
+        if entries is None:
+            self.set_status(404)
+            self.set_header("Content-Type", "application/json")
+            self.write({"error": "project not found"})
+            return
+        self.set_header("Content-Type", "application/json")
+        self.set_header("Cache-Control", "no-store")
+        self.write({"base": base_path, "entries": entries})
+
+
 class TerminalWebSocket(tornado.websocket.WebSocketHandler):
     def initialize(self, shell, cwd):
         self.shell = shell
@@ -406,6 +494,7 @@ def make_app(shell, cwd, dev_mode=False):
         (r"/ws", TerminalWebSocket, {"shell": shell, "cwd": cwd}),
         (r"/api/pdf", PdfHandler),
         (r"/api/file", FileHandler),
+        (r"/api/tree", TreeHandler),
         (r"/(manifest.json)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
         (r"/(sw.js)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
         (r"/(icon.svg)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),

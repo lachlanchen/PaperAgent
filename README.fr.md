@@ -33,6 +33,10 @@ Vous vous concentrez sur l’idée et le récit; PaperAgent gère les boucles d�
 - Prévisualisation PDF avec logs
 - Interface PWA propre et minimale
 
+## Démo
+
+![Démo PaperAgent](figures/demo.png)
+
 ## Projet principal
 
 - https://github.com/lachlanchen/the-art-of-lazying

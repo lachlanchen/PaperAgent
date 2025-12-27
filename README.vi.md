@@ -33,6 +33,10 @@ Bạn tập trung vào ý tưởng và câu chuyện, PaperAgent lo các vòng l
 - Xem trước PDF và log
 - Giao diện PWA gọn gàng
 
+## Demo
+
+![PaperAgent demo](figures/demo.png)
+
 ## Dự án chính
 
 - https://github.com/lachlanchen/the-art-of-lazying

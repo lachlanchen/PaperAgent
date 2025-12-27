@@ -33,6 +33,10 @@ You focus on the idea and the narrative; PaperAgent handles the execution loops.
 - PDF preview with logs
 - A clean, minimal PWA interface
 
+## Demo
+
+![PaperAgent demo](figures/demo.png)
+
 ## Main project
 
 - https://github.com/lachlanchen/the-art-of-lazying

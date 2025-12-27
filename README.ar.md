@@ -33,6 +33,10 @@ PaperAgent مساحة عمل محلية أولاً لكتابة الأوراق: 
 - معاينة PDF مع السجلات
 - واجهة PWA بسيطة ونظيفة
 
+## عرض توضيحي
+
+![عرض PaperAgent](figures/demo.png)
+
 ## المشروع الرئيسي
 
 - https://github.com/lachlanchen/the-art-of-lazying
