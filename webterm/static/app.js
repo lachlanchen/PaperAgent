@@ -13,6 +13,7 @@
   const compileLatexBtn = document.getElementById("compileLatex");
   const initGitBtn = document.getElementById("initGit");
   const generateSshKeyBtn = document.getElementById("generateSshKey");
+  const setSshConfigBtn = document.getElementById("setSshConfig");
   const setGitRemoteBtn = document.getElementById("setGitRemote");
   const testGitRemoteBtn = document.getElementById("testGitRemote");
   const installCodexBtn = document.getElementById("installCodex");
@@ -314,6 +315,43 @@
     ].join("\n");
   }
 
+  function buildSshConfigCommand(user) {
+    const safeUser = sanitizeSegment(user, DEFAULT_USER);
+    const keyName = sanitizeSegment(
+      `${safeUser}_paperagent_ed25519`,
+      "paperagent_ed25519"
+    );
+    const keyPath = `/home/${safeUser}/.ssh/${keyName}`;
+    const configBlock = [
+      "Host github.com",
+      "  HostName github.com",
+      "  User git",
+      `  IdentityFile ${keyPath}`,
+      "  IdentitiesOnly yes",
+    ];
+    const blockLiteral = configBlock.map((line) => `"${line}"`).join(" ");
+    return [
+      `KEY_PATH="${keyPath}"`,
+      'if [ ! -f "$KEY_PATH" ]; then echo "[webterm] SSH key missing, generate it first"; exit 1; fi',
+      `for HOME_DIR in "/home/${safeUser}" "/root"; do`,
+      '  SSH_DIR="$HOME_DIR/.ssh"',
+      '  CONFIG_PATH="$SSH_DIR/config"',
+      '  mkdir -p "$SSH_DIR"',
+      '  chmod 700 "$SSH_DIR"',
+      '  if [ -f "$CONFIG_PATH" ]; then',
+      '    awk \'BEGIN{skip=0} /^\\s*Host\\s+github.com(\\s|$)/{skip=1; next} /^\\s*Host\\s+/{if(skip){skip=0}} !skip{print}\' "$CONFIG_PATH" > "$CONFIG_PATH.tmp"',
+      "  else",
+      '    : > "$CONFIG_PATH.tmp"',
+      "  fi",
+      `  printf '%s\\n' ${blockLiteral} >> "$CONFIG_PATH.tmp"`,
+      '  mv "$CONFIG_PATH.tmp" "$CONFIG_PATH"',
+      '  chmod 600 "$CONFIG_PATH"',
+      "done",
+      `if id -u ${safeUser} >/dev/null 2>&1; then chown -R ${safeUser}:${safeUser} /home/${safeUser}/.ssh; fi`,
+      'echo "[webterm] SSH config updated."',
+    ].join("\n");
+  }
+
   function buildGitRemoteCommand(basePath, remote) {
     const safeRemote = sanitizeGitRemote(remote);
     return [
@@ -361,7 +399,6 @@
       'SSH_DIR="$HOME_DIR/.ssh"',
       `KEY_PATH="${keyPath}"`,
       `CONFIG_PATH="${configPath}"`,
-      'export HOME="$HOME_DIR"',
       'if [ ! -f "$KEY_PATH" ]; then echo "[webterm] SSH key missing, generate it first"; exit 1; fi',
       'if [ -f "$CONFIG_PATH" ]; then SSH_CONFIG="-F $CONFIG_PATH"; else SSH_CONFIG=""; fi',
       'HOST=""',
@@ -1382,6 +1419,15 @@
       sendCommand(`${command}\n`);
       term.focus();
       scheduleSshKeyLoad(1500);
+    });
+  }
+
+  if (setSshConfigBtn) {
+    setSshConfigBtn.addEventListener("click", () => {
+      const { user } = buildBasePath();
+      const command = buildSshConfigCommand(user);
+      sendCommand(`${command}\n`);
+      term.focus();
     });
   }
 
