@@ -4,13 +4,17 @@
   const terminalEl = document.getElementById("terminal");
   const userInput = document.getElementById("userInput");
   const projectInput = document.getElementById("projectInput");
+  const openProjectBtn = document.getElementById("openProject");
   const createProjectBtn = document.getElementById("createProject");
   const initLatexBtn = document.getElementById("initLatex");
   const compileLatexBtn = document.getElementById("compileLatex");
   const pathPreview = document.getElementById("pathPreview");
+  const projectStatus = document.getElementById("projectStatus");
 
   const DEFAULT_USER = "paperagent";
   const DEFAULT_PROJECT = "demo-paper";
+  const PATH_EXISTS_MARKER = "__WEBTERM_PATH_EXISTS__";
+  const PATH_MISSING_MARKER = "__WEBTERM_PATH_MISSING__";
 
   const term = new Terminal({
     cursorBlink: true,
@@ -86,6 +90,27 @@
     pathPreview.textContent = path;
   }
 
+  function setProjectStatus(state) {
+    if (!projectStatus || !createProjectBtn) {
+      return;
+    }
+    projectStatus.classList.remove("exists", "missing");
+    if (state === "exists") {
+      projectStatus.textContent = "Status: exists";
+      projectStatus.classList.add("exists");
+      createProjectBtn.disabled = true;
+      return;
+    }
+    if (state === "missing") {
+      projectStatus.textContent = "Status: missing";
+      projectStatus.classList.add("missing");
+      createProjectBtn.disabled = false;
+      return;
+    }
+    projectStatus.textContent = "Status: unknown";
+    createProjectBtn.disabled = false;
+  }
+
   function setStatus(text, online) {
     statusEl.textContent = text;
     statusEl.classList.toggle("online", Boolean(online));
@@ -98,6 +123,12 @@
     fitAddon.fit();
     const { cols, rows } = term;
     socket.send(JSON.stringify({ type: "resize", cols, rows }));
+  }
+
+  function autoCdOnConnect() {
+    const { path } = buildBasePath();
+    const command = buildCheckCdCommand(path, true);
+    sendCommand(`${command}\n`);
   }
 
   function connect() {
@@ -113,10 +144,23 @@
       setStatus("connected", true);
       term.focus();
       sendResize();
+      autoCdOnConnect();
     });
 
     socket.addEventListener("message", (event) => {
-      term.write(event.data);
+      const data = String(event.data);
+      let output = data;
+      if (output.includes(PATH_EXISTS_MARKER)) {
+        setProjectStatus("exists");
+        output = output.replace(PATH_EXISTS_MARKER, "");
+      }
+      if (output.includes(PATH_MISSING_MARKER)) {
+        setProjectStatus("missing");
+        output = output.replace(PATH_MISSING_MARKER, "");
+      }
+      if (output) {
+        term.write(output);
+      }
     });
 
     socket.addEventListener("close", () => {
@@ -135,6 +179,18 @@
       return;
     }
     socket.send(command);
+  }
+
+  function buildCheckCdCommand(basePath, shouldCd) {
+    const cdPart = shouldCd ? `cd ${basePath} && pwd` : "true";
+    return [
+      `if [ -d ${basePath} ]; then`,
+      `echo "${PATH_EXISTS_MARKER}";`,
+      `${cdPart};`,
+      "else",
+      `echo "${PATH_MISSING_MARKER}";`,
+      "fi",
+    ].join(" ");
   }
 
   term.onData((data) => {
@@ -177,6 +233,19 @@
     });
   }
 
+  if (openProjectBtn) {
+    openProjectBtn.addEventListener("click", () => {
+      const { user, project, path } = buildBasePath();
+      userInput.value = user;
+      projectInput.value = project;
+      updatePathPreview();
+
+      const command = buildCheckCdCommand(path, true);
+      sendCommand(`${command}\n`);
+      term.focus();
+    });
+  }
+
   if (initLatexBtn) {
     initLatexBtn.addEventListener("click", () => {
       const { user, project, path } = buildBasePath();
@@ -204,8 +273,14 @@
   }
 
   if (userInput && projectInput) {
-    userInput.addEventListener("input", updatePathPreview);
-    projectInput.addEventListener("input", updatePathPreview);
+    userInput.addEventListener("input", () => {
+      updatePathPreview();
+      setProjectStatus("unknown");
+    });
+    projectInput.addEventListener("input", () => {
+      updatePathPreview();
+      setProjectStatus("unknown");
+    });
   }
 
   if ("serviceWorker" in navigator) {
@@ -215,6 +290,7 @@
   }
 
   updatePathPreview();
+  setProjectStatus("unknown");
   fitAddon.fit();
   connect();
 })();

@@ -1,6 +1,6 @@
 # Web Terminal Project Controls
 
-The PWA includes a left control panel with project and LaTeX actions. Each button sends a command to the terminal (right panel).
+The PWA includes a left control panel with project and LaTeX actions. Each button sends a command to the terminal (right panel). On reload, the app auto-checks whether the project path exists and `cd`s into it if found.
 
 ## What the buttons do
 
@@ -15,6 +15,18 @@ mkdir -p /home/<user>/Projects/<project>/{code,data,figures,latex/latex_figures,
 ```
 
 You will see the output (`pwd`) in the terminal on the right panel.
+
+### Go to Project
+
+Checks if the project directory exists and `cd`s into it when present:
+
+```
+if [ -d /home/<user>/Projects/<project> ]; then
+  cd /home/<user>/Projects/<project> && pwd
+fi
+```
+
+If the directory exists, the **Create Project + cd** button is disabled to prevent overwriting.
 
 ### Init LaTeX
 
