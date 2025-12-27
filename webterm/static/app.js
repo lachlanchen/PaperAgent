@@ -1699,7 +1699,20 @@
 
   if (codexInitBtn) {
     codexInitBtn.addEventListener("click", () => {
-      sendCodexCommand("/init");
+      const initPrompt = [
+        "/init",
+        "Use this project structure:",
+        "- figures/: paper figures",
+        "- latex/latex_figures/: LaTeX figure assets merged/used in tex",
+        "- code/: scripts and source code",
+        "- data/: datasets and inputs",
+        "- artifacts/: build outputs",
+        "",
+        "Rules:",
+        "- Always commit and push after edits unless asked not to.",
+        "- Use .gitignore to avoid large data files or generated artifacts.",
+      ].join("\n");
+      sendCodexCommand(initPrompt);
     });
   }
 
