@@ -195,6 +195,14 @@ body {
   margin-top: 4px;
 }
 
+.ssh-output {
+  min-height: 80px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  resize: vertical;
+}
+
 .path-preview {
   font-family: "JetBrains Mono", monospace;
   font-size: 12px;

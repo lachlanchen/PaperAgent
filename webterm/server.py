@@ -438,6 +438,22 @@ class TreeHandler(tornado.web.RequestHandler):
         self.write({"base": base_path, "entries": entries})
 
 
+class SshKeyHandler(tornado.web.RequestHandler):
+    def get(self):
+        user = sanitize_segment(self.get_argument("user", "paperagent"), "paperagent")
+        key_name = sanitize_segment(f"{user}_paperagent_ed25519", "paperagent_ed25519")
+        key_path = f"/home/{user}/.ssh/{key_name}.pub"
+        data = read_file_bytes(key_path)
+        if not data:
+            self.set_status(404)
+            self.set_header("Content-Type", "application/json")
+            self.write({"error": "ssh key not found"})
+            return
+        self.set_header("Content-Type", "text/plain; charset=utf-8")
+        self.set_header("Cache-Control", "no-store")
+        self.write(data.decode("utf-8", errors="replace"))
+
+
 class CodexLogger:
     def __init__(self):
         self.enabled = os.environ.get("CODEX_LOG_DB", "1").lower() in ("1", "true", "yes")
@@ -996,6 +1012,7 @@ def make_app(shell, cwd, dev_mode=False):
         (r"/api/pdf", PdfHandler),
         (r"/api/file", FileHandler),
         (r"/api/tree", TreeHandler),
+        (r"/api/ssh-key", SshKeyHandler),
         (r"/(manifest.json)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
         (r"/(sw.js)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
         (r"/(icon.svg)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),

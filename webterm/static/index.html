@@ -65,6 +65,17 @@
         <div class="field">
           <label for="sshKeyLabel">SSH key label</label>
           <input id="sshKeyLabel" class="input" type="text" value="paperagent@local" />
+          <div class="inline-actions">
+            <button id="generateSshKey" class="btn ghost">Generate SSH Key</button>
+          </div>
+          <div class="helper">Public key</div>
+          <textarea
+            id="sshKeyOutput"
+            class="input ssh-output"
+            rows="3"
+            readonly
+            placeholder="Generate a key to see the public key here."
+          ></textarea>
         </div>
 
         <div class="field">
@@ -76,7 +87,6 @@
             placeholder="git@github.com:owner/repo.git"
           />
           <div class="inline-actions">
-            <button id="generateSshKey" class="btn ghost">Generate SSH Key</button>
             <button id="setGitRemote" class="btn ghost">Set Git Remote</button>
             <button id="testGitRemote" class="btn ghost">Test GitHub Connection</button>
           </div>

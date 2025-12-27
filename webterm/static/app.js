@@ -5,6 +5,7 @@
   const userInput = document.getElementById("userInput");
   const projectInput = document.getElementById("projectInput");
   const sshKeyLabelInput = document.getElementById("sshKeyLabel");
+  const sshKeyOutput = document.getElementById("sshKeyOutput");
   const gitRemoteInput = document.getElementById("gitRemote");
   const openProjectBtn = document.getElementById("openProject");
   const createProjectBtn = document.getElementById("createProject");
@@ -193,6 +194,13 @@
     return `/api/tree?${params.toString()}`;
   }
 
+  function buildSshKeyUrl(user) {
+    const params = new URLSearchParams({
+      user,
+    });
+    return `/api/ssh-key?${params.toString()}`;
+  }
+
   function buildCodexSessionsUrl({ user, project }) {
     const params = new URLSearchParams();
     if (user) {
@@ -284,6 +292,7 @@
     const keyName = sanitizeSegment(`${user}_paperagent_ed25519`, "paperagent_ed25519");
     const keyDir = `/home/${user}/.ssh`;
     const keyPath = `${keyDir}/${keyName}`;
+    const configPath = `${keyDir}/config`;
     return [
       'if command -v sudo >/dev/null 2>&1; then SUDO=sudo; else SUDO=""; fi',
       'if ! command -v ssh-keygen >/dev/null 2>&1; then',
@@ -293,8 +302,13 @@
       `mkdir -p ${keyDir}`,
       `chmod 700 ${keyDir}`,
       `if [ ! -f ${keyPath} ]; then ssh-keygen -t ed25519 -C "${safeLabel}" -f ${keyPath} -N ""; fi`,
+      `if [ ! -f ${configPath} ] || ! grep -q "^Host github.com" ${configPath}; then`,
+      `  printf '%s\\n' "Host github.com" "  HostName github.com" "  User git" "  IdentityFile ${keyPath}" "  IdentitiesOnly yes" >> ${configPath}`,
+      "fi",
+      `chmod 600 ${configPath} || true`,
       `chmod 600 ${keyPath} || true`,
       `chmod 644 ${keyPath}.pub || true`,
+      `if id -u ${user} >/dev/null 2>&1; then chown -R ${user}:${user} ${keyDir}; fi`,
       'echo "[webterm] Public key:"',
       `cat ${keyPath}.pub`,
     ].join("\n");
@@ -1351,6 +1365,7 @@
       const command = buildSshKeyCommand(user, label);
       sendCommand(`${command}\n`);
       term.focus();
+      scheduleSshKeyLoad(1500);
     });
   }
 
@@ -1380,6 +1395,30 @@
       sendCommand(`${command}\n`);
       term.focus();
     });
+  }
+
+  async function loadSshKey() {
+    if (!sshKeyOutput) {
+      return;
+    }
+    const { user } = buildBasePath();
+    const url = buildSshKeyUrl(user);
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("missing");
+      }
+      const text = await response.text();
+      sshKeyOutput.value = text.trim();
+    } catch (err) {
+      sshKeyOutput.value = "";
+    }
+  }
+
+  function scheduleSshKeyLoad(delay = 0) {
+    setTimeout(() => {
+      loadSshKey();
+    }, delay);
   }
 
   if (installCodexBtn) {
@@ -1544,6 +1583,7 @@
       scheduleEditorLoad(700);
       scheduleTreeLoad(800);
       setActiveTreePath(null);
+      scheduleSshKeyLoad(400);
     });
     projectInput.addEventListener("input", () => {
       updatePathPreview();
@@ -1567,6 +1607,7 @@
     codexSessionInput.value = storedSession;
     connectCodex(storedSession, { resume: false });
   }
+  loadSshKey();
   loadCodexSessions({ silent: true });
   clearInterval(codexSessionsTimer);
   codexSessionsTimer = setInterval(() => {
