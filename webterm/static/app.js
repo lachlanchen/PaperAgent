@@ -1378,6 +1378,18 @@
     }
   }
 
+  function shouldStartDevReload() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("dev") === "1") {
+      return true;
+    }
+    try {
+      return localStorage.getItem("paperagent.dev") === "1";
+    } catch (err) {
+      return false;
+    }
+  }
+
   function buildCheckCdCommand(basePath, shouldCd) {
     const cdPart = shouldCd ? `cd ${basePath} && pwd` : "true";
     return [
@@ -1778,14 +1790,20 @@
   scheduleEditorLoad(400);
   startEditorWatch();
   loadFileTree({ silent: true });
-  maybeStartDevReload().finally(() => {
-    if (devMode) {
-      return;
-    }
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {
-        // offline or blocked; ignore
-      });
-    }
-  });
+  if (shouldStartDevReload()) {
+    maybeStartDevReload().finally(() => {
+      if (devMode) {
+        return;
+      }
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js").catch(() => {
+          // offline or blocked; ignore
+        });
+      }
+    });
+  } else if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      // offline or blocked; ignore
+    });
+  }
 })();

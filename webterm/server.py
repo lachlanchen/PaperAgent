@@ -656,6 +656,17 @@ class ProjectHandler(tornado.web.RequestHandler):
         project_id = sanitize_segment(self.get_argument("project", "demo-paper"), "demo-paper")
         data = self.store.fetch_project(username, project_id)
         if not data:
+            if not self.store.enabled or self.store._connect_error:
+                self.set_header("Content-Type", "application/json")
+                self.set_header("Cache-Control", "no-store")
+                self.write(
+                    {
+                        "ok": False,
+                        "disabled": True,
+                        "reason": self.store._connect_error or "project store disabled",
+                    }
+                )
+                return
             self.write_error_json(404, "project not found")
             return
         self.set_header("Content-Type", "application/json")
@@ -686,6 +697,17 @@ class ProjectHandler(tornado.web.RequestHandler):
                 project_id,
                 git_remote,
             )
+            if not self.store.enabled or self.store._connect_error:
+                self.set_header("Content-Type", "application/json")
+                self.set_header("Cache-Control", "no-store")
+                self.write(
+                    {
+                        "ok": False,
+                        "disabled": True,
+                        "reason": self.store._connect_error or "project store disabled",
+                    }
+                )
+                return
             self.write_error_json(503, "database unavailable")
             return
         self.set_header("Content-Type", "application/json")
