@@ -55,6 +55,7 @@
   const CODEX_SESSION_KEY = "paperagent.codex.session";
   const CODEX_OUTPUT_LIMIT = 60000;
   const CODEX_SESSIONS_REFRESH_MS = 8000;
+  const PROJECT_REMOTE_PREFIX = "paperagent.project.remote";
 
   const term = new Terminal({
     cursorBlink: true,
@@ -451,10 +452,15 @@
       }
       const data = await response.json();
       const remote = data?.git_remote || "";
+      setStoredProjectRemote(user, project, remote);
       if (!gitRemoteDirty || !gitRemoteInput.value.trim()) {
         gitRemoteInput.value = remote;
       }
     } catch (err) {
+      const cached = getStoredProjectRemote(user, project);
+      if (cached && (!gitRemoteDirty || !gitRemoteInput.value.trim())) {
+        gitRemoteInput.value = cached;
+      }
       if (!silent) {
         // ignore
       }
@@ -475,6 +481,7 @@
       project,
       git_remote: String(remote || "").trim(),
     };
+    setStoredProjectRemote(user, project, payload.git_remote);
     try {
       await fetch("/api/project", {
         method: "POST",
@@ -756,6 +763,26 @@
   function setStoredCodexSession(value) {
     try {
       localStorage.setItem(CODEX_SESSION_KEY, value);
+    } catch (err) {
+      // ignore
+    }
+  }
+
+  function getProjectRemoteKey(user, project) {
+    return `${PROJECT_REMOTE_PREFIX}.${user}.${project}`;
+  }
+
+  function getStoredProjectRemote(user, project) {
+    try {
+      return localStorage.getItem(getProjectRemoteKey(user, project));
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function setStoredProjectRemote(user, project, value) {
+    try {
+      localStorage.setItem(getProjectRemoteKey(user, project), value || "");
     } catch (err) {
       // ignore
     }

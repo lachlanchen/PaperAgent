@@ -45,6 +45,7 @@ In dev mode, the PWA service worker is disabled to avoid stale assets.
 - The control panel can generate an SSH key, write GitHub SSH config (for both `/home/<user>` and `/root`), and show the public key in the UI.
 - The Git remote block includes a GitHub SSH test (exit code 0 or 1 counts as success).
 - When Postgres is configured, the Git remote is saved per user/project and prefilled on load.
+- If Postgres is unavailable, the Git remote falls back to localStorage per user/project.
 - The LaTeX compile action uses `-g` to force a rebuild and will attempt to install missing `*.sty` packages (fallback to `texlive-full`).
 - The Codex panel connects via `/codex/ws` and spawns Codex with `CODEX_ARGS` (default `-s danger-full-access -a never`).
 - Codex starts in `/home/<user>/Projects/<project>` when available (falls back to `/workspace`).
