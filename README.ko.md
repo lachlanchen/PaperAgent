@@ -4,7 +4,34 @@
 
 # PaperAgent
 
-PaperAgent는 로컬 우선 논문 작성 워크스페이스입니다. 브라우저에서 LaTeX와 코드를 편집하고, 백엔드에서 Python/R과 LaTeX을 실행·컴파일하며, PDF와 로그를 한 곳에서 미리 볼 수 있습니다.
+PaperAgent는 로컬 우선 논문 작성 워크스페이스입니다. 브라우저에서 LaTeX와 코드를 편집하고, 백엔드에서 Python/R을 실행해 LaTeX을 컴파일하며, PDF와 로그를 한 곳에서 확인합니다.
+
+## 비전
+
+PaperAgent는 연구의 잡무에서 모두를 해방해 ‘Only Ideas’에 집중하게 합니다.
+핵심은 간단합니다. 생각은 사람에게, 반복은 시스템에게.
+당신은 아이디어와 서사에 집중하고 PaperAgent가 실행 루프를 돌립니다.
+
+## 철학
+
+- 로컬 우선·프라이버시 우선: 데이터와 실행은 기본적으로 로컬에 둡니다.
+- 아이디어 우선 흐름: 개념에서 실행 가능한 논문까지 마찰 최소화.
+- 작은 단계, 되돌리기 쉬움: 변경은 투명하고 복구 가능합니다.
+- 도구는 일을 줄여야 함: 자동화는 일을 줄이기 위해 존재합니다.
+
+## 동작 로직
+
+1) 채팅 → 편집: 요구를 설명하면 필요한 파일이 수정됩니다.
+2) 실행 → 컴파일: Python/R 실행, LaTeX 컴파일, 그림 생성.
+3) 미리보기 → 반복: PDF와 로그를 확인하고 빠르게 수정합니다.
+
+## 제공 기능
+
+- Docker 샌드박스에 연결된 웹 터미널
+- LaTeX 프로젝트 스캐폴딩과 원클릭 컴파일
+- 그림/실험을 위한 Python/R 실행
+- PDF 미리보기와 로그
+- 깔끔한 PWA 인터페이스
 
 ## 메인 프로젝트
 
@@ -12,9 +39,9 @@ PaperAgent는 로컬 우선 논문 작성 워크스페이스입니다. 브라우
 
 ## 에코시스템 링크
 
-- https://lazying.art
+- https://lazying.art 🎨 <img src="https://img.shields.io/badge/메인-Visit-0f766e?style=flat-square" alt="메인 사이트">
 - https://chat.lazying.art
-- https://onlyideas.art
+- https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://ideas.onlyideas.art
 - https://coin.lazying.art
 - https://earn.lazying.art

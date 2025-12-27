@@ -4,7 +4,34 @@
 
 # PaperAgent
 
-PaperAgent là không gian làm việc viết bài nghiên cứu theo hướng local-first: chỉnh sửa LaTeX và mã trong trình duyệt, chạy Python/R và biên dịch LaTeX ở backend, và xem PDF cùng log tại một nơi.
+PaperAgent là không gian làm việc local-first để viết bài nghiên cứu: chỉnh sửa LaTeX và mã trong trình duyệt, chạy Python/R và biên dịch LaTeX ở backend, và xem PDF cùng log tại một nơi.
+
+## Tầm nhìn
+
+PaperAgent được tạo ra để giải phóng mọi người khỏi việc lặt vặt trong nghiên cứu, trở về với “Only Ideas”.
+Mục tiêu rất rõ: giữ phần suy nghĩ cho con người và giao phần lặp lại cho hệ thống.
+Bạn tập trung vào ý tưởng và câu chuyện, PaperAgent lo các vòng lặp thực thi.
+
+## Triết lý
+
+- Ưu tiên local, ưu tiên riêng tư: dữ liệu và thực thi ở trên máy của bạn theo mặc định.
+- Quy trình ưu tiên ý tưởng: từ khái niệm đến bài chạy được với ít ma sát.
+- Bước nhỏ, có thể đảo ngược: thay đổi rõ ràng và dễ hoàn tác.
+- Công cụ phải giảm việc: tự động hóa để bớt việc, không phải thêm việc.
+
+## Cách hoạt động
+
+1) Chat → Chỉnh sửa: mô tả thay đổi, PaperAgent cập nhật đúng tệp.
+2) Chạy → Biên dịch: chạy Python/R, biên dịch LaTeX, tạo hình.
+3) Xem trước → Lặp lại: xem PDF và log, sửa nhanh, lặp lại.
+
+## Bạn nhận được
+
+- Web terminal kết nối Docker sandbox
+- Khung dự án LaTeX và biên dịch một chạm
+- Chạy Python/R cho hình vẽ và thí nghiệm
+- Xem trước PDF và log
+- Giao diện PWA gọn gàng
 
 ## Dự án chính
 
@@ -12,9 +39,9 @@ PaperAgent là không gian làm việc viết bài nghiên cứu theo hướng l
 
 ## Liên kết hệ sinh thái
 
-- https://lazying.art
+- https://lazying.art 🎨 <img src="https://img.shields.io/badge/Main-Visit-0f766e?style=flat-square" alt="Trang chính">
 - https://chat.lazying.art
-- https://onlyideas.art
+- https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://ideas.onlyideas.art
 - https://coin.lazying.art
 - https://earn.lazying.art

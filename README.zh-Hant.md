@@ -4,7 +4,34 @@
 
 # PaperAgent
 
-PaperAgent 是一個本地優先的論文寫作工作台：在瀏覽器中編輯 LaTeX 與程式碼，後端執行 Python/R 與 LaTeX 編譯，並在同一處預覽 PDF 與編譯日誌。
+PaperAgent 是一個本地優先的論文寫作工作台：在瀏覽器中編輯 LaTeX 與程式碼，後端執行 Python/R 並編譯 LaTeX，在同一處預覽 PDF 與編譯日誌。
+
+## 願景
+
+PaperAgent 的願景是讓每個人從研究的瑣事中解放，回到「只有想法」。
+核心很簡單：把思考留給人，把重複工作交給系統。
+你專注於想法與敘事，PaperAgent 處理執行迴圈。
+
+## 理念
+
+- 本地優先、隱私優先：資料與執行預設留在你的機器。
+- 想法優先的流程：從概念到可執行論文的摩擦最小化。
+- 小步可逆：每次變更清楚且可回復。
+- 工具應該減少工作：自動化是為了刪除瑣事，而不是增加。
+
+## 邏輯（如何運作）
+
+1) 聊天 → 編輯：描述改動，PaperAgent 修改正確檔案。
+2) 執行 → 編譯：跑 Python/R、編譯 LaTeX、產生圖表。
+3) 預覽 → 迭代：查看 PDF 與日誌，快速修正再重來。
+
+## 你會得到
+
+- 連到 Docker 沙盒的 Web 終端
+- LaTeX 專案骨架與一鍵編譯
+- 用 Python/R 生成圖表與實驗
+- PDF 預覽與編譯日誌
+- 簡潔的 PWA 介面
 
 ## 主專案
 
@@ -12,9 +39,9 @@ PaperAgent 是一個本地優先的論文寫作工作台：在瀏覽器中編輯
 
 ## 生態系連結
 
-- https://lazying.art
+- https://lazying.art 🎨 <img src="https://img.shields.io/badge/主站-Visit-0f766e?style=flat-square" alt="主站">
 - https://chat.lazying.art
-- https://onlyideas.art
+- https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://ideas.onlyideas.art
 - https://coin.lazying.art
 - https://earn.lazying.art

@@ -6,15 +6,42 @@
 
 PaperAgent es un espacio de trabajo local-first para escribir papers: edita LaTeX y código en el navegador, ejecuta Python/R y compila LaTeX en el backend, y previsualiza PDFs y logs en un solo lugar.
 
+## Visión
+
+PaperAgent está pensado para liberar a todos del trabajo repetitivo de la investigación y volver a «Only Ideas».
+El objetivo es simple: dejar el pensamiento a las personas y el trabajo repetitivo al sistema.
+Tú te concentras en la idea y la narrativa; PaperAgent maneja los bucles de ejecución.
+
+## Filosofía
+
+- Local-first, privacy-first: datos y ejecución quedan en tu máquina por defecto.
+- Flujo idea-first: del concepto a un paper ejecutable con mínima fricción.
+- Pasos pequeños y reversibles: cada cambio es claro y se puede deshacer.
+- Las herramientas deben quitar trabajo: la automatización existe para eliminar esfuerzo.
+
+## Lógica (cómo funciona)
+
+1) Chat → Edición: describes el cambio y se modifican los archivos correctos.
+2) Ejecutar → Compilar: ejecutar Python/R, compilar LaTeX, generar figuras.
+3) Previsualizar → Iterar: revisar PDF y logs, corregir rápido, repetir.
+
+## Qué obtienes
+
+- Terminal web conectado a un sandbox Docker
+- Estructura de proyecto LaTeX y compilación en un clic
+- Ejecución Python/R para figuras y experimentos
+- Previsualización PDF con logs
+- Interfaz PWA limpia y mínima
+
 ## Proyecto principal
 
 - https://github.com/lachlanchen/the-art-of-lazying
 
 ## Enlaces del ecosistema
 
-- https://lazying.art
+- https://lazying.art 🎨 <img src="https://img.shields.io/badge/Main-Visit-0f766e?style=flat-square" alt="Sitio principal">
 - https://chat.lazying.art
-- https://onlyideas.art
+- https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://ideas.onlyideas.art
 - https://coin.lazying.art
 - https://earn.lazying.art

@@ -8,24 +8,22 @@ PaperAgent is a local-first web workspace for writing papers: edit LaTeX and cod
 
 ## Vision
 
-PaperAgent is built to **liberate people from research busy-work to “Only Ideas.”**  
-The goal is simple: keep the thinking human and make the system do the repetitive work.  
+PaperAgent is built to liberate everyone from research busy-work to “Only Ideas.”
+The goal is simple: keep the thinking human and make the system do the repetitive work.
 You focus on the idea and the narrative; PaperAgent handles the execution loops.
 
 ## Philosophy
 
-- **Local-first, privacy-first**: your data and execution stay on your machine by default.
-- **Idea-first workflow**: move from a concept to a runnable paper without friction.
-- **Small, reversible steps**: every change is transparent and easy to undo.
-- **Tools should remove work**: automation exists to delete toil, not add it.
+- Local-first, privacy-first: data and execution stay on your machine by default.
+- Idea-first workflow: move from a concept to a runnable paper with minimal friction.
+- Small, reversible steps: every change is transparent and easy to undo.
+- Tools should remove work: automation exists to delete toil, not add it.
 
 ## Logic (how it works)
 
-1) **Chat → Edit**: describe the change, and PaperAgent edits the right files.  
-2) **Run → Compile**: execute Python/R, compile LaTeX, generate figures.  
-3) **Preview → Iterate**: inspect PDF + logs, fix fast, repeat.
-
-This mirrors how researchers actually work, but makes the loops faster and safer.
+1) Chat → Edit: describe the change, and PaperAgent edits the right files.
+2) Run → Compile: execute Python/R, compile LaTeX, generate figures.
+3) Preview → Iterate: inspect PDF + logs, fix fast, repeat.
 
 ## What you get
 
