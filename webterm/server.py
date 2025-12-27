@@ -103,10 +103,17 @@ def resolve_container_name():
     return None
 
 
-def resolve_codex_command():
+def resolve_codex_command(username=None, project=None):
     cmd = os.environ.get("CODEX_CMD", "codex")
     args = shlex.split(os.environ.get("CODEX_ARGS", "-s danger-full-access -a never"))
-    cwd = os.environ.get("CODEX_CWD", "/workspace")
+    default_project = os.environ.get("CODEX_PROJECT", "demo-paper")
+    default_user = os.environ.get("CODEX_USERNAME", "paperagent")
+    user = username or default_user
+    project_id = project or default_project
+    fallback_cwd = os.environ.get("CODEX_CWD", "/workspace")
+    cwd = f"/home/{user}/Projects/{project_id}"
+    if not user or not project_id:
+        cwd = fallback_cwd
     container = resolve_container_name()
     if container and shutil.which("docker"):
         nvm_dir = os.environ.get("CODEX_NVM_DIR") or os.environ.get("NVM_DIR") or "/root/.nvm"
@@ -115,7 +122,7 @@ def resolve_codex_command():
             f'[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"; '
         )
         quoted = " ".join([shlex.quote(cmd)] + [shlex.quote(arg) for arg in args])
-        shell_cmd = f"{nvm_init}cd {shlex.quote(cwd)} && {quoted}"
+        shell_cmd = f"{nvm_init}cd {shlex.quote(cwd)} 2>/dev/null || cd {shlex.quote(fallback_cwd)}; {quoted}"
         return ["docker", "exec", "-it", container, "bash", "-lc", shell_cmd], None
     return [cmd] + args, cwd
 
@@ -539,7 +546,7 @@ class CodexSession:
         self.master_fd, slave_fd = pty.openpty()
         env = os.environ.copy()
         env.setdefault("TERM", "xterm-256color")
-        cmd, cwd = resolve_codex_command()
+        cmd, cwd = resolve_codex_command(self.username, self.project)
         self.proc = subprocess.Popen(
             cmd,
             stdin=slave_fd,
