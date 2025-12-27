@@ -63,7 +63,7 @@
   const CODEX_SESSIONS_REFRESH_MS = 8000;
   const CODEX_DONE_RE = /(?:^|[\r\n])─ Worked for /;
   const CODEX_PROMPT_RE = /(^|[\r\n])›\s/g;
-  const CODEX_WORK_RE = /(?:^|[\r\n])[•◦]\s+\S+ing\b[^\r\n]*\(\d+s\s+•\s+esc to interrupt\)/i;
+  const CODEX_WORK_RE = /(?:^|[\r\n])\s*[•◦][^\r\n]*esc to interrupt/i;
   const PROJECT_REMOTE_PREFIX = "paperagent.project.remote";
   const USER_IDENTITY_PREFIX = "paperagent.user.git";
 
