@@ -10,11 +10,18 @@
   const compileLatexBtn = document.getElementById("compileLatex");
   const pathPreview = document.getElementById("pathPreview");
   const projectStatus = document.getElementById("projectStatus");
+  const pdfFrame = document.getElementById("pdfFrame");
+  const pdfFileInput = document.getElementById("pdfFile");
+  const refreshPdfBtn = document.getElementById("refreshPdf");
+  const openPdfLink = document.getElementById("openPdf");
+  const pdfEmpty = document.getElementById("pdfEmpty");
+  const pdfStatus = document.getElementById("pdfStatus");
 
   const DEFAULT_USER = "paperagent";
   const DEFAULT_PROJECT = "demo-paper";
   const PATH_EXISTS_MARKER = "__WEBTERM_PATH_EXISTS__";
   const PATH_MISSING_MARKER = "__WEBTERM_PATH_MISSING__";
+  const PDF_NAME_RE = /^[a-zA-Z0-9._-]+\.pdf$/i;
 
   const term = new Terminal({
     cursorBlink: true,
@@ -34,7 +41,9 @@
 
   let socket = null;
   let resizeTimer = null;
+  let pdfRefreshTimer = null;
   let devMode = false;
+  let pdfObjectUrl = null;
 
   function sanitizeSegment(value, fallback) {
     const trimmed = String(value || "").trim();
@@ -46,6 +55,28 @@
     const user = sanitizeSegment(userInput.value, DEFAULT_USER);
     const project = sanitizeSegment(projectInput.value, DEFAULT_PROJECT);
     return { user, project, path: `/home/${user}/Projects/${project}` };
+  }
+
+  function sanitizePdfName(value, fallback) {
+    const trimmed = String(value || "").trim();
+    if (!trimmed) {
+      return fallback;
+    }
+    const cleaned = trimmed.replace(/[^a-zA-Z0-9._-]/g, "");
+    if (!cleaned) {
+      return fallback;
+    }
+    const withExt = /\.pdf$/i.test(cleaned) ? cleaned : `${cleaned}.pdf`;
+    return PDF_NAME_RE.test(withExt) ? withExt : fallback;
+  }
+
+  function buildPdfUrl({ user, project, file }) {
+    const params = new URLSearchParams({
+      user,
+      project,
+      file,
+    });
+    return `/api/pdf?${params.toString()}`;
   }
 
   function buildLatexInitCommand(basePath) {
@@ -112,6 +143,27 @@
     createProjectBtn.disabled = false;
   }
 
+  function setPdfStatus(text, state) {
+    if (!pdfStatus) {
+      return;
+    }
+    pdfStatus.textContent = text;
+    pdfStatus.classList.remove("ready", "missing", "loading");
+    if (state) {
+      pdfStatus.classList.add(state);
+    }
+  }
+
+  function setPdfEmpty(visible, message) {
+    if (!pdfEmpty) {
+      return;
+    }
+    if (message) {
+      pdfEmpty.textContent = message;
+    }
+    pdfEmpty.style.display = visible ? "flex" : "none";
+  }
+
   function setStatus(text, online) {
     statusEl.textContent = text;
     statusEl.classList.toggle("online", Boolean(online));
@@ -132,6 +184,53 @@
     sendCommand(`${command}\n`);
   }
 
+  async function loadPdfPreview() {
+    if (!pdfFrame) {
+      return;
+    }
+    const { user, project } = buildBasePath();
+    const fallbackName = "main.pdf";
+    const file = sanitizePdfName(pdfFileInput ? pdfFileInput.value : fallbackName, fallbackName);
+    if (pdfFileInput) {
+      pdfFileInput.value = file;
+    }
+    const baseUrl = buildPdfUrl({ user, project, file });
+    const freshUrl = `${baseUrl}&t=${Date.now()}`;
+    if (openPdfLink) {
+      openPdfLink.href = freshUrl;
+    }
+    setPdfStatus("Status: loading", "loading");
+    try {
+      const response = await fetch(freshUrl, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("missing");
+      }
+      const blob = await response.blob();
+      if (pdfObjectUrl) {
+        URL.revokeObjectURL(pdfObjectUrl);
+      }
+      pdfObjectUrl = URL.createObjectURL(blob);
+      pdfFrame.src = pdfObjectUrl;
+      setPdfEmpty(false);
+      setPdfStatus(`Status: ready (${file})`, "ready");
+    } catch (err) {
+      if (pdfObjectUrl) {
+        URL.revokeObjectURL(pdfObjectUrl);
+        pdfObjectUrl = null;
+      }
+      pdfFrame.removeAttribute("src");
+      setPdfEmpty(true, "No PDF found yet. Compile LaTeX to generate one.");
+      setPdfStatus(`Status: missing (${file})`, "missing");
+    }
+  }
+
+  function schedulePdfRefresh(delay = 0) {
+    clearTimeout(pdfRefreshTimer);
+    pdfRefreshTimer = setTimeout(() => {
+      loadPdfPreview();
+    }, delay);
+  }
+
   function connect() {
     if (socket && socket.readyState === WebSocket.OPEN) {
       return;
@@ -146,6 +245,7 @@
       term.focus();
       sendResize();
       autoCdOnConnect();
+      schedulePdfRefresh(300);
     });
 
     socket.addEventListener("message", (event) => {
@@ -269,6 +369,7 @@
 
       sendCommand(`${command}\n`);
       term.focus();
+      schedulePdfRefresh(800);
     });
   }
 
@@ -282,6 +383,7 @@
       const command = buildCheckCdCommand(path, true);
       sendCommand(`${command}\n`);
       term.focus();
+      schedulePdfRefresh(400);
     });
   }
 
@@ -295,6 +397,7 @@
       const command = buildLatexInitCommand(path);
       sendCommand(`${command}\n`);
       term.focus();
+      schedulePdfRefresh(600);
     });
   }
 
@@ -308,6 +411,19 @@
       const command = buildLatexCompileCommand(path);
       sendCommand(`${command}\n`);
       term.focus();
+      schedulePdfRefresh(1500);
+    });
+  }
+
+  if (refreshPdfBtn) {
+    refreshPdfBtn.addEventListener("click", () => {
+      schedulePdfRefresh(0);
+    });
+  }
+
+  if (pdfFileInput) {
+    pdfFileInput.addEventListener("input", () => {
+      schedulePdfRefresh(400);
     });
   }
 
@@ -315,15 +431,18 @@
     userInput.addEventListener("input", () => {
       updatePathPreview();
       setProjectStatus("unknown");
+      schedulePdfRefresh(500);
     });
     projectInput.addEventListener("input", () => {
       updatePathPreview();
       setProjectStatus("unknown");
+      schedulePdfRefresh(500);
     });
   }
 
   updatePathPreview();
   setProjectStatus("unknown");
+  setPdfStatus("Status: idle");
   fitAddon.fit();
   connect();
   maybeStartDevReload().finally(() => {

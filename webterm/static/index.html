@@ -77,6 +77,31 @@
       <section class="panel terminal-panel">
         <div id="terminal" class="terminal"></div>
       </section>
+
+      <section class="panel preview-panel">
+        <div class="preview-header">
+          <div>
+            <div class="preview-title">PDF Preview</div>
+            <div class="preview-subtitle">
+              MCP loop: plan -> execute -> observe the artifact.
+            </div>
+          </div>
+          <div class="preview-actions">
+            <input id="pdfFile" class="input small" type="text" value="main.pdf" />
+            <button id="refreshPdf" class="btn ghost">Refresh PDF</button>
+            <a id="openPdf" class="btn" href="#" target="_blank" rel="noopener"
+              >Open</a
+            >
+          </div>
+        </div>
+        <div class="preview-body">
+          <div id="pdfEmpty" class="preview-empty">
+            No PDF yet. Compile LaTeX to generate one.
+          </div>
+          <iframe id="pdfFrame" class="preview-frame" title="PDF preview"></iframe>
+        </div>
+        <div id="pdfStatus" class="preview-status">Status: idle</div>
+      </section>
     </main>
 
     <section class="hint">

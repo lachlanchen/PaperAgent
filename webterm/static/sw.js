@@ -1,4 +1,4 @@
-const CACHE_NAME = "paperterm-v8";
+const CACHE_NAME = "paperterm-v9";
 const ASSETS = [
   "/",
   "/static/styles.css",
@@ -35,6 +35,9 @@ self.addEventListener("fetch", (event) => {
   }
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) {
+    return;
+  }
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/ws")) {
     return;
   }
   event.respondWith(

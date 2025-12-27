@@ -55,6 +55,16 @@ mkdir -p /home/<user>/Projects/<project>/latex && \
   pwd
 ```
 
+## PDF preview panel
+
+The right panel loads the compiled PDF directly from the container. It fetches:
+
+```
+/api/pdf?user=<user>&project=<project>&file=main.pdf
+```
+
+Use **Refresh PDF** to re-fetch the file after compiling. The **Open** button opens the PDF in a new tab. You can change the PDF file name in the input (defaults to `main.pdf`).
+
 ## Defaults
 
 - Container user: `paperagent`

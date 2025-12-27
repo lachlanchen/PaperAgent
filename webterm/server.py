@@ -1,12 +1,14 @@
 import argparse
 import json
 import os
+import re
 import signal
 import subprocess
 import pty
 import fcntl
 import termios
 import struct
+import shutil
 from urllib.parse import urlparse
 
 import tornado.ioloop
@@ -16,6 +18,8 @@ import tornado.autoreload
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
+SAFE_SEGMENT = re.compile(r"[^a-zA-Z0-9._-]+")
+SAFE_PDF = re.compile(r"^[a-zA-Z0-9._-]+\\.pdf$")
 
 
 def resolve_default_shell():
@@ -28,6 +32,49 @@ def resolve_default_shell():
 def set_pty_size(fd, rows, cols):
     winsize = struct.pack("HHHH", rows, cols, 0, 0)
     fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
+
+
+def sanitize_segment(value, fallback):
+    if not value:
+        return fallback
+    safe = SAFE_SEGMENT.sub("_", value.strip())
+    return safe or fallback
+
+
+def sanitize_pdf_name(value):
+    if not value:
+        return "main.pdf"
+    name = os.path.basename(value.strip())
+    if SAFE_PDF.match(name):
+        return name
+    return None
+
+
+def resolve_container_name():
+    container = os.environ.get("WEBTERM_CONTAINER")
+    if container:
+        return container
+    docker_shell = os.path.join(BASE_DIR, "docker-shell.sh")
+    if os.path.isfile(docker_shell):
+        return "paperagent-sandbox"
+    return None
+
+
+def read_pdf_bytes(path):
+    container = resolve_container_name()
+    if container and shutil.which("docker"):
+        result = subprocess.run(
+            ["docker", "exec", container, "cat", path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        if result.returncode == 0 and result.stdout:
+            return result.stdout
+    if os.path.isfile(path):
+        with open(path, "rb") as handle:
+            return handle.read()
+    return None
 
 
 def compute_dev_version():
@@ -60,6 +107,27 @@ class DevVersionHandler(tornado.web.RequestHandler):
     def get(self):
         self.set_header("Cache-Control", "no-store")
         self.write({"version": self.version_func()})
+
+
+class PdfHandler(tornado.web.RequestHandler):
+    def get(self):
+        user = sanitize_segment(self.get_argument("user", "paperagent"), "paperagent")
+        project = sanitize_segment(self.get_argument("project", "demo-paper"), "demo-paper")
+        name = sanitize_pdf_name(self.get_argument("file", "main.pdf"))
+        if not name:
+            self.set_status(400)
+            self.write({"error": "invalid file name"})
+            return
+        pdf_path = f"/home/{user}/Projects/{project}/latex/{name}"
+        data = read_pdf_bytes(pdf_path)
+        if not data:
+            self.set_status(404)
+            self.write({"error": "pdf not found"})
+            return
+        self.set_header("Content-Type", "application/pdf")
+        self.set_header("Cache-Control", "no-store")
+        self.set_header("Content-Disposition", f'inline; filename="{name}"')
+        self.finish(data)
 
 
 class TerminalWebSocket(tornado.websocket.WebSocketHandler):
@@ -166,6 +234,7 @@ def make_app(shell, cwd, dev_mode=False):
     routes = [
         (r"/", MainHandler),
         (r"/ws", TerminalWebSocket, {"shell": shell, "cwd": cwd}),
+        (r"/api/pdf", PdfHandler),
         (r"/(manifest.json)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
         (r"/(sw.js)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
         (r"/(icon.svg)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
