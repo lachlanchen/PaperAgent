@@ -151,6 +151,11 @@
     return trimmed.replace(/[^a-zA-Z0-9@._:/+-]/g, "_");
   }
 
+  function shellQuote(value) {
+    const raw = String(value ?? "");
+    return `'${raw.replace(/'/g, "'\"'\"'")}'`;
+  }
+
 
   function pickEditorMode(relPath) {
     if (!relPath) {
@@ -1074,18 +1079,6 @@
     setCodexRunState("running");
   }
 
-  function buildCodexGitIdentityPrompt(name, email) {
-    return [
-      "Set git identity for this environment.",
-      `user.name: ${name}`,
-      `user.email: ${email}`,
-      "Run:",
-      `git config --global user.name \"${name}\"`,
-      `git config --global user.email \"${email}\"`,
-      "Then show: git config --global --get user.name and user.email.",
-    ].join("\n");
-  }
-
   function buildCodexGitignorePrompt() {
     return [
       "Create a .gitignore for this project.",
@@ -1106,6 +1099,15 @@
       "Please run: git status -sb, git add -A, git commit, git push.",
       "Choose a concise commit message based on the actual changes.",
       "If there are no changes, just report that.",
+    ].join("\n");
+  }
+
+  function buildGitIdentityCommand(name, email) {
+    return [
+      `git config --global user.name ${shellQuote(name)}`,
+      `git config --global user.email ${shellQuote(email)}`,
+      "git config --global --get user.name",
+      "git config --global --get user.email",
     ].join("\n");
   }
 
@@ -1759,7 +1761,13 @@
         return;
       }
       saveUserIdentity(name, email);
-      sendCodexCommand(buildCodexGitIdentityPrompt(name, email));
+      const { user, project, path } = buildBasePath();
+      userInput.value = user;
+      projectInput.value = project;
+      updatePathPreview();
+      const command = buildGitIdentityCommand(name, email);
+      sendCommand(`${command}\n`);
+      term.focus();
     });
   }
 
