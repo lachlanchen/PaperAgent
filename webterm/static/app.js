@@ -336,11 +336,18 @@
     ].join("\n");
   }
 
-  function buildGitTestCommand(basePath, remote) {
+  function buildGitTestCommand(basePath, user, remote) {
     const safeRemote = sanitizeGitRemote(remote);
+    const safeUser = sanitizeSegment(user, DEFAULT_USER);
+    const keyName = sanitizeSegment(
+      `${safeUser}_paperagent_ed25519`,
+      "paperagent_ed25519"
+    );
+    const sshDir = `/home/${safeUser}/.ssh`;
+    const keyPath = `${sshDir}/${keyName}`;
+    const configPath = `${sshDir}/config`;
     return [
       `REMOTE="${safeRemote}"`,
-      'if [ -z "$REMOTE" ]; then echo "[webterm] Remote URL required"; exit 1; fi',
       'if command -v sudo >/dev/null 2>&1; then SUDO=sudo; else SUDO=""; fi',
       'if ! command -v git >/dev/null 2>&1; then',
       '  if ! command -v apt-get >/dev/null 2>&1; then echo "apt-get not found"; exit 1; fi',
@@ -348,6 +355,15 @@
       "fi",
       `mkdir -p ${basePath}`,
       `cd ${basePath}`,
+      'if [ -z "$REMOTE" ]; then REMOTE=$(git remote get-url origin 2>/dev/null || true); fi',
+      'if [ -z "$REMOTE" ]; then echo "[webterm] Remote URL required"; exit 1; fi',
+      `HOME_DIR="/home/${safeUser}"`,
+      'SSH_DIR="$HOME_DIR/.ssh"',
+      `KEY_PATH="${keyPath}"`,
+      `CONFIG_PATH="${configPath}"`,
+      'export HOME="$HOME_DIR"',
+      'if [ ! -f "$KEY_PATH" ]; then echo "[webterm] SSH key missing, generate it first"; exit 1; fi',
+      'if [ -f "$CONFIG_PATH" ]; then SSH_CONFIG="-F $CONFIG_PATH"; else SSH_CONFIG=""; fi',
       'HOST=""',
       'case "$REMOTE" in',
       '  git@*:* ) HOST=$(echo "$REMOTE" | sed -n "s/^git@\\([^:]*\\):.*/\\1/p") ;;',
@@ -361,7 +377,7 @@
       '    if ! command -v apt-get >/dev/null 2>&1; then echo "apt-get not found"; exit 1; fi',
       '    $SUDO apt-get update && $SUDO apt-get install -y openssh-client',
       "  fi",
-      '  ssh -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new git@"$HOST"',
+      '  ssh $SSH_CONFIG -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes -i "$KEY_PATH" git@"$HOST"',
       "  status=$?",
       '  if [ "$status" -eq 1 ] || [ "$status" -eq 0 ]; then',
       '    echo "[webterm] GitHub SSH auth OK"',
@@ -1391,7 +1407,7 @@
       updatePathPreview();
 
       const remote = gitRemoteInput ? gitRemoteInput.value : "";
-      const command = buildGitTestCommand(path, remote);
+      const command = buildGitTestCommand(path, user, remote);
       sendCommand(`${command}\n`);
       term.focus();
     });
