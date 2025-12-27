@@ -52,11 +52,11 @@
     const latexDir = `${basePath}/latex`;
     const texPath = `${latexDir}/main.tex`;
     const latexLines = [
-      "\\\\documentclass{article}",
-      "\\\\usepackage{graphicx}",
-      "\\\\begin{document}",
+      "\\documentclass{article}",
+      "\\usepackage{graphicx}",
+      "\\begin{document}",
       "Hello PaperAgent.",
-      "\\\\end{document}",
+      "\\end{document}",
       "",
     ];
     const printfArgs = latexLines
@@ -65,7 +65,7 @@
 
     return [
       `mkdir -p ${latexDir}/latex_figures`,
-      `if [ ! -f ${texPath} ]; then printf '%s\\\\n' ${printfArgs} > ${texPath}; fi`,
+      `if [ ! -f ${texPath} ] || grep -q '^\\\\\\\\documentclass' ${texPath}; then printf '%s\\\\n' ${printfArgs} > ${texPath}; fi`,
       `cd ${latexDir}`,
       "ls -la",
       "pwd",
