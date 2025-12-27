@@ -584,6 +584,12 @@ class CodexSession:
             self._broadcast({"type": "status", "state": "closed"})
             self.close()
             return
+        if b"\x1b[6n" in data and self.master_fd is not None:
+            try:
+                os.write(self.master_fd, b"\x1b[1;1R")
+            except OSError:
+                pass
+            data = data.replace(b"\x1b[6n", b"")
         text = data.decode("utf-8", errors="ignore")
         self._append_buffer(text)
         if self.logger:
