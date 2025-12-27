@@ -825,7 +825,7 @@
       if (item.type === "dir") {
         const details = document.createElement("details");
         details.className = "tree-dir";
-        details.open = depth < 2;
+        details.open = depth === 0 && item.name === "latex";
         const summary = document.createElement("summary");
         summary.textContent = item.name;
         details.appendChild(summary);
