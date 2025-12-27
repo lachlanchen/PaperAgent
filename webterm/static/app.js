@@ -61,7 +61,6 @@
   const CODEX_SESSION_KEY = "paperagent.codex.session";
   const CODEX_OUTPUT_LIMIT = 60000;
   const CODEX_SESSIONS_REFRESH_MS = 8000;
-  const CODEX_FINISHED_HOLD_MS = 2500;
   const PROJECT_REMOTE_PREFIX = "paperagent.project.remote";
   const USER_IDENTITY_PREFIX = "paperagent.user.git";
 
@@ -100,9 +99,9 @@
   let codexSessionsTimer = null;
   let codexStatusBase = "Status: idle";
   let codexStatusClass = "";
-  let codexRunState = "";
+  let codexRunState = "idle";
   let codexOutputBuffer = "";
-  let codexFinishTimer = null;
+  let codexAwaitingPrompt = false;
   let projectRemoteTimer = null;
   let gitRemoteDirty = false;
   let userIdentityTimer = null;
@@ -707,41 +706,18 @@
   }
 
   function setCodexRunState(state) {
-    codexRunState = state || "idle";
+    codexRunState = state === "running" ? "running" : "idle";
     renderCodexStatus();
   }
 
-  function clearCodexFinishTimer() {
-    if (codexFinishTimer) {
-      clearTimeout(codexFinishTimer);
-      codexFinishTimer = null;
-    }
-  }
-
   function markCodexRunning() {
-    if (codexRunState === "stopped" || codexRunState === "stopping") {
-      return;
-    }
-    clearCodexFinishTimer();
+    codexAwaitingPrompt = true;
     setCodexRunState("running");
   }
 
   function markCodexIdle() {
-    clearCodexFinishTimer();
+    codexAwaitingPrompt = false;
     setCodexRunState("idle");
-  }
-
-  function markCodexFinished() {
-    if (codexRunState === "stopped" || codexRunState === "stopping") {
-      return;
-    }
-    clearCodexFinishTimer();
-    setCodexRunState("finished");
-    codexFinishTimer = setTimeout(() => {
-      if (codexRunState === "finished") {
-        setCodexRunState("idle");
-      }
-    }, CODEX_FINISHED_HOLD_MS);
   }
 
   function renderCodexStatus() {
@@ -751,8 +727,15 @@
     const suffix = codexRunState ? ` · ${codexRunState}` : "";
     codexStatus.textContent = `${codexStatusBase}${suffix}`;
     codexStatus.classList.remove("ready", "loading", "error");
+    codexStatus.classList.remove("running", "idle");
     if (codexStatusClass) {
       codexStatus.classList.add(codexStatusClass);
+    }
+    if (codexRunState) {
+      codexStatus.classList.add(codexRunState);
+      codexStatus.dataset.run = codexRunState;
+    } else {
+      delete codexStatus.dataset.run;
     }
   }
 
@@ -828,10 +811,10 @@
     }
     codexOutputBuffer = `${codexOutputBuffer}${cleaned}`.slice(-2000);
     if (/(^|[\r\n])›\s/.test(codexOutputBuffer)) {
-      markCodexFinished();
+      markCodexIdle();
       return;
     }
-    if (codexRunState !== "running") {
+    if (codexAwaitingPrompt && codexRunState !== "running") {
       markCodexRunning();
     }
   }
@@ -1066,12 +1049,12 @@
           markCodexIdle();
         } else if (state === "closed") {
           setCodexStatus("Status: closed", "error");
-          setCodexRunState("stopped");
+          markCodexIdle();
         } else if (state === "missing") {
           setCodexStatus("Status: missing session", "error");
         } else if (state === "stopping") {
           setCodexStatus("Status: stopping", "loading");
-          setCodexRunState("stopping");
+          markCodexIdle();
         } else {
           setCodexStatus(`Status: ${state}`);
         }
@@ -1086,8 +1069,7 @@
 
     codexSocket.addEventListener("close", () => {
       setCodexStatus("Status: disconnected", "error");
-      setCodexRunState("stopped");
-      clearCodexFinishTimer();
+      markCodexIdle();
       loadCodexSessions({ silent: true });
     });
 
