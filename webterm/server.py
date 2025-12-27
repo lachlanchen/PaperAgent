@@ -50,6 +50,8 @@ CODEX_WORK_RE = re.compile(
 CODEX_DONE_RE = re.compile(r"(?:^|[\r\n])\u2500 Worked for ")
 CODEX_PROMPT_RE = re.compile(r"(?:^|[\r\n])\u203a\s")
 CODEX_CLI_SESSION_RE = re.compile(r"Session:\s*([0-9a-f-]{8,})", re.IGNORECASE)
+ANSI_OSC_RE = re.compile(r"\x1b\][^\x07]*(?:\x07|\x1b\\)")
+ANSI_CSI_RE = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
 MAX_FILE_BYTES = 1024 * 1024
 logger = logging.getLogger("paperterm")
 
@@ -246,6 +248,13 @@ def read_file_bytes(path):
         with open(path, "rb") as handle:
             return handle.read()
     return None
+
+
+def strip_ansi(value):
+    if not value:
+        return ""
+    text = ANSI_OSC_RE.sub("", value)
+    return ANSI_CSI_RE.sub("", text)
 
 
 def write_file_bytes(path, content):
@@ -1106,6 +1115,7 @@ class CodexSession:
         self._run_state_buffer = ""
         self._had_work_line = False
         self.cli_session_id = None
+        self._cli_session_buffer = ""
         if self.logger:
             self.logger.log_session(self.session_id, self.username, self.project)
         self._spawn()
@@ -1177,8 +1187,12 @@ class CodexSession:
     def _update_cli_session_id(self, text):
         if not text:
             return
+        cleaned = strip_ansi(text)
+        if not cleaned:
+            return
+        self._cli_session_buffer = f"{self._cli_session_buffer}{cleaned}"[-2000:]
         match = None
-        for entry in CODEX_CLI_SESSION_RE.finditer(text):
+        for entry in CODEX_CLI_SESSION_RE.finditer(self._cli_session_buffer):
             match = entry
         if not match:
             return
@@ -1186,6 +1200,7 @@ class CodexSession:
         if not cli_id or cli_id == self.cli_session_id:
             return
         self.cli_session_id = cli_id
+        self._cli_session_buffer = ""
         if self.logger:
             self.logger.log_cli_session_id(self.session_id, cli_id)
         self._broadcast({"type": "cli_session", "id": cli_id})
