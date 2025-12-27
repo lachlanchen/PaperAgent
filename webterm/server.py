@@ -83,6 +83,8 @@ class QuietAccessFilter(logging.Filter):
             return False
         if "GET /api/codex/sessions" in message:
             return False
+        if "GET /api/codex/history" in message:
+            return False
         if "GET /api/project" in message:
             return False
         if "GET /api/user" in message:
@@ -1012,6 +1014,41 @@ class CodexLogger:
             "updated_at": row[3].isoformat() if row[3] else None,
         }
 
+    def list_sessions(self, username=None, project=None, limit=50):
+        conn = self._connect()
+        if not conn:
+            return []
+        name = username or None
+        proj = project or None
+        bounded = max(1, min(limit or 50, 200))
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT session_id, username, project_id, updated_at
+                    FROM codex_sessions
+                    WHERE (%s IS NULL OR username = %s)
+                      AND (%s IS NULL OR project_id = %s)
+                    ORDER BY updated_at DESC
+                    LIMIT %s
+                    """,
+                    (name, name, proj, proj, bounded),
+                )
+                rows = cur.fetchall()
+        except Exception:
+            return []
+        sessions = []
+        for row in rows or []:
+            sessions.append(
+                {
+                    "session_id": row[0],
+                    "username": row[1],
+                    "project_id": row[2],
+                    "updated_at": row[3].isoformat() if row[3] else None,
+                }
+            )
+        return sessions
+
 
 class CodexSession:
     def __init__(self, session_id, logger=None, username=None, project=None):
@@ -1351,6 +1388,46 @@ class CodexLatestHandler(tornado.web.RequestHandler):
         self.write(payload)
 
 
+class CodexHistoryHandler(tornado.web.RequestHandler):
+    def initialize(self, manager):
+        self.manager = manager
+
+    def get(self):
+        username = sanitize_segment(self.get_argument("user", ""), "")
+        project = sanitize_segment(self.get_argument("project", ""), "")
+        try:
+            limit = int(self.get_argument("limit", "50"))
+        except ValueError:
+            limit = 50
+        logger_ref = getattr(self.manager, "logger", None)
+        if not logger_ref or not logger_ref.enabled:
+            self.set_header("Content-Type", "application/json")
+            self.set_header("Cache-Control", "no-store")
+            self.write(
+                {
+                    "ok": False,
+                    "disabled": True,
+                    "reason": "codex db logging disabled",
+                }
+            )
+            return
+        sessions = logger_ref.list_sessions(username or None, project or None, limit)
+        if not sessions and logger_ref._connect_error:
+            self.set_header("Content-Type", "application/json")
+            self.set_header("Cache-Control", "no-store")
+            self.write(
+                {
+                    "ok": False,
+                    "disabled": True,
+                    "reason": logger_ref._connect_error,
+                }
+            )
+            return
+        self.set_header("Content-Type", "application/json")
+        self.set_header("Cache-Control", "no-store")
+        self.write({"ok": True, "sessions": sessions})
+
+
 class CodexWebSocket(tornado.websocket.WebSocketHandler):
     def initialize(self, manager):
         self.manager = manager
@@ -1568,6 +1645,7 @@ def make_app(shell, cwd, dev_mode=False):
         (r"/codex/ws", CodexWebSocket, {"manager": codex_manager}),
         (r"/api/codex/sessions", CodexSessionsHandler, {"manager": codex_manager}),
         (r"/api/codex/latest", CodexLatestHandler, {"manager": codex_manager}),
+        (r"/api/codex/history", CodexHistoryHandler, {"manager": codex_manager}),
         (r"/api/pdf", PdfHandler),
         (r"/api/file", FileHandler),
         (r"/api/tree", TreeHandler),

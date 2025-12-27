@@ -61,6 +61,8 @@
   const CODEX_SESSION_KEY = "paperagent.codex.session";
   const CODEX_OUTPUT_LIMIT = 60000;
   const CODEX_SESSIONS_REFRESH_MS = 8000;
+  const CODEX_HISTORY_REFRESH_MS = 30000;
+  const CODEX_HISTORY_LIMIT = 50;
   const CODEX_DONE_RE = /(?:^|[\r\n])─ Worked for /;
   const CODEX_PROMPT_RE = /(^|[\r\n])›\s/g;
   const CODEX_WORK_RE = /(?:^|[\r\n])\s*[•◦][^\r\n]*esc to interrupt/i;
@@ -100,11 +102,14 @@
   let codexTerm = null;
   let codexFitAddon = null;
   let codexSessionsTimer = null;
+  let codexHistoryTimer = null;
   let codexStatusBase = "Status: idle";
   let codexStatusClass = "";
   let codexRunState = "idle";
   let codexOutputBuffer = "";
   let codexHadWorkLine = false;
+  let codexActiveSessions = [];
+  let codexHistorySessions = [];
   let projectRemoteTimer = null;
   let gitRemoteDirty = false;
   let userIdentityTimer = null;
@@ -252,6 +257,20 @@
       params.set("project", project);
     }
     return `/api/codex/sessions?${params.toString()}`;
+  }
+
+  function buildCodexHistoryUrl({ user, project, limit }) {
+    const params = new URLSearchParams();
+    if (user) {
+      params.set("user", user);
+    }
+    if (project) {
+      params.set("project", project);
+    }
+    if (limit) {
+      params.set("limit", String(limit));
+    }
+    return `/api/codex/history?${params.toString()}`;
   }
 
   function buildCodexLatestUrl({ user, project }) {
@@ -887,6 +906,39 @@
     return parts.join(" - ");
   }
 
+  function formatRelativeTime(value) {
+    const stamp = Date.parse(value || "");
+    if (!Number.isFinite(stamp)) {
+      return "";
+    }
+    const diff = Date.now() - stamp;
+    if (diff < 60000) {
+      return `${Math.max(1, Math.round(diff / 1000))}s ago`;
+    }
+    if (diff < 3600000) {
+      return `${Math.round(diff / 60000)}m ago`;
+    }
+    if (diff < 86400000) {
+      return `${Math.round(diff / 3600000)}h ago`;
+    }
+    return `${Math.round(diff / 86400000)}d ago`;
+  }
+
+  function formatCodexHistoryLabel(session) {
+    const parts = [];
+    if (session?.session_id) {
+      parts.push(session.session_id);
+    }
+    if (session?.username || session?.project_id) {
+      parts.push(`${session.username || "?"}/${session.project_id || "?"}`);
+    }
+    const age = formatRelativeTime(session?.updated_at);
+    if (age) {
+      parts.push(age);
+    }
+    return parts.join(" - ");
+  }
+
   function syncCodexSessionSelection(value) {
     if (!codexSessionList) {
       return;
@@ -897,23 +949,44 @@
     codexSessionList.value = hasValue ? value : "";
   }
 
-  function updateCodexSessionList(sessions) {
+  function updateCodexSessionList(activeSessions, historySessions) {
     if (!codexSessionList) {
       return;
     }
+    const active = activeSessions || [];
+    const history = historySessions || [];
+    const activeIds = new Set(
+      active.map((session) => session?.id).filter(Boolean)
+    );
     codexSessionList.innerHTML = "";
     const placeholder = document.createElement("option");
     placeholder.value = "";
-    placeholder.textContent = sessions?.length
+    placeholder.textContent = active.length
       ? "Active sessions"
       : "No active sessions";
     codexSessionList.appendChild(placeholder);
-    (sessions || []).forEach((session) => {
+    active.forEach((session) => {
       const option = document.createElement("option");
       option.value = session.id;
       option.textContent = formatCodexSessionLabel(session);
       codexSessionList.appendChild(option);
     });
+    const filteredHistory = history.filter(
+      (session) => session?.session_id && !activeIds.has(session.session_id)
+    );
+    if (filteredHistory.length) {
+      const divider = document.createElement("option");
+      divider.textContent = "Recent sessions (DB)";
+      divider.disabled = true;
+      divider.value = "";
+      codexSessionList.appendChild(divider);
+      filteredHistory.forEach((session) => {
+        const option = document.createElement("option");
+        option.value = session.session_id;
+        option.textContent = formatCodexHistoryLabel(session);
+        codexSessionList.appendChild(option);
+      });
+    }
     syncCodexSessionSelection(codexSessionInput?.value || "");
   }
 
@@ -929,15 +1002,46 @@
         throw new Error("bad response");
       }
       const data = await response.json();
-      updateCodexSessionList(data.sessions || []);
+      codexActiveSessions = data.sessions || [];
+      updateCodexSessionList(codexActiveSessions, codexHistorySessions);
       const activeId = codexSessionInput?.value || "";
-      const match = (data.sessions || []).find((session) => session.id === activeId);
+      const match = (codexActiveSessions || []).find(
+        (session) => session.id === activeId
+      );
       if (match?.run_state) {
         setCodexRunState(match.run_state);
       }
     } catch (err) {
       if (!silent) {
-        updateCodexSessionList([]);
+        updateCodexSessionList([], codexHistorySessions);
+      }
+    }
+  }
+
+  async function loadCodexHistory({ silent } = {}) {
+    const { user, project } = buildBasePath();
+    const url = buildCodexHistoryUrl({
+      user,
+      project,
+      limit: CODEX_HISTORY_LIMIT,
+    });
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("bad response");
+      }
+      const data = await response.json();
+      if (!data.ok) {
+        codexHistorySessions = [];
+        updateCodexSessionList(codexActiveSessions, codexHistorySessions);
+        return;
+      }
+      codexHistorySessions = data.sessions || [];
+      updateCodexSessionList(codexActiveSessions, codexHistorySessions);
+    } catch (err) {
+      if (!silent) {
+        codexHistorySessions = [];
+        updateCodexSessionList(codexActiveSessions, codexHistorySessions);
       }
     }
   }
@@ -1927,6 +2031,12 @@
     }, delay);
   }
 
+  function scheduleCodexHistoryLoad(delay = 0) {
+    setTimeout(() => {
+      loadCodexHistory({ silent: true });
+    }, delay);
+  }
+
   if (installCodexBtn) {
     installCodexBtn.addEventListener("click", () => {
       const command = buildCodexInstallCommand();
@@ -2125,6 +2235,7 @@
       scheduleProjectRemoteLoad(450);
       gitIdentityDirty = false;
       scheduleUserIdentityLoad(450);
+      scheduleCodexHistoryLoad(500);
     });
     projectInput.addEventListener("input", () => {
       updatePathPreview();
@@ -2135,6 +2246,7 @@
       setActiveTreePath(null);
       gitRemoteDirty = false;
       scheduleProjectRemoteLoad(450);
+      scheduleCodexHistoryLoad(500);
     });
   }
 
@@ -2162,10 +2274,15 @@
   loadProjectRemote({ silent: true });
   loadUserIdentity({ silent: true });
   loadCodexSessions({ silent: true });
+  loadCodexHistory({ silent: true });
   clearInterval(codexSessionsTimer);
   codexSessionsTimer = setInterval(() => {
     loadCodexSessions({ silent: true });
   }, CODEX_SESSIONS_REFRESH_MS);
+  clearInterval(codexHistoryTimer);
+  codexHistoryTimer = setInterval(() => {
+    loadCodexHistory({ silent: true });
+  }, CODEX_HISTORY_REFRESH_MS);
   fitAddon.fit();
   ensureEditor();
   connect();

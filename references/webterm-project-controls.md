@@ -132,6 +132,8 @@ The Codex panel opens a direct WebSocket to `/codex/ws?session=<id>` and lets yo
 - resume a session by ID
 - send prompts without opening the interactive CLI
 
+If Postgres logging is enabled, the session dropdown also includes **Recent sessions (DB)** so you can pick and resume older runs.
+
 Default Codex args can be configured with:
 
 ```
