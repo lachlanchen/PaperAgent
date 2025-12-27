@@ -62,6 +62,21 @@
           <input id="projectInput" class="input" type="text" value="demo-paper" />
         </div>
 
+        <div class="field">
+          <label for="sshKeyLabel">SSH key label</label>
+          <input id="sshKeyLabel" class="input" type="text" value="paperagent@local" />
+        </div>
+
+        <div class="field">
+          <label for="gitRemote">Git remote URL</label>
+          <input
+            id="gitRemote"
+            class="input"
+            type="text"
+            placeholder="git@github.com:owner/repo.git"
+          />
+        </div>
+
         <div id="pathPreview" class="path-preview"></div>
         <div id="projectStatus" class="status-line">Status: unknown</div>
 
@@ -71,6 +86,8 @@
           <button id="initLatex" class="btn ghost">Init LaTeX</button>
           <button id="compileLatex" class="btn ghost">Compile LaTeX</button>
           <button id="initGit" class="btn ghost">Install Git + Init Repo</button>
+          <button id="generateSshKey" class="btn ghost">Generate SSH Key</button>
+          <button id="setGitRemote" class="btn ghost">Set Git Remote</button>
           <button id="installCodex" class="btn ghost">Install NVM + Codex</button>
           <button id="installCuda" class="btn ghost">Install CUDA Toolkit</button>
         </div>

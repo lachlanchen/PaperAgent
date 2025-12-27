@@ -4,11 +4,15 @@
   const terminalEl = document.getElementById("terminal");
   const userInput = document.getElementById("userInput");
   const projectInput = document.getElementById("projectInput");
+  const sshKeyLabelInput = document.getElementById("sshKeyLabel");
+  const gitRemoteInput = document.getElementById("gitRemote");
   const openProjectBtn = document.getElementById("openProject");
   const createProjectBtn = document.getElementById("createProject");
   const initLatexBtn = document.getElementById("initLatex");
   const compileLatexBtn = document.getElementById("compileLatex");
   const initGitBtn = document.getElementById("initGit");
+  const generateSshKeyBtn = document.getElementById("generateSshKey");
+  const setGitRemoteBtn = document.getElementById("setGitRemote");
   const installCodexBtn = document.getElementById("installCodex");
   const installCudaBtn = document.getElementById("installCuda");
   const pathPreview = document.getElementById("pathPreview");
@@ -110,6 +114,22 @@
       cleaned.push(safe);
     }
     return cleaned.join("/");
+  }
+
+  function sanitizeKeyLabel(value, fallback) {
+    const trimmed = String(value || "").trim();
+    if (!trimmed) {
+      return fallback;
+    }
+    return trimmed.replace(/[^a-zA-Z0-9@._+-]/g, "_") || fallback;
+  }
+
+  function sanitizeGitRemote(value) {
+    const trimmed = String(value || "").trim();
+    if (!trimmed) {
+      return "";
+    }
+    return trimmed.replace(/[^a-zA-Z0-9@._:/+-]/g, "_");
   }
 
   function pickEditorMode(relPath) {
@@ -252,9 +272,52 @@
       "fi",
       `mkdir -p ${basePath}`,
       `cd ${basePath}`,
-      'if [ ! -d ".git" ]; then git init; fi',
+      'if [ ! -d ".git" ]; then git init -b main; else git branch -M main; fi',
       "git status -sb",
       "pwd",
+    ].join("\n");
+  }
+
+  function buildSshKeyCommand(user, label) {
+    const safeLabel = sanitizeKeyLabel(label, `${user}@paperagent`);
+    const keyName = sanitizeSegment(`${user}_paperagent_ed25519`, "paperagent_ed25519");
+    const keyDir = `/home/${user}/.ssh`;
+    const keyPath = `${keyDir}/${keyName}`;
+    return [
+      'if command -v sudo >/dev/null 2>&1; then SUDO=sudo; else SUDO=""; fi',
+      'if ! command -v ssh-keygen >/dev/null 2>&1; then',
+      '  if ! command -v apt-get >/dev/null 2>&1; then echo "apt-get not found"; exit 1; fi',
+      '  $SUDO apt-get update && $SUDO apt-get install -y openssh-client',
+      "fi",
+      `mkdir -p ${keyDir}`,
+      `chmod 700 ${keyDir}`,
+      `if [ ! -f ${keyPath} ]; then ssh-keygen -t ed25519 -C "${safeLabel}" -f ${keyPath} -N ""; fi`,
+      `chmod 600 ${keyPath} || true`,
+      `chmod 644 ${keyPath}.pub || true`,
+      'echo "[webterm] Public key:"',
+      `cat ${keyPath}.pub`,
+    ].join("\n");
+  }
+
+  function buildGitRemoteCommand(basePath, remote) {
+    const safeRemote = sanitizeGitRemote(remote);
+    return [
+      `REMOTE="${safeRemote}"`,
+      'if [ -z "$REMOTE" ]; then echo "[webterm] Remote URL required"; exit 1; fi',
+      'if command -v sudo >/dev/null 2>&1; then SUDO=sudo; else SUDO=""; fi',
+      'if ! command -v git >/dev/null 2>&1; then',
+      '  if ! command -v apt-get >/dev/null 2>&1; then echo "apt-get not found"; exit 1; fi',
+      '  $SUDO apt-get update && $SUDO apt-get install -y git',
+      "fi",
+      `mkdir -p ${basePath}`,
+      `cd ${basePath}`,
+      'if [ ! -d ".git" ]; then git init -b main; else git branch -M main; fi',
+      'if git remote get-url origin >/dev/null 2>&1; then',
+      '  git remote set-url origin "$REMOTE"',
+      "else",
+      '  git remote add origin "$REMOTE"',
+      "fi",
+      "git remote -v",
     ].join("\n");
   }
 
@@ -1236,6 +1299,30 @@
       updatePathPreview();
 
       const command = buildGitInitCommand(path);
+      sendCommand(`${command}\n`);
+      term.focus();
+    });
+  }
+
+  if (generateSshKeyBtn) {
+    generateSshKeyBtn.addEventListener("click", () => {
+      const { user } = buildBasePath();
+      const label = sshKeyLabelInput ? sshKeyLabelInput.value : "";
+      const command = buildSshKeyCommand(user, label);
+      sendCommand(`${command}\n`);
+      term.focus();
+    });
+  }
+
+  if (setGitRemoteBtn) {
+    setGitRemoteBtn.addEventListener("click", () => {
+      const { user, project, path } = buildBasePath();
+      userInput.value = user;
+      projectInput.value = project;
+      updatePathPreview();
+
+      const remote = gitRemoteInput ? gitRemoteInput.value : "";
+      const command = buildGitRemoteCommand(path, remote);
       sendCommand(`${command}\n`);
       term.focus();
     });
