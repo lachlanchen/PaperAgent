@@ -43,6 +43,7 @@ In dev mode, the PWA service worker is disabled to avoid stale assets.
 - The control panel includes an installer button for NVM + Node LTS + `@openai/codex`.
 - The control panel includes a CUDA toolkit install button (requires GPU-enabled container + host driver).
 - The control panel can generate an SSH key and set the Git remote in the project.
+- The Git remote block includes a GitHub SSH test (exit code 0 or 1 counts as success).
 - The LaTeX compile action uses `-g` to force a rebuild and will attempt to install missing `*.sty` packages (fallback to `texlive-full`).
 - The Codex panel connects via `/codex/ws` and spawns Codex with `CODEX_ARGS` (default `-s danger-full-access -a never`).
 - Codex starts in `/home/<user>/Projects/<project>` when available (falls back to `/workspace`).

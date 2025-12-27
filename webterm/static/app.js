@@ -13,6 +13,7 @@
   const initGitBtn = document.getElementById("initGit");
   const generateSshKeyBtn = document.getElementById("generateSshKey");
   const setGitRemoteBtn = document.getElementById("setGitRemote");
+  const testGitRemoteBtn = document.getElementById("testGitRemote");
   const installCodexBtn = document.getElementById("installCodex");
   const installCudaBtn = document.getElementById("installCuda");
   const pathPreview = document.getElementById("pathPreview");
@@ -318,6 +319,45 @@
       '  git remote add origin "$REMOTE"',
       "fi",
       "git remote -v",
+    ].join("\n");
+  }
+
+  function buildGitTestCommand(basePath, remote) {
+    const safeRemote = sanitizeGitRemote(remote);
+    return [
+      `REMOTE="${safeRemote}"`,
+      'if [ -z "$REMOTE" ]; then echo "[webterm] Remote URL required"; exit 1; fi',
+      'if command -v sudo >/dev/null 2>&1; then SUDO=sudo; else SUDO=""; fi',
+      'if ! command -v git >/dev/null 2>&1; then',
+      '  if ! command -v apt-get >/dev/null 2>&1; then echo "apt-get not found"; exit 1; fi',
+      '  $SUDO apt-get update && $SUDO apt-get install -y git',
+      "fi",
+      `mkdir -p ${basePath}`,
+      `cd ${basePath}`,
+      'HOST=""',
+      'case "$REMOTE" in',
+      '  git@*:* ) HOST=$(echo "$REMOTE" | sed -n "s/^git@\\([^:]*\\):.*/\\1/p") ;;',
+      '  ssh://git@*/* ) HOST=$(echo "$REMOTE" | sed -n "s#^ssh://git@\\([^/]*\\)/.*#\\1#p") ;;',
+      '  https://*/* ) HOST=$(echo "$REMOTE" | sed -n "s#^https://\\([^/]*\\)/.*#\\1#p") ;;',
+      '  http://*/* ) HOST=$(echo "$REMOTE" | sed -n "s#^http://\\([^/]*\\)/.*#\\1#p") ;;',
+      "esac",
+      'if [ -z "$HOST" ]; then HOST="github.com"; fi',
+      'if [ "$HOST" = "github.com" ]; then',
+      '  if ! command -v ssh >/dev/null 2>&1; then',
+      '    if ! command -v apt-get >/dev/null 2>&1; then echo "apt-get not found"; exit 1; fi',
+      '    $SUDO apt-get update && $SUDO apt-get install -y openssh-client',
+      "  fi",
+      '  ssh -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new git@"$HOST"',
+      "  status=$?",
+      '  if [ "$status" -eq 1 ] || [ "$status" -eq 0 ]; then',
+      '    echo "[webterm] GitHub SSH auth OK"',
+      "  else",
+      '    echo "[webterm] GitHub SSH failed (code $status)"',
+      "    exit $status",
+      "  fi",
+      "else",
+      '  git ls-remote "$REMOTE" HEAD >/dev/null 2>&1 && echo "[webterm] Remote reachable" || { echo "[webterm] Remote test failed"; exit 1; }',
+      "fi",
     ].join("\n");
   }
 
@@ -1323,6 +1363,20 @@
 
       const remote = gitRemoteInput ? gitRemoteInput.value : "";
       const command = buildGitRemoteCommand(path, remote);
+      sendCommand(`${command}\n`);
+      term.focus();
+    });
+  }
+
+  if (testGitRemoteBtn) {
+    testGitRemoteBtn.addEventListener("click", () => {
+      const { user, project, path } = buildBasePath();
+      userInput.value = user;
+      projectInput.value = project;
+      updatePathPreview();
+
+      const remote = gitRemoteInput ? gitRemoteInput.value : "";
+      const command = buildGitTestCommand(path, remote);
       sendCommand(`${command}\n`);
       term.focus();
     });

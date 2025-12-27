@@ -75,6 +75,11 @@
             type="text"
             placeholder="git@github.com:owner/repo.git"
           />
+          <div class="inline-actions">
+            <button id="generateSshKey" class="btn ghost">Generate SSH Key</button>
+            <button id="setGitRemote" class="btn ghost">Set Git Remote</button>
+            <button id="testGitRemote" class="btn ghost">Test GitHub Connection</button>
+          </div>
         </div>
 
         <div id="pathPreview" class="path-preview"></div>
@@ -86,8 +91,6 @@
           <button id="initLatex" class="btn ghost">Init LaTeX</button>
           <button id="compileLatex" class="btn ghost">Compile LaTeX</button>
           <button id="initGit" class="btn ghost">Install Git + Init Repo</button>
-          <button id="generateSshKey" class="btn ghost">Generate SSH Key</button>
-          <button id="setGitRemote" class="btn ghost">Set Git Remote</button>
           <button id="installCodex" class="btn ghost">Install NVM + Codex</button>
           <button id="installCuda" class="btn ghost">Install CUDA Toolkit</button>
         </div>

@@ -188,6 +188,13 @@ body {
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
 
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
 .path-preview {
   font-family: "JetBrains Mono", monospace;
   font-size: 12px;
