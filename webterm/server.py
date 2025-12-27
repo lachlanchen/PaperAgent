@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 import re
 import signal
@@ -43,6 +44,7 @@ STATIC_DIR = os.path.join(BASE_DIR, "static")
 SAFE_SEGMENT = re.compile(r"[^a-zA-Z0-9._-]+")
 SAFE_PDF = re.compile(r"^[a-zA-Z0-9._-]+\.pdf$", re.IGNORECASE)
 MAX_FILE_BYTES = 1024 * 1024
+logger = logging.getLogger("paperterm")
 
 
 def get_codex_max_buffer():
@@ -468,6 +470,12 @@ class ProjectStore:
         self.enabled = os.environ.get("PROJECT_DB", "1").lower() in ("1", "true", "yes")
         self._conn = None
         self._connect_error = None
+        self._connect_error_logged = False
+
+    def _log_connect_error(self):
+        if self._connect_error and not self._connect_error_logged:
+            logger.warning("ProjectStore disabled: %s", self._connect_error)
+            self._connect_error_logged = True
 
     def _connect(self):
         if not self.enabled:
@@ -475,11 +483,13 @@ class ProjectStore:
         if self._conn:
             return self._conn
         if self._connect_error:
+            self._log_connect_error()
             return None
         try:
             import psycopg2
         except ImportError as exc:
             self._connect_error = str(exc)
+            self._log_connect_error()
             return None
         try:
             self._conn = psycopg2.connect(
@@ -493,6 +503,7 @@ class ProjectStore:
             return self._conn
         except Exception as exc:
             self._connect_error = str(exc)
+            self._log_connect_error()
             return None
 
     def _ensure_user(self, username):
@@ -513,7 +524,8 @@ class ProjectStore:
                 )
                 row = cur.fetchone()
                 return row[0] if row else None
-        except Exception:
+        except Exception as exc:
+            logger.error("ProjectStore user upsert failed: %s", exc)
             return None
 
     def upsert_project(self, username, project_id, root_path, git_remote):
@@ -537,7 +549,8 @@ class ProjectStore:
                     (user_id, project_id, root_path, git_remote),
                 )
             return True
-        except Exception:
+        except Exception as exc:
+            logger.error("ProjectStore project upsert failed: %s", exc)
             return False
 
     def fetch_project(self, username, project_id):
@@ -564,7 +577,8 @@ class ProjectStore:
                     "root_path": row[1],
                     "git_remote": row[2],
                 }
-        except Exception:
+        except Exception as exc:
+            logger.error("ProjectStore project fetch failed: %s", exc)
             return None
 
 
@@ -606,6 +620,12 @@ class ProjectHandler(tornado.web.RequestHandler):
         git_remote = normalize_remote(payload.get("git_remote", ""))
         root_path = f"/home/{username}/Projects/{project_id}"
         if not self.store.upsert_project(username, project_id, root_path, git_remote):
+            logger.warning(
+                "ProjectStore unavailable for %s/%s (remote: %s)",
+                username,
+                project_id,
+                git_remote,
+            )
             self.write_error_json(503, "database unavailable")
             return
         self.set_header("Content-Type", "application/json")
@@ -1191,6 +1211,11 @@ def main():
         os.path.join(BASE_DIR, "..", ".env")
     )
     load_dotenv(dotenv_path)
+    log_level = os.environ.get("WEBTERM_LOG_LEVEL", "INFO").upper()
+    logging.basicConfig(
+        level=log_level,
+        format="%(levelname)s %(asctime)s %(message)s",
+    )
     parser = argparse.ArgumentParser(description="Local web terminal (Tornado)")
     parser.add_argument("--host", default="127.0.0.1", help="Bind host")
     parser.add_argument("--port", type=int, default=8765, help="Bind port")
