@@ -42,3 +42,6 @@ pip install psycopg2-binary
 ```
 
 Restart the web server after editing `.env`.
+
+Tip: When the DB is reachable, Codex resume uses the last logged terminal output
+to refill history if the in-memory buffer is empty.

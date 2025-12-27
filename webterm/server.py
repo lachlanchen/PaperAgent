@@ -446,6 +446,7 @@ class CodexLogger:
         )
         self.username = os.environ.get("CODEX_USERNAME", "")
         self.project = os.environ.get("CODEX_PROJECT", "")
+        self.history_messages = int(os.environ.get("CODEX_HISTORY_MESSAGES", "200"))
         self._conn = None
         self._connect_error = None
 
@@ -524,6 +525,31 @@ class CodexLogger:
         except Exception:
             return
 
+    def fetch_output_history(self, session_id):
+        conn = self._connect()
+        if not conn:
+            return ""
+        limit = max(1, min(self.history_messages, 1000))
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT content
+                    FROM codex_messages
+                    WHERE session_id = %s AND role = 'assistant'
+                    ORDER BY created_at DESC
+                    LIMIT %s
+                    """,
+                    (session_id, limit),
+                )
+                rows = cur.fetchall()
+        except Exception:
+            return ""
+        if not rows:
+            return ""
+        rows.reverse()
+        return "".join((row[0] or "") for row in rows)
+
 
 class CodexSession:
     def __init__(self, session_id, logger=None, username=None, project=None):
@@ -541,6 +567,7 @@ class CodexSession:
         self.project = project
         self.created_at = time.time()
         self.last_activity = self.created_at
+        self.state = "running"
         if self.logger:
             self.logger.log_session(self.session_id, self.username, self.project)
         self._spawn()
@@ -593,6 +620,7 @@ class CodexSession:
         except OSError:
             data = b""
         if not data:
+            self.state = "closed"
             self._broadcast({"type": "status", "state": "closed"})
             self.close()
             return
@@ -614,6 +642,10 @@ class CodexSession:
         if self.buffer:
             history = "".join(self.buffer)
             client.write_message(json.dumps({"type": "history", "data": history}))
+        elif self.logger:
+            history = self.logger.fetch_output_history(self.session_id)
+            if history:
+                client.write_message(json.dumps({"type": "history", "data": history}))
         client.write_message(json.dumps({"type": "status", "state": "ready"}))
 
     def detach(self, client):
@@ -652,6 +684,7 @@ class CodexSession:
             pass
 
     def stop(self):
+        self.state = "stopping"
         self._broadcast({"type": "status", "state": "stopping"})
         self.close()
 
@@ -659,6 +692,9 @@ class CodexSession:
         if self._closed:
             return
         self._closed = True
+        if self.state != "closed":
+            self.state = "closed"
+            self._broadcast({"type": "status", "state": "closed"})
         if self.master_fd is not None:
             try:
                 self._loop.remove_handler(self.master_fd)
@@ -714,26 +750,34 @@ class CodexManager:
 
     def list_sessions(self, username=None, project=None):
         sessions = []
+        stale = []
         for session_id, session in self.sessions.items():
             if session._closed:
+                stale.append(session_id)
+                continue
+            if session.proc and session.proc.poll() is not None:
+                stale.append(session_id)
                 continue
             if username and session.username and session.username != username:
                 continue
             if project and session.project and session.project != project:
                 continue
-            state = "running"
-            if session.proc and session.proc.poll() is not None:
-                state = "closed"
+            state = session.state
+            if state == "running":
+                state = "attached" if session.clients else "idle"
             sessions.append(
                 {
                     "id": session_id,
                     "username": session.username,
                     "project": session.project,
                     "state": state,
+                    "clients": len(session.clients),
                     "created_at": session.created_at,
                     "last_activity": session.last_activity,
                 }
             )
+        for session_id in stale:
+            self.sessions.pop(session_id, None)
         sessions.sort(
             key=lambda entry: entry.get("last_activity") or entry.get("created_at") or 0,
             reverse=True,

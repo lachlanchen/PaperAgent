@@ -445,6 +445,9 @@
     if (session?.state) {
       parts.push(session.state);
     }
+    if (typeof session?.clients === "number") {
+      parts.push(`${session.clients} client${session.clients === 1 ? "" : "s"}`);
+    }
     return parts.join(" - ");
   }
 
@@ -1247,6 +1250,10 @@
         return;
       }
       codexSocket.send(JSON.stringify({ type: "control", action: "stop" }));
+      setCodexStatus("Status: stopping", "loading");
+      setTimeout(() => {
+        loadCodexSessions({ silent: true });
+      }, 800);
     });
   }
 
