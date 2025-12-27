@@ -6,6 +6,7 @@
   const projectInput = document.getElementById("projectInput");
   const createProjectBtn = document.getElementById("createProject");
   const initLatexBtn = document.getElementById("initLatex");
+  const compileLatexBtn = document.getElementById("compileLatex");
   const pathPreview = document.getElementById("pathPreview");
 
   const DEFAULT_USER = "paperagent";
@@ -61,8 +62,19 @@
       `mkdir -p ${latexDir}/latex_figures`,
       `if [ ! -f ${texPath} ]; then printf '%s\\\\n' ${printfArgs} > ${texPath}; fi`,
       `cd ${latexDir}`,
+      "ls -la",
+      "pwd",
+    ].join(" && ");
+  }
+
+  function buildLatexCompileCommand(basePath) {
+    const latexDir = `${basePath}/latex`;
+    return [
+      `mkdir -p ${latexDir}`,
+      `cd ${latexDir}`,
       "latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex",
       "ls -lh main.pdf",
+      "pwd",
     ].join(" && ");
   }
 
@@ -173,6 +185,19 @@
       updatePathPreview();
 
       const command = buildLatexInitCommand(path);
+      sendCommand(`${command}\n`);
+      term.focus();
+    });
+  }
+
+  if (compileLatexBtn) {
+    compileLatexBtn.addEventListener("click", () => {
+      const { user, project, path } = buildBasePath();
+      userInput.value = user;
+      projectInput.value = project;
+      updatePathPreview();
+
+      const command = buildLatexCompileCommand(path);
       sendCommand(`${command}\n`);
       term.focus();
     });

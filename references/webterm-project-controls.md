@@ -1,6 +1,6 @@
 # Web Terminal Project Controls
 
-The PWA now includes a left control panel with a **Create Project + cd** button. When clicked, it creates a container-only project layout and changes the terminal to that directory.
+The PWA includes a left control panel with project and LaTeX actions. Each button sends a command to the terminal (right panel).
 
 ## What the buttons do
 
@@ -16,9 +16,9 @@ mkdir -p /home/<user>/Projects/<project>/{code,data,figures,latex/latex_figures,
 
 You will see the output (`pwd`) in the terminal on the right panel.
 
-### Init LaTeX + compile
+### Init LaTeX
 
-It creates a minimal `latex/main.tex` (if missing) and runs `latexmk`:
+It creates a minimal `latex/main.tex` (if missing) and prepares the LaTeX folder:
 
 ```
 mkdir -p /home/<user>/Projects/<project>/latex/latex_figures && \
@@ -27,7 +27,20 @@ mkdir -p /home/<user>/Projects/<project>/latex/latex_figures && \
     > /home/<user>/Projects/<project>/latex/main.tex; \
   fi && \
   cd /home/<user>/Projects/<project>/latex && \
-  latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
+  ls -la && \
+  pwd
+```
+
+### Compile LaTeX
+
+It compiles `latex/main.tex` with `latexmk`:
+
+```
+mkdir -p /home/<user>/Projects/<project>/latex && \
+  cd /home/<user>/Projects/<project>/latex && \
+  latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex && \
+  ls -lh main.pdf && \
+  pwd
 ```
 
 ## Defaults
