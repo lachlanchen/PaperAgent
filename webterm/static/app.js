@@ -40,6 +40,7 @@
   const codexNewBtn = document.getElementById("codexNew");
   const codexResumeBtn = document.getElementById("codexResume");
   const codexStopBtn = document.getElementById("codexStop");
+  const codexInitBtn = document.getElementById("codexInit");
   const codexOutput = document.getElementById("codexOutput");
   const codexPrompt = document.getElementById("codexPrompt");
   const codexSendBtn = document.getElementById("codexSend");
@@ -90,6 +91,10 @@
   let codexTerm = null;
   let codexFitAddon = null;
   let codexSessionsTimer = null;
+  let codexStatusBase = "Status: idle";
+  let codexStatusClass = "";
+  let codexRunState = "";
+  let codexOutputBuffer = "";
   let projectRemoteTimer = null;
   let gitRemoteDirty = false;
 
@@ -604,10 +609,25 @@
     if (!codexStatus) {
       return;
     }
-    codexStatus.textContent = text;
+    codexStatusBase = text;
+    codexStatusClass = state || "";
+    renderCodexStatus();
+  }
+
+  function setCodexRunState(state) {
+    codexRunState = state || "idle";
+    renderCodexStatus();
+  }
+
+  function renderCodexStatus() {
+    if (!codexStatus) {
+      return;
+    }
+    const suffix = codexRunState ? ` · ${codexRunState}` : "";
+    codexStatus.textContent = `${codexStatusBase}${suffix}`;
     codexStatus.classList.remove("ready", "loading", "error");
-    if (state) {
-      codexStatus.classList.add(state);
+    if (codexStatusClass) {
+      codexStatus.classList.add(codexStatusClass);
     }
   }
 
@@ -636,6 +656,9 @@
       if (!codexSocket || codexSocket.readyState !== WebSocket.OPEN) {
         return;
       }
+      if (data.includes("\r")) {
+        setCodexRunState("running");
+      }
       codexSocket.send(JSON.stringify({ type: "input", data }));
     });
   }
@@ -656,6 +679,7 @@
   function resetCodexOutput() {
     if (codexTerm) {
       codexTerm.reset();
+      codexOutputBuffer = "";
       return;
     }
     if (codexOutput) {
@@ -663,7 +687,28 @@
     }
   }
 
+  function stripAnsi(value) {
+    if (!value) {
+      return "";
+    }
+    return value
+      .replace(/\x1b\][^\x07]*(?:\x07|\x1b\\)/g, "")
+      .replace(/\x1b\[[0-9;?]*[ -/]*[@-~]/g, "");
+  }
+
+  function updateCodexRunStateFromOutput(text) {
+    const cleaned = stripAnsi(text);
+    if (!cleaned) {
+      return;
+    }
+    codexOutputBuffer = `${codexOutputBuffer}${cleaned}`.slice(-2000);
+    if (/(^|[\r\n])›\s/.test(codexOutputBuffer)) {
+      setCodexRunState("idle");
+    }
+  }
+
   function appendCodexOutput(text) {
+    updateCodexRunStateFromOutput(text);
     ensureCodexTerminal();
     if (codexTerm) {
       codexTerm.write(text);
@@ -831,6 +876,7 @@
 
     codexSocket.addEventListener("open", () => {
       setCodexStatus(`Status: connected (${id})`, "ready");
+      setCodexRunState("idle");
       ensureCodexTerminal();
       if (codexFitAddon) {
         codexFitAddon.fit();
@@ -860,12 +906,15 @@
         const state = payload.state || "unknown";
         if (state === "ready") {
           setCodexStatus(`Status: ready (${id})`, "ready");
+          setCodexRunState("idle");
         } else if (state === "closed") {
           setCodexStatus("Status: closed", "error");
+          setCodexRunState("stopped");
         } else if (state === "missing") {
           setCodexStatus("Status: missing session", "error");
         } else if (state === "stopping") {
           setCodexStatus("Status: stopping", "loading");
+          setCodexRunState("stopping");
         } else {
           setCodexStatus(`Status: ${state}`);
         }
@@ -880,6 +929,7 @@
 
     codexSocket.addEventListener("close", () => {
       setCodexStatus("Status: disconnected", "error");
+      setCodexRunState("stopped");
       loadCodexSessions({ silent: true });
     });
 
@@ -900,6 +950,21 @@
     const payload = `\u001b[200~${text}\u001b[201~\r`;
     codexSocket.send(JSON.stringify({ type: "input", data: payload }));
     codexPrompt.value = "";
+    setCodexRunState("running");
+  }
+
+  function sendCodexCommand(command) {
+    if (!codexSocket || codexSocket.readyState !== WebSocket.OPEN) {
+      setCodexStatus("Status: not connected", "error");
+      return;
+    }
+    const text = String(command || "").trim();
+    if (!text) {
+      return;
+    }
+    const payload = `\u001b[200~${text}\u001b[201~\r`;
+    codexSocket.send(JSON.stringify({ type: "input", data: payload }));
+    setCodexRunState("running");
   }
 
   function setActiveTreePath(path) {
@@ -1629,6 +1694,12 @@
       setTimeout(() => {
         loadCodexSessions({ silent: true });
       }, 800);
+    });
+  }
+
+  if (codexInitBtn) {
+    codexInitBtn.addEventListener("click", () => {
+      sendCodexCommand("/init");
     });
   }
 

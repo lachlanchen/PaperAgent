@@ -606,10 +606,26 @@ body {
   max-width: 96vw;
   margin: 0 auto 32px;
   padding: 0 28px;
+  display: block;
+  animation: fadeUp 0.8s ease 0.15s both;
+}
+
+.codex-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  gap: 22px;
+  align-items: stretch;
+}
+
+.codex-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 242, 236, 0.95));
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  box-shadow: var(--soft-shadow);
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  animation: fadeUp 0.8s ease 0.15s both;
+  gap: 14px;
 }
 
 .codex-header {
@@ -635,6 +651,10 @@ body {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.codex-panel .codex-actions {
+  align-items: stretch;
 }
 
 .codex-select {
@@ -668,6 +688,10 @@ body {
   display: flex;
   gap: 12px;
   align-items: stretch;
+}
+
+.codex-panel .codex-inputs {
+  flex-direction: column;
 }
 
 .codex-prompt {
@@ -752,6 +776,10 @@ body {
   .preview-panel {
     grid-column: 1 / -1;
     min-height: 46vh;
+  }
+
+  .codex-layout {
+    grid-template-columns: 1fr;
   }
 }
 
