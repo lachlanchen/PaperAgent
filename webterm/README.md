@@ -49,6 +49,7 @@ In dev mode, the PWA service worker is disabled to avoid stale assets.
 - Optional: enable Codex logging with `CODEX_LOG_DB=1` and Postgres env vars from `.env`.
 - See `references/database-setup.md` for database initialization.
 - Codex output is rendered via xterm.js to handle ANSI/TUI output.
+- You can type directly in the Codex output panel; keystrokes are forwarded to the Codex session.
 
 ## LAN access (unsafe unless you trust the network)
 

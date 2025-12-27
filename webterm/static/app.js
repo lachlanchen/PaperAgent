@@ -367,6 +367,12 @@
     codexTerm.loadAddon(codexFitAddon);
     codexTerm.open(codexOutput);
     codexFitAddon.fit();
+    codexTerm.onData((data) => {
+      if (!codexSocket || codexSocket.readyState !== WebSocket.OPEN) {
+        return;
+      }
+      codexSocket.send(JSON.stringify({ type: "input", data }));
+    });
   }
 
   function sendCodexResize() {
@@ -519,7 +525,8 @@
     if (!text) {
       return;
     }
-    codexSocket.send(JSON.stringify({ type: "prompt", text }));
+    const payload = `\u001b[200~${text}\u001b[201~\r`;
+    codexSocket.send(JSON.stringify({ type: "input", data: payload }));
     codexPrompt.value = "";
   }
 

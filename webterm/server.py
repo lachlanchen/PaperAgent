@@ -620,9 +620,19 @@ class CodexSession:
         payload = text.replace("\r", "")
         if "\n" in payload:
             payload = payload.replace("\n", "\r")
-        if not payload.endswith("\r"):
+        if not payload:
+            payload = "\r"
+        elif not payload.endswith("\r"):
             payload = payload + "\r"
         os.write(self.master_fd, payload.encode())
+
+    def send_raw(self, data):
+        if self._closed or self.master_fd is None:
+            return
+        if isinstance(data, str):
+            os.write(self.master_fd, data.encode())
+        else:
+            os.write(self.master_fd, data)
 
     def resize(self, rows, cols):
         if self._closed or self.master_fd is None:
@@ -737,6 +747,11 @@ class CodexWebSocket(tornado.websocket.WebSocketHandler):
                     return
                 if self.session:
                     self.session.resize(rows, cols)
+                return
+            if payload.get("type") == "input":
+                data = payload.get("data", "")
+                if self.session and data:
+                    self.session.send_raw(data)
                 return
             if payload.get("type") == "prompt":
                 text = payload.get("text", "")
