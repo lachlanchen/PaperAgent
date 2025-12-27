@@ -617,9 +617,12 @@ class CodexSession:
     def send_input(self, text):
         if self._closed or self.master_fd is None:
             return
-        if not text.endswith("\n"):
-            text = text + "\n"
-        os.write(self.master_fd, text.encode())
+        payload = text.replace("\r", "")
+        if "\n" in payload:
+            payload = payload.replace("\n", "\r")
+        if not payload.endswith("\r"):
+            payload = payload + "\r"
+        os.write(self.master_fd, payload.encode())
 
     def resize(self, rows, cols):
         if self._closed or self.master_fd is None:
