@@ -254,6 +254,17 @@
     return `/api/codex/sessions?${params.toString()}`;
   }
 
+  function buildCodexLatestUrl({ user, project }) {
+    const params = new URLSearchParams();
+    if (user) {
+      params.set("user", user);
+    }
+    if (project) {
+      params.set("project", project);
+    }
+    return `/api/codex/latest?${params.toString()}`;
+  }
+
   function buildLatexInitCommand(basePath) {
     const latexDir = `${basePath}/latex`;
     const texPath = `${latexDir}/main.tex`;
@@ -931,6 +942,30 @@
     }
   }
 
+  async function loadCodexLatestSession({ silent } = {}) {
+    const { user, project } = buildBasePath();
+    const url = buildCodexLatestUrl({ user, project });
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("bad response");
+      }
+      const data = await response.json();
+      if (!data.ok || !data.session?.session_id) {
+        return null;
+      }
+      if (data.session.run_state) {
+        setCodexRunState(data.session.run_state);
+      }
+      return data.session.session_id;
+    } catch (err) {
+      if (!silent) {
+        return null;
+      }
+    }
+    return null;
+  }
+
   function getStoredCodexSession() {
     try {
       return localStorage.getItem(CODEX_SESSION_KEY);
@@ -1068,6 +1103,13 @@
         const state = payload.state || "unknown";
         if (state === "ready") {
           setCodexStatus(`Status: ready (${id})`, "ready");
+          if (payload.run_state) {
+            setCodexRunState(payload.run_state);
+          } else {
+            markCodexIdle();
+          }
+        } else if (state === "restored") {
+          setCodexStatus(`Status: restored (${id})`, "ready");
           if (payload.run_state) {
             setCodexRunState(payload.run_state);
           } else {
@@ -2104,9 +2146,17 @@
   setCodexStatus("Status: idle");
   ensureCodexTerminal();
   if (codexSessionInput) {
-    const storedSession = getStoredCodexSession() || generateCodexSessionId();
-    codexSessionInput.value = storedSession;
-    connectCodex(storedSession, { resume: false });
+    const storedSession = getStoredCodexSession();
+    if (storedSession) {
+      codexSessionInput.value = storedSession;
+      connectCodex(storedSession, { resume: true });
+    } else {
+      loadCodexLatestSession({ silent: true }).then((latest) => {
+        const nextSession = latest || generateCodexSessionId();
+        codexSessionInput.value = nextSession;
+        connectCodex(nextSession, { resume: Boolean(latest) });
+      });
+    }
   }
   loadSshKey();
   loadProjectRemote({ silent: true });

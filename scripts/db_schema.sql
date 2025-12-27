@@ -44,3 +44,6 @@ CREATE TABLE IF NOT EXISTS codex_messages (
 
 CREATE INDEX IF NOT EXISTS codex_messages_session_id_idx
   ON codex_messages(session_id);
+
+CREATE INDEX IF NOT EXISTS codex_sessions_user_project_updated_idx
+  ON codex_sessions(username, project_id, updated_at);

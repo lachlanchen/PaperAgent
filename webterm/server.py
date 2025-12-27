@@ -967,6 +967,37 @@ class CodexLogger:
         rows.reverse()
         return "".join((row[0] or "") for row in rows)
 
+    def fetch_latest_session(self, username=None, project=None):
+        conn = self._connect()
+        if not conn:
+            return None
+        name = username or None
+        proj = project or None
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT session_id, username, project_id, updated_at
+                    FROM codex_sessions
+                    WHERE (%s IS NULL OR username = %s)
+                      AND (%s IS NULL OR project_id = %s)
+                    ORDER BY updated_at DESC
+                    LIMIT 1
+                    """,
+                    (name, name, proj, proj),
+                )
+                row = cur.fetchone()
+        except Exception:
+            return None
+        if not row:
+            return None
+        return {
+            "session_id": row[0],
+            "username": row[1],
+            "project_id": row[2],
+            "updated_at": row[3].isoformat() if row[3] else None,
+        }
+
 
 class CodexSession:
     def __init__(self, session_id, logger=None, username=None, project=None):
@@ -1087,6 +1118,8 @@ class CodexSession:
     def attach(self, client):
         self.clients.add(client)
         self.last_activity = time.time()
+        if self.logger:
+            self.logger.log_session(self.session_id, self.username, self.project)
         if self.buffer:
             history = "".join(self.buffer)
             client.write_message(json.dumps({"type": "history", "data": history}))
@@ -1253,6 +1286,57 @@ class CodexSessionsHandler(tornado.web.RequestHandler):
         self.write({"sessions": sessions})
 
 
+class CodexLatestHandler(tornado.web.RequestHandler):
+    def initialize(self, manager):
+        self.manager = manager
+
+    def get(self):
+        username = sanitize_segment(self.get_argument("user", ""), "")
+        project = sanitize_segment(self.get_argument("project", ""), "")
+        logger_ref = getattr(self.manager, "logger", None)
+        if not logger_ref or not logger_ref.enabled:
+            self.set_header("Content-Type", "application/json")
+            self.set_header("Cache-Control", "no-store")
+            self.write(
+                {
+                    "ok": False,
+                    "disabled": True,
+                    "reason": "codex db logging disabled",
+                }
+            )
+            return
+        session = logger_ref.fetch_latest_session(username or None, project or None)
+        if not session:
+            if logger_ref._connect_error:
+                self.set_header("Content-Type", "application/json")
+                self.set_header("Cache-Control", "no-store")
+                self.write(
+                    {
+                        "ok": False,
+                        "disabled": True,
+                        "reason": logger_ref._connect_error,
+                    }
+                )
+                return
+            self.set_header("Content-Type", "application/json")
+            self.set_header("Cache-Control", "no-store")
+            self.write({"ok": False})
+            return
+        active = None
+        if self.manager:
+            active = self.manager.get(session.get("session_id"))
+        payload = {
+            "ok": True,
+            "session": session,
+        }
+        if active:
+            payload["session"]["run_state"] = active.run_state
+            payload["session"]["state"] = "attached" if active.clients else "idle"
+        self.set_header("Content-Type", "application/json")
+        self.set_header("Cache-Control", "no-store")
+        self.write(payload)
+
+
 class CodexWebSocket(tornado.websocket.WebSocketHandler):
     def initialize(self, manager):
         self.manager = manager
@@ -1281,11 +1365,28 @@ class CodexWebSocket(tornado.websocket.WebSocketHandler):
         self.username = username or None
         self.project = project or None
         resume = self.get_argument("resume", "0").lower() in ("1", "true", "yes")
+        auto_restore = os.environ.get("CODEX_AUTO_RESTORE", "1").lower() in (
+            "1",
+            "true",
+            "yes",
+        )
         if resume:
             session = self.manager.get(session_id)
             if not session:
-                self.write_message(json.dumps({"type": "status", "state": "missing"}))
-                self.close()
+                if not auto_restore:
+                    self.write_message(
+                        json.dumps({"type": "status", "state": "missing"})
+                    )
+                    self.close()
+                    return
+                self.session = self.manager.get_or_create(
+                    session_id, username, project
+                )
+                self.session.attach(self)
+                self.write_message(
+                    json.dumps({"type": "status", "state": "restored"})
+                )
+                self.write_message(json.dumps({"type": "session", "id": session_id}))
                 return
             self.session = session
         else:
@@ -1452,6 +1553,7 @@ def make_app(shell, cwd, dev_mode=False):
         (r"/ws", TerminalWebSocket, {"shell": shell, "cwd": cwd}),
         (r"/codex/ws", CodexWebSocket, {"manager": codex_manager}),
         (r"/api/codex/sessions", CodexSessionsHandler, {"manager": codex_manager}),
+        (r"/api/codex/latest", CodexLatestHandler, {"manager": codex_manager}),
         (r"/api/pdf", PdfHandler),
         (r"/api/file", FileHandler),
         (r"/api/tree", TreeHandler),

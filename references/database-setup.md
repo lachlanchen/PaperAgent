@@ -52,5 +52,21 @@ Restart the web server after editing `.env`.
 Tip: When the DB is reachable, Codex resume uses the last logged terminal output
 to refill history if the in-memory buffer is empty.
 
+## 4) Codex session persistence
+
+When the DB is reachable, the web app can restore the last Codex session for a
+`user/project` pair using `/api/codex/latest`. The UI prefers the stored session
+ID (localStorage) and falls back to the latest DB session on first load.
+
+If a session ID is requested but not currently running, the server can recreate
+the Codex process with the same session ID and replay the stored history. This
+is controlled by:
+
+```
+CODEX_AUTO_RESTORE=1
+```
+
+(`1` is the default.)
+
 The `projects` table also stores `git_remote` so the UI can prefill the remote URL.
 The `users` table stores `git_name` and `git_email` for git identity persistence.

@@ -156,6 +156,19 @@ The server tracks a lightweight run state so the UI can show **running** vs **id
 
 This state is broadcast over the WebSocket as `{"type":"run_state","state":"running|idle"}` and also included in `/api/codex/sessions` for session dropdown refreshes.
 
+### Session restore
+
+If Postgres logging is enabled, the UI can request the latest session ID via:
+
+```
+GET /api/codex/latest?user=<user>&project=<project>
+```
+
+On startup, the UI prefers the stored session ID (localStorage) and falls back
+to the latest DB session if none is stored. When `CODEX_AUTO_RESTORE=1` (default),
+`/codex/ws?resume=1` will recreate a missing session with the same ID and replay
+the stored output history.
+
 ## Defaults
 
 - Container user: `paperagent`
