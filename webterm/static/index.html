@@ -80,6 +80,24 @@
         </div>
 
         <div class="field">
+          <label for="gitUserName">Git user.name</label>
+          <input id="gitUserName" class="input" type="text" placeholder="Your Name" />
+        </div>
+
+        <div class="field">
+          <label for="gitUserEmail">Git user.email</label>
+          <input
+            id="gitUserEmail"
+            class="input"
+            type="email"
+            placeholder="you@example.com"
+          />
+          <div class="inline-actions">
+            <button id="setGitIdentity" class="btn ghost">Set Git Identity</button>
+          </div>
+        </div>
+
+        <div class="field">
           <label for="gitRemote">Git remote URL</label>
           <input
             id="gitRemote"
@@ -166,24 +184,6 @@
               <option value="">Active sessions</option>
             </select>
             <input id="codexSession" class="input" type="text" placeholder="Session id" />
-          </div>
-
-          <div class="field">
-            <label for="gitUserName">Git user.name</label>
-            <input id="gitUserName" class="input" type="text" placeholder="Your Name" />
-          </div>
-
-          <div class="field">
-            <label for="gitUserEmail">Git user.email</label>
-            <input
-              id="gitUserEmail"
-              class="input"
-              type="email"
-              placeholder="you@example.com"
-            />
-            <div class="inline-actions">
-              <button id="setGitIdentity" class="btn ghost">Set Git Identity</button>
-            </div>
           </div>
 
           <div class="codex-actions">
