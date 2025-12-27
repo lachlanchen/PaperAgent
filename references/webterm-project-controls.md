@@ -137,6 +137,8 @@ By default the UI requests `limit=0` (no limit) so it shows all stored sessions 
 
 When available, the dropdown label shows the Codex CLI session ID (parsed from `/status` output) and the bridge session ID in parentheses.
 
+If a session is missing the CLI ID, the UI sends `/status` automatically after connect (and you can click **Sync /status**) to populate it.
+
 Default Codex args can be configured with:
 
 ```

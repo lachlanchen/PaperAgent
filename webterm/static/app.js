@@ -42,6 +42,7 @@
   const setGitIdentityBtn = document.getElementById("setGitIdentity");
   const codexNewBtn = document.getElementById("codexNew");
   const codexResumeBtn = document.getElementById("codexResume");
+  const codexStatusSyncBtn = document.getElementById("codexStatusSync");
   const codexStopBtn = document.getElementById("codexStop");
   const codexInitBtn = document.getElementById("codexInit");
   const createGitignoreBtn = document.getElementById("createGitignore");
@@ -63,6 +64,7 @@
   const CODEX_SESSIONS_REFRESH_MS = 8000;
   const CODEX_HISTORY_REFRESH_MS = 30000;
   const CODEX_HISTORY_LIMIT = 0;
+  const CODEX_STATUS_SYNC_DELAY_MS = 600;
   const CODEX_DONE_RE = /(?:^|[\r\n])─ Worked for /;
   const CODEX_PROMPT_RE = /(^|[\r\n])›\s/g;
   const CODEX_WORK_RE = /(?:^|[\r\n])\s*[•◦][^\r\n]*esc to interrupt/i;
@@ -110,6 +112,8 @@
   let codexHadWorkLine = false;
   let codexActiveSessions = [];
   let codexHistorySessions = [];
+  let codexStatusSyncTimer = null;
+  const codexStatusRequested = new Set();
   let projectRemoteTimer = null;
   let gitRemoteDirty = false;
   let userIdentityTimer = null;
@@ -947,6 +951,51 @@
     return parts.join(" - ");
   }
 
+  function resolveCliSessionId(sessionId) {
+    if (!sessionId) {
+      return "";
+    }
+    const active = (codexActiveSessions || []).find(
+      (session) => session.id === sessionId
+    );
+    if (active?.cli_session_id) {
+      return active.cli_session_id;
+    }
+    const historical = (codexHistorySessions || []).find(
+      (session) => session.session_id === sessionId
+    );
+    return historical?.cli_session_id || "";
+  }
+
+  function requestCodexStatus({ force } = {}) {
+    if (!codexSocket || codexSocket.readyState !== WebSocket.OPEN) {
+      return;
+    }
+    const sessionId = codexSessionInput?.value || "";
+    if (!sessionId) {
+      return;
+    }
+    if (!force) {
+      if (resolveCliSessionId(sessionId)) {
+        return;
+      }
+      if (codexStatusRequested.has(sessionId)) {
+        return;
+      }
+    }
+    codexStatusRequested.add(sessionId);
+    sendCodexCommand("/status");
+  }
+
+  function scheduleCodexStatusSync(delay = CODEX_STATUS_SYNC_DELAY_MS) {
+    if (codexStatusSyncTimer) {
+      clearTimeout(codexStatusSyncTimer);
+    }
+    codexStatusSyncTimer = setTimeout(() => {
+      requestCodexStatus({ force: false });
+    }, delay);
+  }
+
   function syncCodexSessionSelection(value) {
     if (!codexSessionList) {
       return;
@@ -1197,6 +1246,7 @@
         sendCodexResize();
       }, 50);
       loadCodexSessions({ silent: true });
+      scheduleCodexStatusSync();
     });
 
     codexSocket.addEventListener("message", (event) => {
@@ -2081,6 +2131,12 @@
     });
   }
 
+  if (codexStatusSyncBtn) {
+    codexStatusSyncBtn.addEventListener("click", () => {
+      requestCodexStatus({ force: true });
+    });
+  }
+
   if (codexStopBtn) {
     codexStopBtn.addEventListener("click", () => {
       if (!codexSocket || codexSocket.readyState !== WebSocket.OPEN) {
@@ -2148,6 +2204,7 @@
       if (codexSessionList.value) {
         codexSessionInput.value = codexSessionList.value;
         setStoredCodexSession(codexSessionList.value);
+        scheduleCodexStatusSync();
       }
     });
   }
