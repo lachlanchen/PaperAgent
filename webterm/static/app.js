@@ -182,7 +182,7 @@
   function buildLatexCompileCommand(basePath) {
     const latexDir = `${basePath}/latex`;
     const latexmkCmd =
-      "latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex";
+      "latexmk -pdf -interaction=nonstopmode -halt-on-error -g main.tex";
     const missingPattern = "File \\`[^']+\\.sty' not found";
     const missingExtract =
       "grep -oE \"File \\`[^']+\\.sty' not found\" main.log | head -n1 | sed \"s/.*\\`//; s/' not found//\"";

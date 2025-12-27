@@ -55,6 +55,9 @@ mkdir -p /home/<user>/Projects/<project>/latex && \
   pwd
 ```
 
+The compile step uses `-g` to force a rebuild when you click it, even if
+`latexmk` thinks outputs are up-to-date.
+
 If a `*.sty` package is missing, the PWA will attempt to install dependencies
 and re-run the compile. Example mapping:
 
