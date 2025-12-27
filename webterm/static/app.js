@@ -183,15 +183,15 @@
     const latexDir = `${basePath}/latex`;
     const latexmkCmd =
       "latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex";
-    const missingPattern = "File \\`[^']\\+\\.sty' not found";
+    const missingPattern = "File \\`[^']+\\.sty' not found";
     const missingExtract =
-      "grep -o \"File \\`[^']\\+\\.sty' not found\" main.log | head -n1 | sed \"s/.*\\`//; s/' not found//\"";
+      "grep -oE \"File \\`[^']+\\.sty' not found\" main.log | head -n1 | sed \"s/.*\\`//; s/' not found//\"";
     return [
       `mkdir -p ${latexDir}`,
       `cd ${latexDir}`,
       'if command -v sudo >/dev/null 2>&1; then SUDO=sudo; else SUDO=""; fi',
-      `${latexmkCmd} || {`,
-      `  if [ -f main.log ] && grep -q "${missingPattern}" main.log; then`,
+      `if ! ${latexmkCmd}; then`,
+      `  if [ -f main.log ] && grep -Eq "${missingPattern}" main.log; then`,
       `    missing=$(${missingExtract})`,
       '    echo "[webterm] Missing LaTeX package: $missing"',
       '    if command -v apt-get >/dev/null 2>&1; then',
@@ -201,7 +201,7 @@
       "      esac",
       '      echo "[webterm] Installing $pkg..."',
       '      $SUDO apt-get update && $SUDO apt-get install -y "$pkg"',
-      `      ${latexmkCmd}`,
+      `      if ! ${latexmkCmd}; then exit 1; fi`,
       "    else",
       '      echo "[webterm] apt-get not available; install TeX packages manually."',
       "      exit 1",
@@ -209,10 +209,10 @@
       "  else",
       "    exit 1",
       "  fi",
-      "}",
+      "fi",
       "ls -lh main.pdf",
       "pwd",
-    ].join(" && ");
+    ].join("\n");
   }
 
   function buildCodexInstallCommand() {
