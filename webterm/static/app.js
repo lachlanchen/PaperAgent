@@ -34,6 +34,7 @@
 
   let socket = null;
   let resizeTimer = null;
+  let devMode = false;
 
   function sanitizeSegment(value, fallback) {
     const trimmed = String(value || "").trim();
@@ -181,6 +182,44 @@
     socket.send(command);
   }
 
+  async function disableServiceWorkerCache() {
+    if (!("serviceWorker" in navigator)) {
+      return;
+    }
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((reg) => reg.unregister()));
+  }
+
+  async function maybeStartDevReload() {
+    const url = "/__dev__/version";
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        return;
+      }
+      const payload = await response.json();
+      let lastVersion = payload.version;
+      devMode = true;
+      await disableServiceWorkerCache();
+      setInterval(async () => {
+        try {
+          const check = await fetch(url, { cache: "no-store" });
+          if (!check.ok) {
+            return;
+          }
+          const next = await check.json();
+          if (next.version !== lastVersion) {
+            location.reload();
+          }
+        } catch (err) {
+          // ignore
+        }
+      }, 1500);
+    } catch (err) {
+      // ignore
+    }
+  }
+
   function buildCheckCdCommand(basePath, shouldCd) {
     const cdPart = shouldCd ? `cd ${basePath} && pwd` : "true";
     return [
@@ -283,14 +322,18 @@
     });
   }
 
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/sw.js").catch(() => {
-      // offline or blocked; ignore
-    });
-  }
-
   updatePathPreview();
   setProjectStatus("unknown");
   fitAddon.fit();
   connect();
+  maybeStartDevReload().finally(() => {
+    if (devMode) {
+      return;
+    }
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {
+        // offline or blocked; ignore
+      });
+    }
+  });
 })();

@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
+import tornado.autoreload
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -29,9 +30,36 @@ def set_pty_size(fd, rows, cols):
     fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
 
 
+def compute_dev_version():
+    paths = [os.path.abspath(__file__)]
+    for root, _, files in os.walk(STATIC_DIR):
+        for name in files:
+            if name.startswith("."):
+                continue
+            paths.append(os.path.join(root, name))
+    latest = 0.0
+    for path in paths:
+        try:
+            mtime = os.path.getmtime(path)
+        except OSError:
+            continue
+        if mtime > latest:
+            latest = mtime
+    return int(latest * 1000)
+
+
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
         self.render("index.html")
+
+
+class DevVersionHandler(tornado.web.RequestHandler):
+    def initialize(self, version_func):
+        self.version_func = version_func
+
+    def get(self):
+        self.set_header("Cache-Control", "no-store")
+        self.write({"version": self.version_func()})
 
 
 class TerminalWebSocket(tornado.websocket.WebSocketHandler):
@@ -129,23 +157,25 @@ class TerminalWebSocket(tornado.websocket.WebSocketHandler):
         self.proc = None
 
 
-def make_app(shell, cwd):
+def make_app(shell, cwd, dev_mode=False):
     settings = {
         "static_path": STATIC_DIR,
         "template_path": STATIC_DIR,
         "compress_response": True,
     }
-    return tornado.web.Application(
-        [
-            (r"/", MainHandler),
-            (r"/ws", TerminalWebSocket, {"shell": shell, "cwd": cwd}),
-            (r"/(manifest.json)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
-            (r"/(sw.js)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
-            (r"/(icon.svg)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
-            (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
-        ],
-        **settings,
-    )
+    routes = [
+        (r"/", MainHandler),
+        (r"/ws", TerminalWebSocket, {"shell": shell, "cwd": cwd}),
+        (r"/(manifest.json)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
+        (r"/(sw.js)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
+        (r"/(icon.svg)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
+        (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
+    ]
+    if dev_mode:
+        routes.append(
+            (r"/__dev__/version", DevVersionHandler, {"version_func": compute_dev_version})
+        )
+    return tornado.web.Application(routes, **settings)
 
 
 def main():
@@ -162,9 +192,21 @@ def main():
         default=os.getcwd(),
         help="Working directory for the shell",
     )
+    parser.add_argument(
+        "--dev",
+        action="store_true",
+        help="Enable auto-reload on code changes",
+    )
     args = parser.parse_args()
 
-    app = make_app(args.shell, args.cwd)
+    if args.dev:
+        tornado.autoreload.start()
+        tornado.autoreload.watch(os.path.abspath(__file__))
+        for root, _, files in os.walk(STATIC_DIR):
+            for name in files:
+                tornado.autoreload.watch(os.path.join(root, name))
+
+    app = make_app(args.shell, args.cwd, dev_mode=args.dev)
     app.listen(args.port, args.host)
     print(f"Web terminal running at http://{args.host}:{args.port}")
     tornado.ioloop.IOLoop.current().start()

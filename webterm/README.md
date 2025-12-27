@@ -20,6 +20,16 @@ python server.py --host 127.0.0.1 --port 8765
 
 Open http://127.0.0.1:8765 in your browser.
 
+## Dev auto-reload
+
+Start the server with `--dev` to auto-reload the browser when code changes:
+
+```
+python server.py --host 127.0.0.1 --port 8765 --dev
+```
+
+In dev mode, the PWA service worker is disabled to avoid stale assets.
+
 ## Notes
 
 - If `webterm/docker-shell.sh` exists and is executable, the server will use it by default (Docker shell).
