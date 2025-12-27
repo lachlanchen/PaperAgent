@@ -10,6 +10,7 @@ import termios
 import struct
 import shutil
 import shlex
+import time
 import uuid
 from collections import deque
 
@@ -439,7 +440,7 @@ class TreeHandler(tornado.web.RequestHandler):
 
 class CodexLogger:
     def __init__(self):
-        self.enabled = os.environ.get("CODEX_LOG_DB", "0").lower() in ("1", "true", "yes")
+        self.enabled = os.environ.get("CODEX_LOG_DB", "1").lower() in ("1", "true", "yes")
         self.log_output = (
             os.environ.get("CODEX_LOG_OUTPUT", "1").lower() in ("1", "true", "yes")
         )
@@ -538,6 +539,8 @@ class CodexSession:
         self.logger = logger
         self.username = username
         self.project = project
+        self.created_at = time.time()
+        self.last_activity = self.created_at
         if self.logger:
             self.logger.log_session(self.session_id, self.username, self.project)
         self._spawn()
@@ -569,6 +572,7 @@ class CodexSession:
         while self.buffer_len > self.max_buffer and self.buffer:
             dropped = self.buffer.popleft()
             self.buffer_len -= len(dropped)
+        self.last_activity = time.time()
 
     def _broadcast(self, payload):
         if not self.clients:
@@ -606,6 +610,7 @@ class CodexSession:
 
     def attach(self, client):
         self.clients.add(client)
+        self.last_activity = time.time()
         if self.buffer:
             history = "".join(self.buffer)
             client.write_message(json.dumps({"type": "history", "data": history}))
@@ -617,6 +622,7 @@ class CodexSession:
     def send_input(self, text):
         if self._closed or self.master_fd is None:
             return
+        self.last_activity = time.time()
         payload = text.replace("\r", "")
         if "\n" in payload:
             payload = payload.replace("\n", "\r")
@@ -629,6 +635,7 @@ class CodexSession:
     def send_raw(self, data):
         if self._closed or self.master_fd is None:
             return
+        self.last_activity = time.time()
         if isinstance(data, str):
             os.write(self.master_fd, data.encode())
         else:
@@ -675,9 +682,15 @@ class CodexManager:
         self.sessions = {}
         self.logger = CodexLogger()
 
-    def get_or_create(self, session_id, username=None, project=None):
+    def get(self, session_id):
         session = self.sessions.get(session_id)
         if session and not session._closed:
+            return session
+        return None
+
+    def get_or_create(self, session_id, username=None, project=None):
+        session = self.get(session_id)
+        if session:
             return session
         session = CodexSession(
             session_id,
@@ -698,6 +711,47 @@ class CodexManager:
     def restart(self, session_id, username=None, project=None):
         self.stop(session_id)
         return self.get_or_create(session_id, username, project)
+
+    def list_sessions(self, username=None, project=None):
+        sessions = []
+        for session_id, session in self.sessions.items():
+            if session._closed:
+                continue
+            if username and session.username and session.username != username:
+                continue
+            if project and session.project and session.project != project:
+                continue
+            state = "running"
+            if session.proc and session.proc.poll() is not None:
+                state = "closed"
+            sessions.append(
+                {
+                    "id": session_id,
+                    "username": session.username,
+                    "project": session.project,
+                    "state": state,
+                    "created_at": session.created_at,
+                    "last_activity": session.last_activity,
+                }
+            )
+        sessions.sort(
+            key=lambda entry: entry.get("last_activity") or entry.get("created_at") or 0,
+            reverse=True,
+        )
+        return sessions
+
+
+class CodexSessionsHandler(tornado.web.RequestHandler):
+    def initialize(self, manager):
+        self.manager = manager
+
+    def get(self):
+        username = sanitize_segment(self.get_argument("user", ""), "")
+        project = sanitize_segment(self.get_argument("project", ""), "")
+        sessions = self.manager.list_sessions(username or None, project or None)
+        self.set_header("Content-Type", "application/json")
+        self.set_header("Cache-Control", "no-store")
+        self.write({"sessions": sessions})
 
 
 class CodexWebSocket(tornado.websocket.WebSocketHandler):
@@ -727,7 +781,16 @@ class CodexWebSocket(tornado.websocket.WebSocketHandler):
         project = sanitize_segment(self.get_argument("project", ""), "")
         self.username = username or None
         self.project = project or None
-        self.session = self.manager.get_or_create(session_id, username, project)
+        resume = self.get_argument("resume", "0").lower() in ("1", "true", "yes")
+        if resume:
+            session = self.manager.get(session_id)
+            if not session:
+                self.write_message(json.dumps({"type": "status", "state": "missing"}))
+                self.close()
+                return
+            self.session = session
+        else:
+            self.session = self.manager.get_or_create(session_id, username, project)
         self.session.attach(self)
         self.write_message(json.dumps({"type": "session", "id": session_id}))
 
@@ -885,6 +948,7 @@ def make_app(shell, cwd, dev_mode=False):
         (r"/", MainHandler),
         (r"/ws", TerminalWebSocket, {"shell": shell, "cwd": cwd}),
         (r"/codex/ws", CodexWebSocket, {"manager": codex_manager}),
+        (r"/api/codex/sessions", CodexSessionsHandler, {"manager": codex_manager}),
         (r"/api/pdf", PdfHandler),
         (r"/api/file", FileHandler),
         (r"/api/tree", TreeHandler),

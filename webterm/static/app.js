@@ -28,6 +28,7 @@
   const refreshTreeBtn = document.getElementById("refreshTree");
   const fileTreeStatus = document.getElementById("fileTreeStatus");
   const codexSessionInput = document.getElementById("codexSession");
+  const codexSessionList = document.getElementById("codexSessionList");
   const codexNewBtn = document.getElementById("codexNew");
   const codexResumeBtn = document.getElementById("codexResume");
   const codexStopBtn = document.getElementById("codexStop");
@@ -45,6 +46,7 @@
   const DEFAULT_TREE_DEPTH = 5;
   const CODEX_SESSION_KEY = "paperagent.codex.session";
   const CODEX_OUTPUT_LIMIT = 60000;
+  const CODEX_SESSIONS_REFRESH_MS = 8000;
 
   const term = new Terminal({
     cursorBlink: true,
@@ -78,6 +80,7 @@
   let codexSocket = null;
   let codexTerm = null;
   let codexFitAddon = null;
+  let codexSessionsTimer = null;
 
   function sanitizeSegment(value, fallback) {
     const trimmed = String(value || "").trim();
@@ -166,6 +169,17 @@
       depth: String(depth),
     });
     return `/api/tree?${params.toString()}`;
+  }
+
+  function buildCodexSessionsUrl({ user, project }) {
+    const params = new URLSearchParams();
+    if (user) {
+      params.set("user", user);
+    }
+    if (project) {
+      params.set("project", project);
+    }
+    return `/api/codex/sessions?${params.toString()}`;
   }
 
   function buildLatexInitCommand(basePath) {
@@ -420,6 +434,70 @@
     return Math.random().toString(36).slice(2, 14);
   }
 
+  function formatCodexSessionLabel(session) {
+    const parts = [];
+    if (session?.id) {
+      parts.push(session.id);
+    }
+    if (session?.username || session?.project) {
+      parts.push(`${session.username || "?"}/${session.project || "?"}`);
+    }
+    if (session?.state) {
+      parts.push(session.state);
+    }
+    return parts.join(" - ");
+  }
+
+  function syncCodexSessionSelection(value) {
+    if (!codexSessionList) {
+      return;
+    }
+    const hasValue = Array.from(codexSessionList.options).some(
+      (option) => option.value === value
+    );
+    codexSessionList.value = hasValue ? value : "";
+  }
+
+  function updateCodexSessionList(sessions) {
+    if (!codexSessionList) {
+      return;
+    }
+    codexSessionList.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = sessions?.length
+      ? "Active sessions"
+      : "No active sessions";
+    codexSessionList.appendChild(placeholder);
+    (sessions || []).forEach((session) => {
+      const option = document.createElement("option");
+      option.value = session.id;
+      option.textContent = formatCodexSessionLabel(session);
+      codexSessionList.appendChild(option);
+    });
+    syncCodexSessionSelection(codexSessionInput?.value || "");
+  }
+
+  async function loadCodexSessions({ silent } = {}) {
+    if (!codexSessionList) {
+      return;
+    }
+    const { user, project } = buildBasePath();
+    const url = buildCodexSessionsUrl({ user, project });
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("bad response");
+      }
+      const data = await response.json();
+      updateCodexSessionList(data.sessions || []);
+    } catch (err) {
+      if (!silent) {
+        updateCodexSessionList([]);
+      }
+    }
+  }
+
   function getStoredCodexSession() {
     try {
       return localStorage.getItem(CODEX_SESSION_KEY);
@@ -436,13 +514,26 @@
     }
   }
 
-  function connectCodex(sessionId) {
+  function connectCodex(sessionId, options = {}) {
     if (!codexSessionInput) {
       return;
     }
-    const id = sanitizeSegment(sessionId, generateCodexSessionId());
+    const rawId = String(sessionId || "").trim();
+    if (options.resume && !rawId) {
+      setCodexStatus("Status: session id required", "error");
+      return;
+    }
+    const id = sanitizeSegment(
+      rawId,
+      options.resume ? "" : generateCodexSessionId()
+    );
+    if (!id) {
+      setCodexStatus("Status: session id required", "error");
+      return;
+    }
     codexSessionInput.value = id;
     setStoredCodexSession(id);
+    syncCodexSessionSelection(id);
     if (codexSocket) {
       try {
         codexSocket.close();
@@ -458,6 +549,9 @@
       user,
       project,
     });
+    if (options.resume) {
+      wsParams.set("resume", "1");
+    }
     const wsUrl = `${protocol}://${location.host}/codex/ws?${wsParams.toString()}`;
     codexSocket = new WebSocket(wsUrl);
 
@@ -473,6 +567,7 @@
         }
         sendCodexResize();
       }, 50);
+      loadCodexSessions({ silent: true });
     });
 
     codexSocket.addEventListener("message", (event) => {
@@ -493,6 +588,8 @@
           setCodexStatus(`Status: ready (${id})`, "ready");
         } else if (state === "closed") {
           setCodexStatus("Status: closed", "error");
+        } else if (state === "missing") {
+          setCodexStatus("Status: missing session", "error");
         } else if (state === "stopping") {
           setCodexStatus("Status: stopping", "loading");
         } else {
@@ -509,6 +606,7 @@
 
     codexSocket.addEventListener("close", () => {
       setCodexStatus("Status: disconnected", "error");
+      loadCodexSessions({ silent: true });
     });
 
     codexSocket.addEventListener("error", () => {
@@ -1130,14 +1228,16 @@
   if (codexNewBtn) {
     codexNewBtn.addEventListener("click", () => {
       resetCodexOutput();
-      connectCodex(generateCodexSessionId());
+      connectCodex(generateCodexSessionId(), { resume: false });
+      loadCodexSessions({ silent: true });
     });
   }
 
   if (codexResumeBtn) {
     codexResumeBtn.addEventListener("click", () => {
       resetCodexOutput();
-      connectCodex(codexSessionInput?.value || "");
+      const candidate = codexSessionInput?.value || codexSessionList?.value || "";
+      connectCodex(candidate, { resume: true });
     });
   }
 
@@ -1162,6 +1262,24 @@
         event.preventDefault();
         sendCodexPrompt();
       }
+    });
+  }
+
+  if (codexSessionList) {
+    codexSessionList.addEventListener("change", () => {
+      if (!codexSessionInput) {
+        return;
+      }
+      if (codexSessionList.value) {
+        codexSessionInput.value = codexSessionList.value;
+        setStoredCodexSession(codexSessionList.value);
+      }
+    });
+  }
+
+  if (codexSessionInput) {
+    codexSessionInput.addEventListener("input", () => {
+      syncCodexSessionSelection(codexSessionInput.value);
     });
   }
 
@@ -1270,8 +1388,13 @@
   if (codexSessionInput) {
     const storedSession = getStoredCodexSession() || generateCodexSessionId();
     codexSessionInput.value = storedSession;
-    connectCodex(storedSession);
+    connectCodex(storedSession, { resume: false });
   }
+  loadCodexSessions({ silent: true });
+  clearInterval(codexSessionsTimer);
+  codexSessionsTimer = setInterval(() => {
+    loadCodexSessions({ silent: true });
+  }, CODEX_SESSIONS_REFRESH_MS);
   fitAddon.fit();
   ensureEditor();
   connect();

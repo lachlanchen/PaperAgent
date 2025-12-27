@@ -125,7 +125,10 @@
           </div>
         </div>
         <div class="codex-actions">
-          <input id="codexSession" class="input" type="text" />
+          <select id="codexSessionList" class="input codex-select">
+            <option value="">Active sessions</option>
+          </select>
+          <input id="codexSession" class="input" type="text" placeholder="Session id" />
           <button id="codexNew" class="btn ghost">New Session</button>
           <button id="codexResume" class="btn ghost">Resume</button>
           <button id="codexStop" class="btn">Stop</button>

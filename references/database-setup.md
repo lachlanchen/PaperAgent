@@ -26,12 +26,13 @@ This will:
 - create the database if missing
 - apply `scripts/db_schema.sql`
 
-## 3) Enable Codex logging (optional)
+## 3) Codex logging (default on)
 
-Set in `.env`:
+Codex logging is enabled by default when the database is reachable. To disable it,
+set in `.env`:
 
 ```
-CODEX_LOG_DB=1
+CODEX_LOG_DB=0
 ```
 
 Then install the Postgres driver in your Python environment:
