@@ -196,16 +196,20 @@
             <button id="gitCommitPush" class="btn ghost">Status + Add + Commit + Push</button>
           </div>
 
-          <div class="codex-inputs">
-            <textarea id="codexPrompt" class="codex-prompt" rows="3"></textarea>
-            <button id="codexSend" class="btn primary">Send</button>
-          </div>
-
           <div id="codexStatus" class="codex-status">Status: idle</div>
         </aside>
 
         <div class="codex-body">
           <div id="codexOutput" class="codex-output"></div>
+          <div class="codex-inputs">
+            <textarea
+              id="codexPrompt"
+              class="codex-prompt"
+              rows="3"
+              placeholder="Enter sends · Shift+Enter = newline"
+            ></textarea>
+            <button id="codexSend" class="btn primary">Send</button>
+          </div>
         </div>
       </div>
     </section>

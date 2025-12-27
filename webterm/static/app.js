@@ -2189,7 +2189,7 @@
 
   if (codexPrompt) {
     codexPrompt.addEventListener("keydown", (event) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
         sendCodexPrompt();
       }

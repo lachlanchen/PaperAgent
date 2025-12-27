@@ -671,10 +671,12 @@ body {
   background: #0f1419;
   min-height: 32vh;
   box-shadow: var(--soft-shadow);
+  display: flex;
+  flex-direction: column;
 }
 
 .codex-output {
-  height: 100%;
+  flex: 1;
   padding: 10px;
   overflow: auto;
 }
@@ -691,6 +693,9 @@ body {
   display: flex;
   gap: 12px;
   align-items: stretch;
+  padding: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.9);
 }
 
 .codex-panel .codex-inputs {
