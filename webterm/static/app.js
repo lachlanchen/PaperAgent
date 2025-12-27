@@ -61,8 +61,8 @@
   const CODEX_SESSION_KEY = "paperagent.codex.session";
   const CODEX_OUTPUT_LIMIT = 60000;
   const CODEX_SESSIONS_REFRESH_MS = 8000;
-  const CODEX_READY_RE = /(?:^|[\r\n])\s*\d+% context left\b/i;
   const CODEX_DONE_RE = /(?:^|[\r\n])─ Worked for /;
+  const CODEX_PROMPT_RE = /(^|[\r\n])›\s/g;
   const PROJECT_REMOTE_PREFIX = "paperagent.project.remote";
   const USER_IDENTITY_PREFIX = "paperagent.user.git";
 
@@ -103,6 +103,7 @@
   let codexStatusClass = "";
   let codexRunState = "idle";
   let codexOutputBuffer = "";
+  let codexPendingPromptEcho = false;
   let projectRemoteTimer = null;
   let gitRemoteDirty = false;
   let userIdentityTimer = null;
@@ -721,6 +722,7 @@
 
   function startCodexRun() {
     codexOutputBuffer = "";
+    codexPendingPromptEcho = true;
     markCodexRunning();
   }
 
@@ -814,13 +816,27 @@
       return;
     }
     codexOutputBuffer = `${codexOutputBuffer}${cleaned}`.slice(-2000);
-    if (CODEX_READY_RE.test(codexOutputBuffer) || CODEX_DONE_RE.test(codexOutputBuffer)) {
+    if (CODEX_DONE_RE.test(codexOutputBuffer)) {
+      codexPendingPromptEcho = false;
       markCodexIdle();
       return;
     }
-    if (source === "output" && codexRunState !== "running") {
-      markCodexRunning();
+    if (source !== "output" || codexRunState !== "running") {
+      return;
     }
+    const promptMatches = cleaned.match(CODEX_PROMPT_RE);
+    const promptCount = promptMatches ? promptMatches.length : 0;
+    if (!promptCount) {
+      return;
+    }
+    if (codexPendingPromptEcho) {
+      codexPendingPromptEcho = false;
+      if (promptCount > 1) {
+        markCodexIdle();
+      }
+      return;
+    }
+    markCodexIdle();
   }
 
   function appendCodexOutput(text, source) {
