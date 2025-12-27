@@ -5,6 +5,7 @@
   const userInput = document.getElementById("userInput");
   const projectInput = document.getElementById("projectInput");
   const createProjectBtn = document.getElementById("createProject");
+  const initLatexBtn = document.getElementById("initLatex");
   const pathPreview = document.getElementById("pathPreview");
 
   const DEFAULT_USER = "paperagent";
@@ -39,6 +40,30 @@
     const user = sanitizeSegment(userInput.value, DEFAULT_USER);
     const project = sanitizeSegment(projectInput.value, DEFAULT_PROJECT);
     return { user, project, path: `/home/${user}/Projects/${project}` };
+  }
+
+  function buildLatexInitCommand(basePath) {
+    const latexDir = `${basePath}/latex`;
+    const texPath = `${latexDir}/main.tex`;
+    const latexLines = [
+      "\\\\documentclass{article}",
+      "\\\\usepackage{graphicx}",
+      "\\\\begin{document}",
+      "Hello PaperAgent.",
+      "\\\\end{document}",
+      "",
+    ];
+    const printfArgs = latexLines
+      .map((line) => `'${line.replace(/'/g, "'\\\\''")}'`)
+      .join(" ");
+
+    return [
+      `mkdir -p ${latexDir}/latex_figures`,
+      `if [ ! -f ${texPath} ]; then printf '%s\\\\n' ${printfArgs} > ${texPath}; fi`,
+      `cd ${latexDir}`,
+      "latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex",
+      "ls -lh main.pdf",
+    ].join(" && ");
   }
 
   function updatePathPreview() {
@@ -135,6 +160,19 @@
         "pwd",
       ].join(" && ");
 
+      sendCommand(`${command}\n`);
+      term.focus();
+    });
+  }
+
+  if (initLatexBtn) {
+    initLatexBtn.addEventListener("click", () => {
+      const { user, project, path } = buildBasePath();
+      userInput.value = user;
+      projectInput.value = project;
+      updatePathPreview();
+
+      const command = buildLatexInitCommand(path);
       sendCommand(`${command}\n`);
       term.focus();
     });

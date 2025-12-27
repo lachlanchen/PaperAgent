@@ -2,7 +2,9 @@
 
 The PWA now includes a left control panel with a **Create Project + cd** button. When clicked, it creates a container-only project layout and changes the terminal to that directory.
 
-## What the button does
+## What the buttons do
+
+### Create Project + cd
 
 It sends the following command into the terminal:
 
@@ -13,6 +15,20 @@ mkdir -p /home/<user>/Projects/<project>/{code,data,figures,latex/latex_figures,
 ```
 
 You will see the output (`pwd`) in the terminal on the right panel.
+
+### Init LaTeX + compile
+
+It creates a minimal `latex/main.tex` (if missing) and runs `latexmk`:
+
+```
+mkdir -p /home/<user>/Projects/<project>/latex/latex_figures && \
+  if [ ! -f /home/<user>/Projects/<project>/latex/main.tex ]; then \
+    printf '%s\n' "\\documentclass{article}" "\\usepackage{graphicx}" "\\begin{document}" "Hello PaperAgent." "\\end{document}" "" \
+    > /home/<user>/Projects/<project>/latex/main.tex; \
+  fi && \
+  cd /home/<user>/Projects/<project>/latex && \
+  latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
+```
 
 ## Defaults
 
@@ -25,4 +41,3 @@ You can edit these fields before clicking the button. Invalid characters are rep
 
 - This creates the folder structure **inside the container** (not on the host) unless you explicitly bind-mount that path.
 - The terminal must be connected to the Docker container (see `webterm/docker-shell.sh`).
-

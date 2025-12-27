@@ -56,10 +56,16 @@
 
         <div id="pathPreview" class="path-preview"></div>
 
-        <button id="createProject" class="btn primary">Create Project + cd</button>
+        <div class="control-actions">
+          <button id="createProject" class="btn primary">Create Project + cd</button>
+          <button id="initLatex" class="btn ghost">Init LaTeX + compile</button>
+        </div>
 
         <div class="helper">
           Creates: code, data, figures, latex/latex_figures, artifacts
+        </div>
+        <div class="helper">
+          LaTeX: latex/main.tex + latexmk compile
         </div>
         <div class="helper code">
           mkdir -p /home/&lt;user&gt;/Projects/&lt;project&gt;/...
