@@ -985,11 +985,9 @@
     ].join("\n");
   }
 
-  function buildCodexCommitPushPrompt(message) {
-    const safeMessage = String(message || "update").trim() || "update";
+  function buildCodexCommitPushPrompt() {
     return [
       "Please run: git status -sb, git add -A, git commit, git push.",
-      `Use commit message: ${safeMessage}`,
       "If there are no changes, just report that.",
     ].join("\n");
   }
@@ -1751,7 +1749,7 @@
 
   if (gitCommitPushBtn) {
     gitCommitPushBtn.addEventListener("click", () => {
-      sendCodexCommand(buildCodexCommitPushPrompt("update"));
+      sendCodexCommand(buildCodexCommitPushPrompt());
     });
   }
 
