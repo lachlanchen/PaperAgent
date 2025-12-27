@@ -628,13 +628,16 @@ body {
 
 .codex-output {
   height: 100%;
-  padding: 14px;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #e5e7eb;
+  padding: 10px;
   overflow: auto;
-  white-space: pre-wrap;
+}
+
+.codex-output .xterm-viewport {
+  overflow: auto;
+}
+
+.codex-output .xterm {
+  height: 100%;
 }
 
 .codex-inputs {

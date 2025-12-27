@@ -76,6 +76,8 @@
   let activeTreePath = null;
   let treeLoadTimer = null;
   let codexSocket = null;
+  let codexTerm = null;
+  let codexFitAddon = null;
 
   function sanitizeSegment(value, fallback) {
     const trimmed = String(value || "").trim();
@@ -336,19 +338,51 @@
     }
   }
 
+  function ensureCodexTerminal() {
+    if (codexTerm || !codexOutput || !window.Terminal) {
+      return;
+    }
+    codexTerm = new Terminal({
+      cursorBlink: true,
+      fontFamily: "JetBrains Mono, monospace",
+      fontSize: 12,
+      convertEol: true,
+      scrollback: 2000,
+      theme: {
+        background: "#0f1419",
+        foreground: "#e5e7eb",
+        cursor: "#9ae6b4",
+        selectionBackground: "#1f2937",
+      },
+    });
+    codexFitAddon = new FitAddon.FitAddon();
+    codexTerm.loadAddon(codexFitAddon);
+    codexTerm.open(codexOutput);
+    codexFitAddon.fit();
+  }
+
+  function resetCodexOutput() {
+    if (codexTerm) {
+      codexTerm.reset();
+      return;
+    }
+    if (codexOutput) {
+      codexOutput.textContent = "";
+    }
+  }
+
   function appendCodexOutput(text) {
+    ensureCodexTerminal();
+    if (codexTerm) {
+      codexTerm.write(text);
+      return;
+    }
     if (!codexOutput) {
       return;
     }
-    const shouldScroll =
-      codexOutput.scrollTop + codexOutput.clientHeight >=
-      codexOutput.scrollHeight - 40;
     codexOutput.textContent += text;
     if (codexOutput.textContent.length > CODEX_OUTPUT_LIMIT) {
       codexOutput.textContent = codexOutput.textContent.slice(-CODEX_OUTPUT_LIMIT);
-    }
-    if (shouldScroll) {
-      codexOutput.scrollTop = codexOutput.scrollHeight;
     }
   }
 
@@ -455,7 +489,6 @@
       return;
     }
     codexSocket.send(JSON.stringify({ type: "prompt", text }));
-    appendCodexOutput(`\n> ${text}\n`);
     codexPrompt.value = "";
   }
 
@@ -955,7 +988,12 @@
 
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(sendResize, 150);
+    resizeTimer = setTimeout(() => {
+      sendResize();
+      if (codexFitAddon) {
+        codexFitAddon.fit();
+      }
+    }, 150);
   });
 
   reconnectBtn.addEventListener("click", () => {
@@ -1052,18 +1090,14 @@
 
   if (codexNewBtn) {
     codexNewBtn.addEventListener("click", () => {
-      if (codexOutput) {
-        codexOutput.textContent = "";
-      }
+      resetCodexOutput();
       connectCodex(generateCodexSessionId());
     });
   }
 
   if (codexResumeBtn) {
     codexResumeBtn.addEventListener("click", () => {
-      if (codexOutput) {
-        codexOutput.textContent = "";
-      }
+      resetCodexOutput();
       connectCodex(codexSessionInput?.value || "");
     });
   }
@@ -1193,6 +1227,7 @@
   setEditorStatus("Status: idle");
   setTreeStatus("Status: idle");
   setCodexStatus("Status: idle");
+  ensureCodexTerminal();
   if (codexSessionInput) {
     const storedSession = getStoredCodexSession() || generateCodexSessionId();
     codexSessionInput.value = storedSession;

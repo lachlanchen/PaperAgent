@@ -47,6 +47,7 @@ In dev mode, the PWA service worker is disabled to avoid stale assets.
 - If Codex is installed via NVM in the container, set `CODEX_NVM_DIR=/root/.nvm`.
 - Optional: enable Codex logging with `CODEX_LOG_DB=1` and Postgres env vars from `.env`.
 - See `references/database-setup.md` for database initialization.
+- Codex output is rendered via xterm.js to handle ANSI/TUI output.
 
 ## LAN access (unsafe unless you trust the network)
 
