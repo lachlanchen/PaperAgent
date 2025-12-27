@@ -278,3 +278,19 @@ This is a soft sandbox:
 - Network isolation: no (host networking on Linux, full outbound network on others)
 
 If you want stricter isolation later, remove host networking and mount only the project directory.
+
+## On-the-fly LaTeX packages (optional)
+
+Ubuntu/Debian TeX Live installs via `apt` do not auto-download missing packages like MiKTeX. Two options:
+
+1) Install missing packages explicitly with `apt` (recommended).
+2) Use `texliveonfly` (still uses `apt` under the hood).
+
+Install and run:
+
+```
+apt-get install -y texlive-extra-utils
+texliveonfly -c xelatex main.tex
+```
+
+If you need true auto-installation via `tlmgr`, install TeX Live from the upstream installer instead of `apt` (do not mix the two).
