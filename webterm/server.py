@@ -20,6 +20,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 SAFE_SEGMENT = re.compile(r"[^a-zA-Z0-9._-]+")
 SAFE_PDF = re.compile(r"^[a-zA-Z0-9._-]+\.pdf$", re.IGNORECASE)
+MAX_FILE_BYTES = 1024 * 1024
 
 
 def resolve_default_shell():
@@ -50,6 +51,23 @@ def sanitize_pdf_name(value):
     return None
 
 
+def sanitize_relpath(value):
+    if not value:
+        return None
+    cleaned = value.strip().lstrip("/")
+    if not cleaned:
+        return None
+    parts = []
+    for part in cleaned.split("/"):
+        if part in ("", ".", ".."):
+            return None
+        safe = SAFE_SEGMENT.sub("_", part)
+        if not safe or safe in (".", ".."):
+            return None
+        parts.append(safe)
+    return "/".join(parts)
+
+
 def resolve_container_name():
     container = os.environ.get("WEBTERM_CONTAINER")
     if container:
@@ -60,7 +78,7 @@ def resolve_container_name():
     return None
 
 
-def read_pdf_bytes(path):
+def read_file_bytes(path):
     container = resolve_container_name()
     if container and shutil.which("docker"):
         result = subprocess.run(
@@ -74,6 +92,70 @@ def read_pdf_bytes(path):
     if os.path.isfile(path):
         with open(path, "rb") as handle:
             return handle.read()
+    return None
+
+
+def write_file_bytes(path, content):
+    container = resolve_container_name()
+    if container and shutil.which("docker"):
+        result = subprocess.run(
+            [
+                "docker",
+                "exec",
+                "-i",
+                container,
+                "sh",
+                "-c",
+                'mkdir -p "$(dirname "$1")" && cat > "$1"',
+                "_",
+                path,
+            ],
+            input=content,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        return result.returncode == 0
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb") as handle:
+            handle.write(content)
+        return True
+    except OSError:
+        return False
+
+
+def read_file_meta(path):
+    container = resolve_container_name()
+    if container and shutil.which("docker"):
+        result = subprocess.run(
+            [
+                "docker",
+                "exec",
+                container,
+                "sh",
+                "-c",
+                'stat -c "%Y %s" "$1"',
+                "_",
+                path,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        if result.returncode == 0 and result.stdout:
+            try:
+                parts = result.stdout.decode().strip().split()
+                return {"mtime": int(parts[0]), "size": int(parts[1])}
+            except (ValueError, IndexError):
+                return None
+        return None
+    if os.path.isfile(path):
+        try:
+            stat = os.stat(path)
+        except OSError:
+            return None
+        return {"mtime": int(stat.st_mtime), "size": int(stat.st_size)}
     return None
 
 
@@ -119,7 +201,7 @@ class PdfHandler(tornado.web.RequestHandler):
             self.write({"error": "invalid file name"})
             return
         pdf_path = f"/home/{user}/Projects/{project}/latex/{name}"
-        data = read_pdf_bytes(pdf_path)
+        data = read_file_bytes(pdf_path)
         if not data:
             self.set_status(404)
             self.write({"error": "pdf not found"})
@@ -128,6 +210,94 @@ class PdfHandler(tornado.web.RequestHandler):
         self.set_header("Cache-Control", "no-store")
         self.set_header("Content-Disposition", f'inline; filename="{name}"')
         self.finish(data)
+
+
+class FileHandler(tornado.web.RequestHandler):
+    def write_error_json(self, status, message):
+        self.set_status(status)
+        self.set_header("Content-Type", "application/json")
+        self.write({"error": message})
+
+    def get(self):
+        user = sanitize_segment(self.get_argument("user", "paperagent"), "paperagent")
+        project = sanitize_segment(self.get_argument("project", "demo-paper"), "demo-paper")
+        rel_path = sanitize_relpath(self.get_argument("path", "latex/main.tex"))
+        if not rel_path:
+            self.write_error_json(400, "invalid path")
+            return
+        base_path = f"/home/{user}/Projects/{project}"
+        target = os.path.normpath(os.path.join(base_path, rel_path))
+        if not target.startswith(base_path):
+            self.write_error_json(400, "invalid path")
+            return
+        meta_only = self.get_argument("meta", "0").lower() in ("1", "true", "yes")
+        meta = read_file_meta(target)
+        if not meta:
+            self.write_error_json(404, "file not found")
+            return
+        if meta_only:
+            self.set_header("Content-Type", "application/json")
+            self.set_header("Cache-Control", "no-store")
+            self.write({"path": rel_path, "mtime": meta["mtime"], "size": meta["size"]})
+            return
+        if meta["size"] > MAX_FILE_BYTES:
+            self.write_error_json(413, "file too large")
+            return
+        data = read_file_bytes(target)
+        if data is None:
+            self.write_error_json(404, "file not found")
+            return
+        content = data.decode("utf-8", errors="replace")
+        self.set_header("Content-Type", "application/json")
+        self.set_header("Cache-Control", "no-store")
+        self.write(
+            {
+                "path": rel_path,
+                "content": content,
+                "mtime": meta["mtime"],
+                "size": meta["size"],
+            }
+        )
+
+    def post(self):
+        try:
+            payload = json.loads(self.request.body.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            self.write_error_json(400, "invalid json")
+            return
+        user = sanitize_segment(payload.get("user") or "paperagent", "paperagent")
+        project = sanitize_segment(payload.get("project") or "demo-paper", "demo-paper")
+        rel_path = sanitize_relpath(payload.get("path"))
+        if not rel_path:
+            self.write_error_json(400, "invalid path")
+            return
+        base_path = f"/home/{user}/Projects/{project}"
+        target = os.path.normpath(os.path.join(base_path, rel_path))
+        if not target.startswith(base_path):
+            self.write_error_json(400, "invalid path")
+            return
+        content = payload.get("content", "")
+        if not isinstance(content, str):
+            self.write_error_json(400, "invalid content")
+            return
+        data = content.encode("utf-8")
+        if len(data) > MAX_FILE_BYTES:
+            self.write_error_json(413, "file too large")
+            return
+        if not write_file_bytes(target, data):
+            self.write_error_json(500, "failed to write")
+            return
+        meta = read_file_meta(target) or {"mtime": 0, "size": len(data)}
+        self.set_header("Content-Type", "application/json")
+        self.set_header("Cache-Control", "no-store")
+        self.write(
+            {
+                "ok": True,
+                "path": rel_path,
+                "mtime": meta["mtime"],
+                "size": meta["size"],
+            }
+        )
 
 
 class TerminalWebSocket(tornado.websocket.WebSocketHandler):
@@ -235,6 +405,7 @@ def make_app(shell, cwd, dev_mode=False):
         (r"/", MainHandler),
         (r"/ws", TerminalWebSocket, {"shell": shell, "cwd": cwd}),
         (r"/api/pdf", PdfHandler),
+        (r"/api/file", FileHandler),
         (r"/(manifest.json)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
         (r"/(sw.js)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
         (r"/(icon.svg)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),

@@ -14,6 +14,14 @@
     />
     <link
       rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css"
+    />
+    <link
+      rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css"
     />
     <link rel="stylesheet" href="/static/styles.css" />
@@ -104,11 +112,48 @@
       </section>
     </main>
 
+    <section class="editor-section">
+      <div class="editor-header">
+        <div>
+          <div class="editor-title">Project Editor</div>
+          <div class="editor-subtitle">
+            Sublime-like editing with live sync to the container.
+          </div>
+        </div>
+        <div class="editor-actions">
+          <input
+            id="editorPath"
+            class="input"
+            type="text"
+            value="latex/main.tex"
+          />
+          <button id="loadFile" class="btn ghost">Load</button>
+          <button id="saveFile" class="btn primary">Save</button>
+          <label class="toggle">
+            <input id="watchFile" type="checkbox" checked />
+            Watch
+          </label>
+        </div>
+      </div>
+      <div class="editor-body">
+        <textarea id="editorText"></textarea>
+      </div>
+      <div id="editorStatus" class="editor-status">Status: idle</div>
+    </section>
+
     <section class="hint">
       <div class="pill">Scope: Docker shell</div>
       <div class="meta">Run: python server.py --host 0.0.0.0 --port 8766</div>
     </section>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/stex/stex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
     <script src="/static/app.js" defer></script>

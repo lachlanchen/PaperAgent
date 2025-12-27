@@ -65,6 +65,17 @@ The right panel loads the compiled PDF directly from the container. It fetches:
 
 Use **Refresh PDF** to re-fetch the file after compiling. The **Open** button opens the PDF in a new tab. You can change the PDF file name in the input (defaults to `main.pdf`).
 
+## Editor panel
+
+The bottom editor panel uses a Sublime-style CodeMirror editor. It loads and saves files inside the container through:
+
+```
+GET /api/file?user=<user>&project=<project>&path=latex/main.tex
+POST /api/file
+```
+
+The **Watch** toggle polls every ~3s and reloads when it detects a newer mtime (unless you have unsaved edits).
+
 ## Defaults
 
 - Container user: `paperagent`

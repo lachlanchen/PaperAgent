@@ -38,6 +38,7 @@ In dev mode, the PWA service worker is disabled to avoid stale assets.
 - The terminal runs the shell from your current working directory. Use `--cwd` to change.
 - Resize events are forwarded to the PTY so full-screen tools behave correctly.
 - The PDF preview panel fetches `/api/pdf?user=<user>&project=<project>&file=main.pdf` and streams it from the container.
+- The editor panel uses CodeMirror (loaded from CDN) and reads/writes files via `/api/file`.
 
 ## LAN access (unsafe unless you trust the network)
 

@@ -16,12 +16,19 @@
   const openPdfLink = document.getElementById("openPdf");
   const pdfEmpty = document.getElementById("pdfEmpty");
   const pdfStatus = document.getElementById("pdfStatus");
+  const editorPathInput = document.getElementById("editorPath");
+  const editorTextArea = document.getElementById("editorText");
+  const loadFileBtn = document.getElementById("loadFile");
+  const saveFileBtn = document.getElementById("saveFile");
+  const editorStatus = document.getElementById("editorStatus");
+  const watchFileToggle = document.getElementById("watchFile");
 
   const DEFAULT_USER = "paperagent";
   const DEFAULT_PROJECT = "demo-paper";
   const PATH_EXISTS_MARKER = "__WEBTERM_PATH_EXISTS__";
   const PATH_MISSING_MARKER = "__WEBTERM_PATH_MISSING__";
   const PDF_NAME_RE = /^[a-zA-Z0-9._-]+\.pdf$/i;
+  const DEFAULT_EDITOR_FILE = "latex/main.tex";
 
   const term = new Terminal({
     cursorBlink: true,
@@ -44,11 +51,63 @@
   let pdfRefreshTimer = null;
   let devMode = false;
   let pdfObjectUrl = null;
+  let editor = null;
+  let editorDirty = false;
+  let editorPollTimer = null;
+  let editorLoadTimer = null;
+  let lastRemoteMtime = null;
+  let editorLoading = false;
 
   function sanitizeSegment(value, fallback) {
     const trimmed = String(value || "").trim();
     const safe = trimmed.replace(/[^a-zA-Z0-9._-]/g, "_");
     return safe || fallback;
+  }
+
+  function sanitizeRelPath(value, fallback) {
+    const trimmed = String(value || "").trim().replace(/^\/+/, "");
+    if (!trimmed) {
+      return fallback;
+    }
+    const parts = trimmed.split("/").filter(Boolean);
+    if (!parts.length) {
+      return fallback;
+    }
+    const cleaned = [];
+    for (const part of parts) {
+      if (part === "." || part === "..") {
+        return fallback;
+      }
+      const safe = part.replace(/[^a-zA-Z0-9._-]/g, "_");
+      if (!safe || safe === "." || safe === "..") {
+        return fallback;
+      }
+      cleaned.push(safe);
+    }
+    return cleaned.join("/");
+  }
+
+  function pickEditorMode(relPath) {
+    if (!relPath) {
+      return null;
+    }
+    const lower = relPath.toLowerCase();
+    if (lower.endsWith(".tex") || lower.endsWith(".sty") || lower.endsWith(".cls")) {
+      return "stex";
+    }
+    if (lower.endsWith(".py")) {
+      return "python";
+    }
+    if (lower.endsWith(".md")) {
+      return "markdown";
+    }
+    if (lower.endsWith(".json")) {
+      return { name: "javascript", json: true };
+    }
+    if (lower.endsWith(".js")) {
+      return "javascript";
+    }
+    return null;
   }
 
   function buildBasePath() {
@@ -164,6 +223,89 @@
     pdfEmpty.style.display = visible ? "flex" : "none";
   }
 
+  function setEditorStatus(text, state) {
+    if (!editorStatus) {
+      return;
+    }
+    editorStatus.textContent = text;
+    editorStatus.classList.remove("ready", "dirty", "error", "loading");
+    if (state) {
+      editorStatus.classList.add(state);
+    }
+  }
+
+  function setEditorDirty(isDirty) {
+    editorDirty = isDirty;
+    if (editorDirty) {
+      setEditorStatus("Status: modified (unsaved)", "dirty");
+    }
+  }
+
+  function ensureEditor() {
+    if (!editorTextArea || editor) {
+      return;
+    }
+    if (!window.CodeMirror) {
+      setEditorStatus("Status: CodeMirror missing", "error");
+      return;
+    }
+    editor = window.CodeMirror.fromTextArea(editorTextArea, {
+      lineNumbers: true,
+      lineWrapping: true,
+      theme: "material-darker",
+      indentUnit: 2,
+      tabSize: 2,
+      styleActiveLine: true,
+      matchBrackets: true,
+      autoCloseBrackets: true,
+    });
+    editor.on("change", () => {
+      if (editorLoading) {
+        return;
+      }
+      setEditorDirty(true);
+    });
+  }
+
+  function getEditorValue() {
+    if (editor) {
+      return editor.getValue();
+    }
+    return editorTextArea ? editorTextArea.value : "";
+  }
+
+  function setEditorValue(content) {
+    if (editor) {
+      editor.setValue(content);
+    } else if (editorTextArea) {
+      editorTextArea.value = content;
+    }
+  }
+
+  function setEditorMode(path) {
+    if (!editor) {
+      return;
+    }
+    const mode = pickEditorMode(path);
+    if (mode) {
+      editor.setOption("mode", mode);
+    } else {
+      editor.setOption("mode", null);
+    }
+  }
+
+  function buildFileApiUrl({ user, project, path, meta }) {
+    const params = new URLSearchParams({
+      user,
+      project,
+      path,
+    });
+    if (meta) {
+      params.set("meta", "1");
+    }
+    return `/api/file?${params.toString()}`;
+  }
+
   function setStatus(text, online) {
     statusEl.textContent = text;
     statusEl.classList.toggle("online", Boolean(online));
@@ -228,6 +370,120 @@
     clearTimeout(pdfRefreshTimer);
     pdfRefreshTimer = setTimeout(() => {
       loadPdfPreview();
+    }, delay);
+  }
+
+  async function loadEditorFile({ silent } = {}) {
+    if (!editorPathInput) {
+      return;
+    }
+    ensureEditor();
+    const { user, project } = buildBasePath();
+    const relPath = sanitizeRelPath(editorPathInput.value, DEFAULT_EDITOR_FILE);
+    editorPathInput.value = relPath;
+    setEditorStatus("Status: loading", "loading");
+    try {
+      const url = buildFileApiUrl({ user, project, path: relPath });
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("missing");
+      }
+      const payload = await response.json();
+      editorLoading = true;
+      setEditorValue(payload.content || "");
+      setEditorMode(relPath);
+      if (editor) {
+        editor.refresh();
+      }
+      editorDirty = false;
+      lastRemoteMtime = payload.mtime || null;
+      setEditorStatus(`Status: loaded (${relPath})`, "ready");
+      editorLoading = false;
+    } catch (err) {
+      editorLoading = false;
+      if (!silent) {
+        setEditorStatus(`Status: missing (${relPath})`, "error");
+      }
+    }
+  }
+
+  async function saveEditorFile() {
+    if (!editorPathInput) {
+      return;
+    }
+    ensureEditor();
+    const { user, project } = buildBasePath();
+    const relPath = sanitizeRelPath(editorPathInput.value, DEFAULT_EDITOR_FILE);
+    editorPathInput.value = relPath;
+    setEditorStatus("Status: saving", "loading");
+    try {
+      const response = await fetch("/api/file", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user,
+          project,
+          path: relPath,
+          content: getEditorValue(),
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("save failed");
+      }
+      const payload = await response.json();
+      editorDirty = false;
+      lastRemoteMtime = payload.mtime || null;
+      setEditorStatus(`Status: saved (${relPath})`, "ready");
+      if (relPath.toLowerCase().endsWith(".tex")) {
+        schedulePdfRefresh(1200);
+      }
+    } catch (err) {
+      setEditorStatus("Status: save failed", "error");
+    }
+  }
+
+  async function pollEditorFile() {
+    if (!watchFileToggle || !watchFileToggle.checked || !editorPathInput) {
+      return;
+    }
+    const { user, project } = buildBasePath();
+    const relPath = sanitizeRelPath(editorPathInput.value, DEFAULT_EDITOR_FILE);
+    const url = buildFileApiUrl({ user, project, path: relPath, meta: true });
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        return;
+      }
+      const payload = await response.json();
+      if (!payload.mtime) {
+        return;
+      }
+      if (lastRemoteMtime && payload.mtime > lastRemoteMtime) {
+        if (editorDirty) {
+          setEditorStatus("Status: remote change detected", "dirty");
+        } else {
+          await loadEditorFile({ silent: true });
+        }
+      }
+    } catch (err) {
+      // ignore
+    }
+  }
+
+  function startEditorWatch() {
+    clearInterval(editorPollTimer);
+    if (!watchFileToggle || !watchFileToggle.checked) {
+      return;
+    }
+    editorPollTimer = setInterval(() => {
+      pollEditorFile();
+    }, 3000);
+  }
+
+  function scheduleEditorLoad(delay = 0) {
+    clearTimeout(editorLoadTimer);
+    editorLoadTimer = setTimeout(() => {
+      loadEditorFile({ silent: true });
     }, delay);
   }
 
@@ -415,6 +671,41 @@
     });
   }
 
+  if (loadFileBtn) {
+    loadFileBtn.addEventListener("click", () => {
+      loadEditorFile();
+    });
+  }
+
+  if (saveFileBtn) {
+    saveFileBtn.addEventListener("click", () => {
+      saveEditorFile();
+    });
+  }
+
+  if (editorPathInput) {
+    editorPathInput.addEventListener("change", () => {
+      editorPathInput.value = sanitizeRelPath(
+        editorPathInput.value,
+        DEFAULT_EDITOR_FILE
+      );
+      scheduleEditorLoad(200);
+    });
+  }
+
+  if (watchFileToggle) {
+    watchFileToggle.addEventListener("change", () => {
+      startEditorWatch();
+    });
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+      event.preventDefault();
+      saveEditorFile();
+    }
+  });
+
   if (refreshPdfBtn) {
     refreshPdfBtn.addEventListener("click", () => {
       schedulePdfRefresh(0);
@@ -432,19 +723,25 @@
       updatePathPreview();
       setProjectStatus("unknown");
       schedulePdfRefresh(500);
+      scheduleEditorLoad(700);
     });
     projectInput.addEventListener("input", () => {
       updatePathPreview();
       setProjectStatus("unknown");
       schedulePdfRefresh(500);
+      scheduleEditorLoad(700);
     });
   }
 
   updatePathPreview();
   setProjectStatus("unknown");
   setPdfStatus("Status: idle");
+  setEditorStatus("Status: idle");
   fitAddon.fit();
+  ensureEditor();
   connect();
+  scheduleEditorLoad(400);
+  startEditorWatch();
   maybeStartDevReload().finally(() => {
     if (devMode) {
       return;

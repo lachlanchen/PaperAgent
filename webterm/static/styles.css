@@ -352,6 +352,107 @@ body {
   font-weight: 600;
 }
 
+.editor-section {
+  max-width: 1480px;
+  margin: 0 auto 24px;
+  padding: 0 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeUp 0.8s ease 0.1s both;
+}
+
+.editor-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.editor-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.editor-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.toggle input {
+  accent-color: var(--accent);
+}
+
+.editor-body {
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+  background: #12161c;
+  min-height: 48vh;
+  height: 52vh;
+  box-shadow: var(--soft-shadow);
+}
+
+.editor-body textarea {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #12161c;
+  color: #e5e7eb;
+  padding: 16px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  resize: none;
+}
+
+.editor-body .CodeMirror {
+  height: 100%;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.editor-status {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.editor-status.ready {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.editor-status.dirty {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.editor-status.error {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.editor-status.loading {
+  color: #0ea5e9;
+  font-weight: 600;
+}
+
 .hint {
   margin: 0 auto 28px;
   max-width: 1480px;
@@ -421,5 +522,10 @@ body {
 
   .terminal {
     height: 60vh;
+  }
+
+  .editor-body {
+    min-height: 42vh;
+    height: 46vh;
   }
 }
