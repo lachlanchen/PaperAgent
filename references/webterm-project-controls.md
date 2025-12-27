@@ -93,6 +93,12 @@ nvcc --version
 nvidia-smi
 ```
 
+If `nvidia-smi` is missing, install the host driver and NVIDIA Container Toolkit:
+
+```
+./scripts/install_nvidia_host.sh
+```
+
 ## PDF preview panel
 
 The right panel loads the compiled PDF directly from the container. It fetches:

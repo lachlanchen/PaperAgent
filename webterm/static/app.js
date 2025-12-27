@@ -248,10 +248,18 @@
     return [
       'if ! command -v apt-get >/dev/null 2>&1; then echo "apt-get not found"; exit 1; fi',
       'if command -v sudo >/dev/null 2>&1; then SUDO=sudo; else SUDO=""; fi',
+      'if [ -f /.dockerenv ]; then',
+      '  echo "[webterm] Container detected. Installing CUDA toolkit in container."',
+      '  echo "[webterm] Host NVIDIA driver is required for GPU access."',
+      '  echo "[webterm] Run on host: ./scripts/install_nvidia_host.sh"',
+      "fi",
       '$SUDO apt-get update',
       '$SUDO apt-get install -y nvidia-cuda-toolkit',
       "nvcc --version || true",
       "nvidia-smi || true",
+      'if ! command -v nvidia-smi >/dev/null 2>&1; then',
+      '  echo "[webterm] nvidia-smi not found. Install NVIDIA driver on host."',
+      "fi",
     ].join("\n");
   }
 

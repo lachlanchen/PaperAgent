@@ -61,6 +61,12 @@ sudo systemctl restart docker
 
 After installing drivers, reboot if `nvidia-smi` does not work.
 
+You can also run the helper script from the repo root:
+
+```
+./scripts/install_nvidia_host.sh
+```
+
 ### One-shot bootstrap (host + container)
 
 If you want a single script to install Docker on the host, create the sandbox

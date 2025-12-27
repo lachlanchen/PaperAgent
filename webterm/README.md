@@ -41,7 +41,7 @@ In dev mode, the PWA service worker is disabled to avoid stale assets.
 - The editor panel uses CodeMirror (loaded from CDN) and reads/writes files via `/api/file`.
 - The file tree loads from `/api/tree` (defaults to depth 5) and lets you click to open a file.
 - The control panel includes an installer button for NVM + Node LTS + `@openai/codex`.
-- The control panel includes a CUDA toolkit install button (requires GPU-enabled container).
+- The control panel includes a CUDA toolkit install button (requires GPU-enabled container + host driver).
 - The LaTeX compile action uses `-g` to force a rebuild and will attempt to install missing `*.sty` packages (fallback to `texlive-full`).
 - The Codex panel connects via `/codex/ws` and spawns Codex with `CODEX_ARGS` (default `-s danger-full-access -a never`).
 - Codex starts in `/home/<user>/Projects/<project>` when available (falls back to `/workspace`).
