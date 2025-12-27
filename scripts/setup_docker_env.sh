@@ -23,6 +23,95 @@ USE_GPU="${USE_GPU:-0}"
 INSTALL_CUDA="${INSTALL_CUDA:-0}"
 CUDA_PACKAGE="${CUDA_PACKAGE:-nvidia-cuda-toolkit}"
 
+usage() {
+  cat <<'EOF'
+Usage: ./scripts/setup_docker_env.sh [options]
+
+Options:
+  --name <container>        Container name (default: paperagent-sandbox)
+  --image <image>           Base image (default: ubuntu:22.04)
+  --project-user <user>     Project user inside container (default: paperagent)
+  --project-id <id>         Project id (default: demo-paper)
+  --codex-user <user>       User to install Codex for (default: root)
+  --texlive <full|minimal>  TeX Live profile (default: full)
+  --no-project-layout       Skip creating project folders
+  --no-home-mount           Skip mounting host home into /host-home
+  --no-host-network         Disable --network host
+  --with-gpu                Run container with --gpus all
+  --install-nvidia          Install host NVIDIA driver + container toolkit
+  --install-cuda            Install CUDA toolkit in container
+  --full-gpu                Enable GPU, install host NVIDIA + CUDA toolkit
+  -h, --help                Show this help
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --name)
+      if [[ -z "${2:-}" ]]; then
+        log "Error: --name requires a value."
+        usage
+        exit 1
+      fi
+      CONTAINER_NAME="$2"; shift 2 ;;
+    --image)
+      if [[ -z "${2:-}" ]]; then
+        log "Error: --image requires a value."
+        usage
+        exit 1
+      fi
+      IMAGE="$2"; shift 2 ;;
+    --project-user)
+      if [[ -z "${2:-}" ]]; then
+        log "Error: --project-user requires a value."
+        usage
+        exit 1
+      fi
+      PROJECT_USER="$2"; shift 2 ;;
+    --project-id)
+      if [[ -z "${2:-}" ]]; then
+        log "Error: --project-id requires a value."
+        usage
+        exit 1
+      fi
+      PROJECT_ID="$2"; shift 2 ;;
+    --codex-user)
+      if [[ -z "${2:-}" ]]; then
+        log "Error: --codex-user requires a value."
+        usage
+        exit 1
+      fi
+      CODEX_USER="$2"; shift 2 ;;
+    --texlive)
+      if [[ -z "${2:-}" ]]; then
+        log "Error: --texlive requires a value."
+        usage
+        exit 1
+      fi
+      TEXLIVE_PROFILE="$2"; shift 2 ;;
+    --no-project-layout)
+      CREATE_PROJECT_LAYOUT="0"; shift ;;
+    --no-home-mount)
+      MOUNT_HOME="0"; shift ;;
+    --no-host-network)
+      USE_HOST_NETWORK="0"; shift ;;
+    --with-gpu)
+      USE_GPU="1"; shift ;;
+    --install-nvidia)
+      INSTALL_NVIDIA="1"; shift ;;
+    --install-cuda)
+      INSTALL_CUDA="1"; shift ;;
+    --full-gpu)
+      USE_GPU="1"; INSTALL_NVIDIA="1"; INSTALL_CUDA="1"; shift ;;
+    -h|--help)
+      usage; exit 0 ;;
+    *)
+      log "Unknown option: $1"
+      usage
+      exit 1 ;;
+  esac
+done
+
 if [[ "$(uname -s)" != "Linux" ]]; then
   USE_HOST_NETWORK="0"
 fi
@@ -195,6 +284,16 @@ create_project_layout() {
      chown -R ${PROJECT_USER}:${PROJECT_USER} /home/${PROJECT_USER}/Projects/${PROJECT_ID}"
 }
 
+init_project_repo() {
+  log "Initializing git repo in /home/${PROJECT_USER}/Projects/${PROJECT_ID}."
+  "${DOCKER_BIN[@]}" exec -u "$PROJECT_USER" \
+    -e HOME="/home/${PROJECT_USER}" \
+    "$CONTAINER_NAME" bash -lc \
+    "mkdir -p /home/${PROJECT_USER}/Projects/${PROJECT_ID} && \
+     cd /home/${PROJECT_USER}/Projects/${PROJECT_ID} && \
+     if [ ! -d .git ]; then git init -b main; else git branch -M main; fi"
+}
+
 install_codex() {
   log "Installing NVM + Node LTS + Codex for user ${CODEX_USER}."
   if [[ "$CODEX_USER" == "root" ]]; then
@@ -231,6 +330,7 @@ main() {
   ensure_container_user
   ensure_project_user
   create_project_layout
+  init_project_repo
   install_codex
 
   log "Done."
