@@ -104,8 +104,8 @@ body {
   animation: fadeUp 0.8s ease;
   max-width: 96vw;
   margin: 0 auto;
-  min-height: 90vh;
-  height: 150vh;
+  min-height: 75vh;
+  height: clamp(560px, 85vh, 980px);
 }
 
 .panel {
