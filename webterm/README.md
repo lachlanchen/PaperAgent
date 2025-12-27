@@ -22,6 +22,8 @@ Open http://127.0.0.1:8765 in your browser.
 
 ## Notes
 
+- If `webterm/docker-shell.sh` exists and is executable, the server will use it by default (Docker shell).
+- To force the host shell, pass `--shell /bin/bash` (or your preferred shell).
 - The server binds to localhost by default. Keep it that way unless you add auth and TLS.
 - The terminal runs the shell from your current working directory. Use `--cwd` to change.
 - Resize events are forwarded to the PTY so full-screen tools behave correctly.
@@ -41,3 +43,15 @@ hostname -I
 ```
 
 Then open `http://<LAN_IP>:8766`. Do not expose this to the internet without auth/TLS.
+
+## Docker shell permissions
+
+If the Docker shell fails with "permission denied", make sure the web server is started from a shell that has Docker group access:
+
+```
+newgrp docker
+cd webterm
+python server.py --host 0.0.0.0 --port 8766
+```
+
+If you do not want to log out, `newgrp docker` starts a new shell with the right group membership.

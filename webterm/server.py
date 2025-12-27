@@ -17,6 +17,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 
 
+def resolve_default_shell():
+    docker_shell = os.path.join(BASE_DIR, "docker-shell.sh")
+    if os.path.isfile(docker_shell) and os.access(docker_shell, os.X_OK):
+        return docker_shell
+    return os.environ.get("SHELL", "/bin/bash")
+
+
 def set_pty_size(fd, rows, cols):
     winsize = struct.pack("HHHH", rows, cols, 0, 0)
     fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
@@ -147,7 +154,7 @@ def main():
     parser.add_argument("--port", type=int, default=8765, help="Bind port")
     parser.add_argument(
         "--shell",
-        default=os.environ.get("SHELL", "/bin/bash"),
+        default=resolve_default_shell(),
         help="Shell to launch",
     )
     parser.add_argument(

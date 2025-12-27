@@ -2,6 +2,13 @@
   const statusEl = document.getElementById("status");
   const reconnectBtn = document.getElementById("reconnect");
   const terminalEl = document.getElementById("terminal");
+  const userInput = document.getElementById("userInput");
+  const projectInput = document.getElementById("projectInput");
+  const createProjectBtn = document.getElementById("createProject");
+  const pathPreview = document.getElementById("pathPreview");
+
+  const DEFAULT_USER = "paperagent";
+  const DEFAULT_PROJECT = "demo-paper";
 
   const term = new Terminal({
     cursorBlink: true,
@@ -21,6 +28,26 @@
 
   let socket = null;
   let resizeTimer = null;
+
+  function sanitizeSegment(value, fallback) {
+    const trimmed = String(value || "").trim();
+    const safe = trimmed.replace(/[^a-zA-Z0-9._-]/g, "_");
+    return safe || fallback;
+  }
+
+  function buildBasePath() {
+    const user = sanitizeSegment(userInput.value, DEFAULT_USER);
+    const project = sanitizeSegment(projectInput.value, DEFAULT_PROJECT);
+    return { user, project, path: `/home/${user}/Projects/${project}` };
+  }
+
+  function updatePathPreview() {
+    if (!pathPreview) {
+      return;
+    }
+    const { path } = buildBasePath();
+    pathPreview.textContent = path;
+  }
 
   function setStatus(text, online) {
     statusEl.textContent = text;
@@ -64,6 +91,15 @@
     });
   }
 
+  function sendCommand(command) {
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      term.writeln("");
+      term.writeln("[webterm] Not connected.");
+      return;
+    }
+    socket.send(command);
+  }
+
   term.onData((data) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(data);
@@ -86,12 +122,36 @@
     connect();
   });
 
+  if (createProjectBtn) {
+    createProjectBtn.addEventListener("click", () => {
+      const { user, project, path } = buildBasePath();
+      userInput.value = user;
+      projectInput.value = project;
+      updatePathPreview();
+
+      const command = [
+        `mkdir -p ${path}/{code,data,figures,latex/latex_figures,artifacts}`,
+        `cd ${path}`,
+        "pwd",
+      ].join(" && ");
+
+      sendCommand(`${command}\n`);
+      term.focus();
+    });
+  }
+
+  if (userInput && projectInput) {
+    userInput.addEventListener("input", updatePathPreview);
+    projectInput.addEventListener("input", updatePathPreview);
+  }
+
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/sw.js").catch(() => {
       // offline or blocked; ignore
     });
   }
 
+  updatePathPreview();
   fitAddon.fit();
   connect();
 })();
