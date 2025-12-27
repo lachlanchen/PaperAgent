@@ -132,6 +132,15 @@ Default Codex args can be configured with:
 CODEX_ARGS="-s danger-full-access -a never"
 ```
 
+To log Codex sessions to Postgres, set:
+
+```
+CODEX_LOG_DB=1
+DB_NAME=paperagent_db
+DB_USER=lachlan
+DB_PASSWORD=...
+```
+
 ## Defaults
 
 - Container user: `paperagent`

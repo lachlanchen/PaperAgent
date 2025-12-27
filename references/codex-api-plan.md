@@ -17,6 +17,7 @@ Expose Codex CLI as a backend service so the PWA can:
   - a Codex process (spawned via `docker exec` if container mode)
   - a ring buffer of recent output (for reconnect/resume)
 - Session key is a short ID (client-provided or server-generated).
+- Optional DB logging via `CODEX_LOG_DB=1` (Postgres).
 
 ### Transport
 
@@ -35,6 +36,7 @@ Expose Codex CLI as a backend service so the PWA can:
   - `CODEX_ARGS="-s danger-full-access -a never"`
 - If Docker shell is active, wrap with:
   - `docker exec -it paperagent-sandbox bash -lc "cd /workspace && codex ..."`
+- For NVM installs, export `CODEX_NVM_DIR=/root/.nvm` so the bridge sources `nvm.sh`.
 
 ### Frontend
 

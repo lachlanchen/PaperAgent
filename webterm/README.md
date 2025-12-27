@@ -44,6 +44,9 @@ In dev mode, the PWA service worker is disabled to avoid stale assets.
 - The control panel includes a CUDA toolkit install button (requires GPU-enabled container).
 - The LaTeX compile action uses `-g` to force a rebuild and will attempt to install missing `*.sty` packages (fallback to `texlive-full`).
 - The Codex panel connects via `/codex/ws` and spawns Codex with `CODEX_ARGS` (default `-s danger-full-access -a never`).
+- If Codex is installed via NVM in the container, set `CODEX_NVM_DIR=/root/.nvm`.
+- Optional: enable Codex logging with `CODEX_LOG_DB=1` and Postgres env vars from `.env`.
+- See `references/database-setup.md` for database initialization.
 
 ## LAN access (unsafe unless you trust the network)
 

@@ -12,6 +12,24 @@ import shutil
 import shlex
 import uuid
 from collections import deque
+
+
+def load_dotenv(path):
+    if not path or not os.path.isfile(path):
+        return
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            for raw in handle:
+                line = raw.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = value
+    except OSError:
+        pass
 from urllib.parse import urlparse
 
 import tornado.ioloop
@@ -24,7 +42,10 @@ STATIC_DIR = os.path.join(BASE_DIR, "static")
 SAFE_SEGMENT = re.compile(r"[^a-zA-Z0-9._-]+")
 SAFE_PDF = re.compile(r"^[a-zA-Z0-9._-]+\.pdf$", re.IGNORECASE)
 MAX_FILE_BYTES = 1024 * 1024
-CODEX_MAX_BUFFER = int(os.environ.get("CODEX_MAX_BUFFER", "40000"))
+
+
+def get_codex_max_buffer():
+    return int(os.environ.get("CODEX_MAX_BUFFER", "40000"))
 
 
 def resolve_default_shell():
@@ -88,8 +109,13 @@ def resolve_codex_command():
     cwd = os.environ.get("CODEX_CWD", "/workspace")
     container = resolve_container_name()
     if container and shutil.which("docker"):
+        nvm_dir = os.environ.get("CODEX_NVM_DIR") or os.environ.get("NVM_DIR") or "/root/.nvm"
+        nvm_init = (
+            f'export NVM_DIR={shlex.quote(nvm_dir)}; '
+            f'[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"; '
+        )
         quoted = " ".join([shlex.quote(cmd)] + [shlex.quote(arg) for arg in args])
-        shell_cmd = f"cd {shlex.quote(cwd)} && {quoted}"
+        shell_cmd = f"{nvm_init}cd {shlex.quote(cwd)} && {quoted}"
         return ["docker", "exec", "-it", container, "bash", "-lc", shell_cmd], None
     return [cmd] + args, cwd
 
@@ -404,10 +430,97 @@ class TreeHandler(tornado.web.RequestHandler):
         self.write({"base": base_path, "entries": entries})
 
 
+class CodexLogger:
+    def __init__(self):
+        self.enabled = os.environ.get("CODEX_LOG_DB", "0").lower() in ("1", "true", "yes")
+        self.log_output = (
+            os.environ.get("CODEX_LOG_OUTPUT", "1").lower() in ("1", "true", "yes")
+        )
+        self.username = os.environ.get("CODEX_USERNAME", "")
+        self.project = os.environ.get("CODEX_PROJECT", "")
+        self._conn = None
+        self._connect_error = None
+
+    def _connect(self):
+        if not self.enabled:
+            return None
+        if self._conn:
+            return self._conn
+        if self._connect_error:
+            return None
+        try:
+            import psycopg2
+        except ImportError as exc:
+            self._connect_error = str(exc)
+            return None
+        try:
+            self._conn = psycopg2.connect(
+                host=os.environ.get("DB_HOST", "localhost"),
+                port=os.environ.get("DB_PORT", "5432"),
+                dbname=os.environ.get("DB_NAME", "paperagent_db"),
+                user=os.environ.get("DB_USER", "lachlan"),
+                password=os.environ.get("DB_PASSWORD", ""),
+            )
+            self._conn.autocommit = True
+            return self._conn
+        except Exception as exc:
+            self._connect_error = str(exc)
+            return None
+
+    def log_session(self, session_id, username=None, project=None):
+        conn = self._connect()
+        if not conn:
+            return
+        name = username or self.username or None
+        proj = project or self.project or None
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO codex_sessions (session_id, username, project_id)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (session_id)
+                    DO UPDATE SET
+                      username = EXCLUDED.username,
+                      project_id = EXCLUDED.project_id,
+                      updated_at = NOW()
+                    """,
+                    (session_id, name, proj),
+                )
+        except Exception:
+            return
+
+    def log_message(self, session_id, role, content):
+        if role == "assistant" and not self.log_output:
+            return
+        conn = self._connect()
+        if not conn:
+            return
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO codex_messages (session_id, role, content)
+                    VALUES (%s, %s, %s)
+                    """,
+                    (session_id, role, content),
+                )
+                cur.execute(
+                    """
+                    UPDATE codex_sessions
+                    SET updated_at = NOW()
+                    WHERE session_id = %s
+                    """,
+                    (session_id,),
+                )
+        except Exception:
+            return
+
+
 class CodexSession:
-    def __init__(self, session_id, max_buffer=CODEX_MAX_BUFFER):
+    def __init__(self, session_id, logger=None, username=None, project=None):
         self.session_id = session_id
-        self.max_buffer = max_buffer
+        self.max_buffer = get_codex_max_buffer()
         self.buffer = deque()
         self.buffer_len = 0
         self.clients = set()
@@ -415,6 +528,11 @@ class CodexSession:
         self.proc = None
         self._closed = False
         self._loop = tornado.ioloop.IOLoop.current()
+        self.logger = logger
+        self.username = username
+        self.project = project
+        if self.logger:
+            self.logger.log_session(self.session_id, self.username, self.project)
         self._spawn()
 
     def _spawn(self):
@@ -468,6 +586,8 @@ class CodexSession:
             return
         text = data.decode("utf-8", errors="ignore")
         self._append_buffer(text)
+        if self.logger:
+            self.logger.log_message(self.session_id, "assistant", text)
         self._broadcast({"type": "output", "data": text})
 
     def attach(self, client):
@@ -516,12 +636,18 @@ class CodexSession:
 class CodexManager:
     def __init__(self):
         self.sessions = {}
+        self.logger = CodexLogger()
 
-    def get_or_create(self, session_id):
+    def get_or_create(self, session_id, username=None, project=None):
         session = self.sessions.get(session_id)
         if session and not session._closed:
             return session
-        session = CodexSession(session_id)
+        session = CodexSession(
+            session_id,
+            logger=self.logger,
+            username=username,
+            project=project,
+        )
         self.sessions[session_id] = session
         return session
 
@@ -532,9 +658,9 @@ class CodexManager:
         session.stop()
         self.sessions.pop(session_id, None)
 
-    def restart(self, session_id):
+    def restart(self, session_id, username=None, project=None):
         self.stop(session_id)
-        return self.get_or_create(session_id)
+        return self.get_or_create(session_id, username, project)
 
 
 class CodexWebSocket(tornado.websocket.WebSocketHandler):
@@ -542,6 +668,8 @@ class CodexWebSocket(tornado.websocket.WebSocketHandler):
         self.manager = manager
         self.session = None
         self.session_id = None
+        self.username = None
+        self.project = None
 
     def check_origin(self, origin):
         if not origin:
@@ -558,7 +686,11 @@ class CodexWebSocket(tornado.websocket.WebSocketHandler):
         if not session_id:
             session_id = uuid.uuid4().hex[:12]
         self.session_id = session_id
-        self.session = self.manager.get_or_create(session_id)
+        username = sanitize_segment(self.get_argument("user", ""), "")
+        project = sanitize_segment(self.get_argument("project", ""), "")
+        self.username = username or None
+        self.project = project or None
+        self.session = self.manager.get_or_create(session_id, username, project)
         self.session.attach(self)
         self.write_message(json.dumps({"type": "session", "id": session_id}))
 
@@ -574,13 +706,17 @@ class CodexWebSocket(tornado.websocket.WebSocketHandler):
                 text = payload.get("text", "")
                 if self.session:
                     self.session.send_input(text)
+                if self.session_id and self.manager.logger:
+                    self.manager.logger.log_message(self.session_id, "user", text)
                 return
             if payload.get("type") == "control":
                 action = payload.get("action")
                 if action == "stop" and self.session_id:
                     self.manager.stop(self.session_id)
                 elif action == "new" and self.session_id:
-                    self.session = self.manager.restart(self.session_id)
+                    self.session = self.manager.restart(
+                        self.session_id, self.username, self.project
+                    )
                     self.session.attach(self)
                 return
         if self.session:
@@ -714,6 +850,10 @@ def make_app(shell, cwd, dev_mode=False):
 
 
 def main():
+    dotenv_path = os.environ.get("ENV_FILE") or os.path.abspath(
+        os.path.join(BASE_DIR, "..", ".env")
+    )
+    load_dotenv(dotenv_path)
     parser = argparse.ArgumentParser(description="Local web terminal (Tornado)")
     parser.add_argument("--host", default="127.0.0.1", help="Bind host")
     parser.add_argument("--port", type=int, default=8765, help="Bind port")

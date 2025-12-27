@@ -390,10 +390,14 @@
       }
     }
     setCodexStatus("Status: connecting", "loading");
+    const { user, project } = buildBasePath();
     const protocol = location.protocol === "https:" ? "wss" : "ws";
-    const wsUrl = `${protocol}://${location.host}/codex/ws?session=${encodeURIComponent(
-      id
-    )}`;
+    const wsParams = new URLSearchParams({
+      session: id,
+      user,
+      project,
+    });
+    const wsUrl = `${protocol}://${location.host}/codex/ws?${wsParams.toString()}`;
     codexSocket = new WebSocket(wsUrl);
 
     codexSocket.addEventListener("open", () => {
