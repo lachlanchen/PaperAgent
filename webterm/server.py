@@ -47,6 +47,46 @@ MAX_FILE_BYTES = 1024 * 1024
 logger = logging.getLogger("paperterm")
 
 
+class QuietAccessFilter(logging.Filter):
+    def __init__(self):
+        super().__init__()
+        self.enabled = os.environ.get("WEBTERM_QUIET_LOGS", "1").lower() in (
+            "1",
+            "true",
+            "yes",
+        )
+
+    def filter(self, record):
+        if not self.enabled:
+            return True
+        message = record.getMessage()
+        if not message:
+            return True
+        parts = message.split(" ", 1)
+        try:
+            status = int(parts[0])
+        except (ValueError, IndexError):
+            return True
+        if status >= 400:
+            return True
+        if "GET /api/file" in message and "meta=1" in message:
+            return False
+        if "GET /api/codex/sessions" in message:
+            return False
+        if "GET /api/project" in message:
+            return False
+        if "GET /__dev__/version" in message:
+            return False
+        if (
+            "GET /static/" in message
+            or "GET /manifest.json" in message
+            or "GET /icon.svg" in message
+            or "GET /sw.js" in message
+        ):
+            return False
+        return True
+
+
 def get_codex_max_buffer():
     return int(os.environ.get("CODEX_MAX_BUFFER", "40000"))
 
@@ -1216,6 +1256,8 @@ def main():
         level=log_level,
         format="%(levelname)s %(asctime)s %(message)s",
     )
+    access_logger = logging.getLogger("tornado.access")
+    access_logger.addFilter(QuietAccessFilter())
     parser = argparse.ArgumentParser(description="Local web terminal (Tornado)")
     parser.add_argument("--host", default="127.0.0.1", help="Bind host")
     parser.add_argument("--port", type=int, default=8765, help="Bind port")
