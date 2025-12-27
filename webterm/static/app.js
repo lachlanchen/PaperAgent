@@ -104,7 +104,7 @@
   let codexStatusClass = "";
   let codexRunState = "idle";
   let codexOutputBuffer = "";
-  let codexPendingPromptEcho = false;
+  let codexHadWorkLine = false;
   let projectRemoteTimer = null;
   let gitRemoteDirty = false;
   let userIdentityTimer = null;
@@ -723,8 +723,8 @@
 
   function startCodexRun() {
     codexOutputBuffer = "";
-    codexPendingPromptEcho = true;
-    markCodexRunning();
+    codexHadWorkLine = false;
+    markCodexIdle();
   }
 
   function renderCodexStatus() {
@@ -816,31 +816,24 @@
     if (!cleaned) {
       return;
     }
+    if (source === "history") {
+      return;
+    }
     codexOutputBuffer = `${codexOutputBuffer}${cleaned}`.slice(-2000);
-    if (CODEX_DONE_RE.test(codexOutputBuffer)) {
-      codexPendingPromptEcho = false;
+    if (CODEX_WORK_RE.test(cleaned)) {
+      codexHadWorkLine = true;
+      markCodexRunning();
+      return;
+    }
+    if (CODEX_DONE_RE.test(codexOutputBuffer) || CODEX_PROMPT_RE.test(cleaned)) {
+      codexHadWorkLine = false;
+      codexOutputBuffer = "";
       markCodexIdle();
       return;
     }
-    if (source !== "output" || codexRunState !== "running") {
-      if (source === "output" && CODEX_WORK_RE.test(cleaned)) {
-        markCodexRunning();
-      }
-      return;
+    if (!codexHadWorkLine) {
+      markCodexIdle();
     }
-    const promptMatches = cleaned.match(CODEX_PROMPT_RE);
-    const promptCount = promptMatches ? promptMatches.length : 0;
-    if (!promptCount) {
-      return;
-    }
-    if (codexPendingPromptEcho) {
-      codexPendingPromptEcho = false;
-      if (promptCount > 1) {
-        markCodexIdle();
-      }
-      return;
-    }
-    markCodexIdle();
   }
 
   function appendCodexOutput(text, source) {
