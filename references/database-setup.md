@@ -53,3 +53,4 @@ Tip: When the DB is reachable, Codex resume uses the last logged terminal output
 to refill history if the in-memory buffer is empty.
 
 The `projects` table also stores `git_remote` so the UI can prefill the remote URL.
+The `users` table stores `git_name` and `git_email` for git identity persistence.

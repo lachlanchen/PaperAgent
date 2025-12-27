@@ -37,6 +37,9 @@
   const fileTreeStatus = document.getElementById("fileTreeStatus");
   const codexSessionInput = document.getElementById("codexSession");
   const codexSessionList = document.getElementById("codexSessionList");
+  const gitUserNameInput = document.getElementById("gitUserName");
+  const gitUserEmailInput = document.getElementById("gitUserEmail");
+  const setGitIdentityBtn = document.getElementById("setGitIdentity");
   const codexNewBtn = document.getElementById("codexNew");
   const codexResumeBtn = document.getElementById("codexResume");
   const codexStopBtn = document.getElementById("codexStop");
@@ -59,6 +62,7 @@
   const CODEX_OUTPUT_LIMIT = 60000;
   const CODEX_SESSIONS_REFRESH_MS = 8000;
   const PROJECT_REMOTE_PREFIX = "paperagent.project.remote";
+  const USER_IDENTITY_PREFIX = "paperagent.user.git";
 
   const term = new Terminal({
     cursorBlink: true,
@@ -99,6 +103,8 @@
   let codexOutputBuffer = "";
   let projectRemoteTimer = null;
   let gitRemoteDirty = false;
+  let userIdentityTimer = null;
+  let gitIdentityDirty = false;
 
   function sanitizeSegment(value, fallback) {
     const trimmed = String(value || "").trim();
@@ -219,6 +225,13 @@
       project,
     });
     return `/api/project?${params.toString()}`;
+  }
+
+  function buildUserUrl(user) {
+    const params = new URLSearchParams({
+      user,
+    });
+    return `/api/user?${params.toString()}`;
   }
 
   function buildCodexSessionsUrl({ user, project }) {
@@ -492,6 +505,69 @@
     setStoredProjectRemote(user, project, payload.git_remote);
     try {
       await fetch("/api/project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      // ignore
+    }
+  }
+
+  async function loadUserIdentity({ silent } = {}) {
+    if (!gitUserNameInput || !gitUserEmailInput) {
+      return;
+    }
+    const { user } = buildBasePath();
+    const url = buildUserUrl(user);
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("missing");
+      }
+      const data = await response.json();
+      const name = data?.git_name || "";
+      const email = data?.git_email || "";
+      setStoredUserIdentity(user, name, email);
+      if (!gitIdentityDirty || !gitUserNameInput.value.trim()) {
+        gitUserNameInput.value = name;
+      }
+      if (!gitIdentityDirty || !gitUserEmailInput.value.trim()) {
+        gitUserEmailInput.value = email;
+      }
+    } catch (err) {
+      const cached = getStoredUserIdentity(user);
+      if (cached) {
+        if (!gitIdentityDirty || !gitUserNameInput.value.trim()) {
+          gitUserNameInput.value = cached.git_name || "";
+        }
+        if (!gitIdentityDirty || !gitUserEmailInput.value.trim()) {
+          gitUserEmailInput.value = cached.git_email || "";
+        }
+      }
+      if (!silent) {
+        // ignore
+      }
+    }
+  }
+
+  function scheduleUserIdentityLoad(delay = 0) {
+    clearTimeout(userIdentityTimer);
+    userIdentityTimer = setTimeout(() => {
+      loadUserIdentity({ silent: true });
+    }, delay);
+  }
+
+  async function saveUserIdentity(name, email) {
+    const { user } = buildBasePath();
+    const payload = {
+      user,
+      git_name: String(name || "").trim(),
+      git_email: String(email || "").trim(),
+    };
+    setStoredUserIdentity(user, payload.git_name, payload.git_email);
+    try {
+      await fetch("/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -836,6 +912,34 @@
     }
   }
 
+  function getUserIdentityKey(user) {
+    return `${USER_IDENTITY_PREFIX}.${user}`;
+  }
+
+  function getStoredUserIdentity(user) {
+    try {
+      const raw = localStorage.getItem(getUserIdentityKey(user));
+      if (!raw) {
+        return null;
+      }
+      return JSON.parse(raw);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function setStoredUserIdentity(user, name, email) {
+    try {
+      const payload = {
+        git_name: name || "",
+        git_email: email || "",
+      };
+      localStorage.setItem(getUserIdentityKey(user), JSON.stringify(payload));
+    } catch (err) {
+      // ignore
+    }
+  }
+
   function connectCodex(sessionId, options = {}) {
     if (!codexSessionInput) {
       return;
@@ -968,6 +1072,18 @@
     const payload = `\u001b[200~${text}\u001b[201~\r`;
     codexSocket.send(JSON.stringify({ type: "input", data: payload }));
     setCodexRunState("running");
+  }
+
+  function buildCodexGitIdentityPrompt(name, email) {
+    return [
+      "Set git identity for this environment.",
+      `user.name: ${name}`,
+      `user.email: ${email}`,
+      "Run:",
+      `git config --global user.name \"${name}\"`,
+      `git config --global user.email \"${email}\"`,
+      "Then show: git config --global --get user.name and user.email.",
+    ].join("\n");
   }
 
   function buildCodexGitignorePrompt() {
@@ -1634,6 +1750,19 @@
     });
   }
 
+  if (setGitIdentityBtn) {
+    setGitIdentityBtn.addEventListener("click", () => {
+      const name = gitUserNameInput ? gitUserNameInput.value.trim() : "";
+      const email = gitUserEmailInput ? gitUserEmailInput.value.trim() : "";
+      if (!name || !email) {
+        setCodexStatus("Status: git name/email required", "error");
+        return;
+      }
+      saveUserIdentity(name, email);
+      sendCodexCommand(buildCodexGitIdentityPrompt(name, email));
+    });
+  }
+
   if (testGitRemoteBtn) {
     testGitRemoteBtn.addEventListener("click", () => {
       const { user, project, path } = buildBasePath();
@@ -1651,6 +1780,18 @@
   if (gitRemoteInput) {
     gitRemoteInput.addEventListener("input", () => {
       gitRemoteDirty = true;
+    });
+  }
+
+  if (gitUserNameInput) {
+    gitUserNameInput.addEventListener("input", () => {
+      gitIdentityDirty = true;
+    });
+  }
+
+  if (gitUserEmailInput) {
+    gitUserEmailInput.addEventListener("input", () => {
+      gitIdentityDirty = true;
     });
   }
 
@@ -1874,6 +2015,8 @@
       scheduleSshKeyLoad(400);
       gitRemoteDirty = false;
       scheduleProjectRemoteLoad(450);
+      gitIdentityDirty = false;
+      scheduleUserIdentityLoad(450);
     });
     projectInput.addEventListener("input", () => {
       updatePathPreview();
@@ -1901,6 +2044,7 @@
   }
   loadSshKey();
   loadProjectRemote({ silent: true });
+  loadUserIdentity({ silent: true });
   loadCodexSessions({ silent: true });
   clearInterval(codexSessionsTimer);
   codexSessionsTimer = setInterval(() => {

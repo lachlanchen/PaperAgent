@@ -2,6 +2,8 @@ CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
   display_name TEXT,
+  git_name TEXT,
+  git_email TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -14,6 +16,12 @@ CREATE TABLE IF NOT EXISTS projects (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (user_id, project_id)
 );
+
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS git_name TEXT;
+
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS git_email TEXT;
 
 ALTER TABLE projects
   ADD COLUMN IF NOT EXISTS git_remote TEXT;

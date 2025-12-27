@@ -79,6 +79,8 @@ class QuietAccessFilter(logging.Filter):
             return False
         if "GET /api/project" in message:
             return False
+        if "GET /api/user" in message:
+            return False
         if "GET /__dev__/version" in message:
             return False
         if (
@@ -147,6 +149,15 @@ def normalize_remote(value):
     if not trimmed:
         return ""
     return trimmed[:512]
+
+
+def normalize_user_field(value, max_len=200):
+    if not value:
+        return ""
+    trimmed = value.strip()
+    if not trimmed:
+        return ""
+    return trimmed[:max_len]
 
 
 def get_db_params():
@@ -641,6 +652,57 @@ class ProjectStore:
             logger.error("ProjectStore project fetch failed: %s", exc)
             return None
 
+    def upsert_user_git(self, username, git_name, git_email):
+        conn = self._connect()
+        if not conn:
+            return False
+        user_id = self._ensure_user(username)
+        if not user_id:
+            return False
+        name_value = git_name or None
+        email_value = git_email or None
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    UPDATE users
+                    SET git_name = %s,
+                        git_email = %s
+                    WHERE id = %s
+                    """,
+                    (name_value, email_value, user_id),
+                )
+            return True
+        except Exception as exc:
+            logger.error("ProjectStore user git update failed: %s", exc)
+            return False
+
+    def fetch_user_git(self, username):
+        conn = self._connect()
+        if not conn:
+            return None
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT git_name, git_email
+                    FROM users
+                    WHERE username = %s
+                    LIMIT 1
+                    """,
+                    (username,),
+                )
+                row = cur.fetchone()
+                if not row:
+                    return None
+                return {
+                    "git_name": row[0] or "",
+                    "git_email": row[1] or "",
+                }
+        except Exception as exc:
+            logger.error("ProjectStore user git fetch failed: %s", exc)
+            return None
+
 
 class ProjectHandler(tornado.web.RequestHandler):
     def initialize(self, store):
@@ -713,6 +775,89 @@ class ProjectHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", "application/json")
         self.set_header("Cache-Control", "no-store")
         self.write({"ok": True, "user": username, "project": project_id})
+
+
+class UserHandler(tornado.web.RequestHandler):
+    def initialize(self, store):
+        self.store = store
+
+    def write_error_json(self, status, message):
+        self.set_status(status)
+        self.set_header("Content-Type", "application/json")
+        self.write({"error": message})
+
+    def get(self):
+        username = sanitize_segment(self.get_argument("user", "paperagent"), "paperagent")
+        if not self.store.enabled or self.store._connect_error:
+            self.set_header("Content-Type", "application/json")
+            self.set_header("Cache-Control", "no-store")
+            self.write(
+                {
+                    "ok": False,
+                    "disabled": True,
+                    "reason": self.store._connect_error or "user store disabled",
+                    "user": username,
+                    "git_name": "",
+                    "git_email": "",
+                }
+            )
+            return
+        data = self.store.fetch_user_git(username)
+        if not data:
+            self.set_header("Content-Type", "application/json")
+            self.set_header("Cache-Control", "no-store")
+            self.write(
+                {
+                    "ok": True,
+                    "user": username,
+                    "git_name": "",
+                    "git_email": "",
+                }
+            )
+            return
+        self.set_header("Content-Type", "application/json")
+        self.set_header("Cache-Control", "no-store")
+        self.write(
+            {
+                "ok": True,
+                "user": username,
+                "git_name": data.get("git_name", ""),
+                "git_email": data.get("git_email", ""),
+            }
+        )
+
+    def post(self):
+        try:
+            payload = json.loads(self.request.body.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            self.write_error_json(400, "invalid json")
+            return
+        username = sanitize_segment(payload.get("user") or "paperagent", "paperagent")
+        git_name = normalize_user_field(payload.get("git_name", ""), max_len=120)
+        git_email = normalize_user_field(payload.get("git_email", ""), max_len=120)
+        if not self.store.upsert_user_git(username, git_name, git_email):
+            logger.warning(
+                "UserStore unavailable for %s (git_name=%s, git_email=%s)",
+                username,
+                git_name,
+                git_email,
+            )
+            if not self.store.enabled or self.store._connect_error:
+                self.set_header("Content-Type", "application/json")
+                self.set_header("Cache-Control", "no-store")
+                self.write(
+                    {
+                        "ok": False,
+                        "disabled": True,
+                        "reason": self.store._connect_error or "user store disabled",
+                    }
+                )
+                return
+            self.write_error_json(503, "database unavailable")
+            return
+        self.set_header("Content-Type", "application/json")
+        self.set_header("Cache-Control", "no-store")
+        self.write({"ok": True, "user": username})
 
 
 class CodexLogger:
@@ -1265,6 +1410,7 @@ def make_app(shell, cwd, dev_mode=False):
         (r"/api/tree", TreeHandler),
         (r"/api/ssh-key", SshKeyHandler),
         (r"/api/project", ProjectHandler, {"store": project_store}),
+        (r"/api/user", UserHandler, {"store": project_store}),
         (r"/(manifest.json)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
         (r"/(sw.js)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
         (r"/(icon.svg)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
