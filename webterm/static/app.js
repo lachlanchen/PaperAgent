@@ -61,6 +61,7 @@
   const CODEX_SESSION_KEY = "paperagent.codex.session";
   const CODEX_OUTPUT_LIMIT = 60000;
   const CODEX_SESSIONS_REFRESH_MS = 8000;
+  const CODEX_FINISHED_HOLD_MS = 2500;
   const PROJECT_REMOTE_PREFIX = "paperagent.project.remote";
   const USER_IDENTITY_PREFIX = "paperagent.user.git";
 
@@ -101,6 +102,7 @@
   let codexStatusClass = "";
   let codexRunState = "";
   let codexOutputBuffer = "";
+  let codexFinishTimer = null;
   let projectRemoteTimer = null;
   let gitRemoteDirty = false;
   let userIdentityTimer = null;
@@ -709,6 +711,39 @@
     renderCodexStatus();
   }
 
+  function clearCodexFinishTimer() {
+    if (codexFinishTimer) {
+      clearTimeout(codexFinishTimer);
+      codexFinishTimer = null;
+    }
+  }
+
+  function markCodexRunning() {
+    if (codexRunState === "stopped" || codexRunState === "stopping") {
+      return;
+    }
+    clearCodexFinishTimer();
+    setCodexRunState("running");
+  }
+
+  function markCodexIdle() {
+    clearCodexFinishTimer();
+    setCodexRunState("idle");
+  }
+
+  function markCodexFinished() {
+    if (codexRunState === "stopped" || codexRunState === "stopping") {
+      return;
+    }
+    clearCodexFinishTimer();
+    setCodexRunState("finished");
+    codexFinishTimer = setTimeout(() => {
+      if (codexRunState === "finished") {
+        setCodexRunState("idle");
+      }
+    }, CODEX_FINISHED_HOLD_MS);
+  }
+
   function renderCodexStatus() {
     if (!codexStatus) {
       return;
@@ -747,7 +782,7 @@
         return;
       }
       if (data.includes("\r")) {
-        setCodexRunState("running");
+        markCodexRunning();
       }
       codexSocket.send(JSON.stringify({ type: "input", data }));
     });
@@ -793,7 +828,11 @@
     }
     codexOutputBuffer = `${codexOutputBuffer}${cleaned}`.slice(-2000);
     if (/(^|[\r\n])›\s/.test(codexOutputBuffer)) {
-      setCodexRunState("idle");
+      markCodexFinished();
+      return;
+    }
+    if (codexRunState !== "running") {
+      markCodexRunning();
     }
   }
 
@@ -994,7 +1033,7 @@
 
     codexSocket.addEventListener("open", () => {
       setCodexStatus(`Status: connected (${id})`, "ready");
-      setCodexRunState("idle");
+      markCodexIdle();
       ensureCodexTerminal();
       if (codexFitAddon) {
         codexFitAddon.fit();
@@ -1024,7 +1063,7 @@
         const state = payload.state || "unknown";
         if (state === "ready") {
           setCodexStatus(`Status: ready (${id})`, "ready");
-          setCodexRunState("idle");
+          markCodexIdle();
         } else if (state === "closed") {
           setCodexStatus("Status: closed", "error");
           setCodexRunState("stopped");
@@ -1048,6 +1087,7 @@
     codexSocket.addEventListener("close", () => {
       setCodexStatus("Status: disconnected", "error");
       setCodexRunState("stopped");
+      clearCodexFinishTimer();
       loadCodexSessions({ silent: true });
     });
 
@@ -1068,7 +1108,7 @@
     const payload = `\u001b[200~${text}\u001b[201~\r`;
     codexSocket.send(JSON.stringify({ type: "input", data: payload }));
     codexPrompt.value = "";
-    setCodexRunState("running");
+    markCodexRunning();
   }
 
   function sendCodexCommand(command) {
@@ -1082,7 +1122,7 @@
     }
     const payload = `\u001b[200~${text}\u001b[201~\r`;
     codexSocket.send(JSON.stringify({ type: "input", data: payload }));
-    setCodexRunState("running");
+    markCodexRunning();
   }
 
   function buildCodexGitignorePrompt() {
