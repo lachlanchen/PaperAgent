@@ -89,6 +89,8 @@
   let codexTerm = null;
   let codexFitAddon = null;
   let codexSessionsTimer = null;
+  let projectRemoteTimer = null;
+  let gitRemoteDirty = false;
 
   function sanitizeSegment(value, fallback) {
     const trimmed = String(value || "").trim();
@@ -200,6 +202,14 @@
       user,
     });
     return `/api/ssh-key?${params.toString()}`;
+  }
+
+  function buildProjectUrl({ user, project }) {
+    const params = new URLSearchParams({
+      user,
+      project,
+    });
+    return `/api/project?${params.toString()}`;
   }
 
   function buildCodexSessionsUrl({ user, project }) {
@@ -426,6 +436,54 @@
       '  git ls-remote "$REMOTE" HEAD >/dev/null 2>&1 && echo "[webterm] Remote reachable" || { echo "[webterm] Remote test failed"; exit 1; }',
       "fi",
     ].join("\n");
+  }
+
+  async function loadProjectRemote({ silent } = {}) {
+    if (!gitRemoteInput) {
+      return;
+    }
+    const { user, project } = buildBasePath();
+    const url = buildProjectUrl({ user, project });
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("missing");
+      }
+      const data = await response.json();
+      const remote = data?.git_remote || "";
+      if (!gitRemoteDirty || !gitRemoteInput.value.trim()) {
+        gitRemoteInput.value = remote;
+      }
+    } catch (err) {
+      if (!silent) {
+        // ignore
+      }
+    }
+  }
+
+  function scheduleProjectRemoteLoad(delay = 0) {
+    clearTimeout(projectRemoteTimer);
+    projectRemoteTimer = setTimeout(() => {
+      loadProjectRemote({ silent: true });
+    }, delay);
+  }
+
+  async function saveProjectRemote(remote) {
+    const { user, project } = buildBasePath();
+    const payload = {
+      user,
+      project,
+      git_remote: String(remote || "").trim(),
+    };
+    try {
+      await fetch("/api/project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      // ignore
+    }
   }
 
   function buildCodexInstallCommand() {
@@ -1439,6 +1497,7 @@
       updatePathPreview();
 
       const remote = gitRemoteInput ? gitRemoteInput.value : "";
+      saveProjectRemote(remote);
       const command = buildGitRemoteCommand(path, remote);
       sendCommand(`${command}\n`);
       term.focus();
@@ -1456,6 +1515,12 @@
       const command = buildGitTestCommand(path, user, remote);
       sendCommand(`${command}\n`);
       term.focus();
+    });
+  }
+
+  if (gitRemoteInput) {
+    gitRemoteInput.addEventListener("input", () => {
+      gitRemoteDirty = true;
     });
   }
 
@@ -1646,6 +1711,8 @@
       scheduleTreeLoad(800);
       setActiveTreePath(null);
       scheduleSshKeyLoad(400);
+      gitRemoteDirty = false;
+      scheduleProjectRemoteLoad(450);
     });
     projectInput.addEventListener("input", () => {
       updatePathPreview();
@@ -1654,6 +1721,8 @@
       scheduleEditorLoad(700);
       scheduleTreeLoad(800);
       setActiveTreePath(null);
+      gitRemoteDirty = false;
+      scheduleProjectRemoteLoad(450);
     });
   }
 
@@ -1670,6 +1739,7 @@
     connectCodex(storedSession, { resume: false });
   }
   loadSshKey();
+  loadProjectRemote({ silent: true });
   loadCodexSessions({ silent: true });
   clearInterval(codexSessionsTimer);
   codexSessionsTimer = setInterval(() => {

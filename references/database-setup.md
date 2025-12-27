@@ -45,3 +45,5 @@ Restart the web server after editing `.env`.
 
 Tip: When the DB is reachable, Codex resume uses the last logged terminal output
 to refill history if the in-memory buffer is empty.
+
+The `projects` table also stores `git_remote` so the UI can prefill the remote URL.

@@ -94,6 +94,15 @@ def sanitize_relpath(value):
     return "/".join(parts)
 
 
+def normalize_remote(value):
+    if not value:
+        return ""
+    trimmed = value.strip()
+    if not trimmed:
+        return ""
+    return trimmed[:512]
+
+
 def resolve_container_name():
     container = os.environ.get("WEBTERM_CONTAINER")
     if container:
@@ -452,6 +461,156 @@ class SshKeyHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", "text/plain; charset=utf-8")
         self.set_header("Cache-Control", "no-store")
         self.write(data.decode("utf-8", errors="replace"))
+
+
+class ProjectStore:
+    def __init__(self):
+        self.enabled = os.environ.get("PROJECT_DB", "1").lower() in ("1", "true", "yes")
+        self._conn = None
+        self._connect_error = None
+
+    def _connect(self):
+        if not self.enabled:
+            return None
+        if self._conn:
+            return self._conn
+        if self._connect_error:
+            return None
+        try:
+            import psycopg2
+        except ImportError as exc:
+            self._connect_error = str(exc)
+            return None
+        try:
+            self._conn = psycopg2.connect(
+                host=os.environ.get("DB_HOST", "localhost"),
+                port=os.environ.get("DB_PORT", "5432"),
+                dbname=os.environ.get("DB_NAME", "paperagent_db"),
+                user=os.environ.get("DB_USER", "lachlan"),
+                password=os.environ.get("DB_PASSWORD", ""),
+            )
+            self._conn.autocommit = True
+            return self._conn
+        except Exception as exc:
+            self._connect_error = str(exc)
+            return None
+
+    def _ensure_user(self, username):
+        conn = self._connect()
+        if not conn:
+            return None
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO users (username)
+                    VALUES (%s)
+                    ON CONFLICT (username)
+                    DO UPDATE SET username = EXCLUDED.username
+                    RETURNING id
+                    """,
+                    (username,),
+                )
+                row = cur.fetchone()
+                return row[0] if row else None
+        except Exception:
+            return None
+
+    def upsert_project(self, username, project_id, root_path, git_remote):
+        conn = self._connect()
+        if not conn:
+            return False
+        user_id = self._ensure_user(username)
+        if not user_id:
+            return False
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO projects (user_id, project_id, root_path, git_remote)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (user_id, project_id)
+                    DO UPDATE SET
+                      root_path = EXCLUDED.root_path,
+                      git_remote = EXCLUDED.git_remote
+                    """,
+                    (user_id, project_id, root_path, git_remote),
+                )
+            return True
+        except Exception:
+            return False
+
+    def fetch_project(self, username, project_id):
+        conn = self._connect()
+        if not conn:
+            return None
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT p.project_id, p.root_path, p.git_remote
+                    FROM projects p
+                    JOIN users u ON u.id = p.user_id
+                    WHERE u.username = %s AND p.project_id = %s
+                    LIMIT 1
+                    """,
+                    (username, project_id),
+                )
+                row = cur.fetchone()
+                if not row:
+                    return None
+                return {
+                    "project_id": row[0],
+                    "root_path": row[1],
+                    "git_remote": row[2],
+                }
+        except Exception:
+            return None
+
+
+class ProjectHandler(tornado.web.RequestHandler):
+    def initialize(self, store):
+        self.store = store
+
+    def write_error_json(self, status, message):
+        self.set_status(status)
+        self.set_header("Content-Type", "application/json")
+        self.write({"error": message})
+
+    def get(self):
+        username = sanitize_segment(self.get_argument("user", "paperagent"), "paperagent")
+        project_id = sanitize_segment(self.get_argument("project", "demo-paper"), "demo-paper")
+        data = self.store.fetch_project(username, project_id)
+        if not data:
+            self.write_error_json(404, "project not found")
+            return
+        self.set_header("Content-Type", "application/json")
+        self.set_header("Cache-Control", "no-store")
+        self.write(
+            {
+                "user": username,
+                "project": project_id,
+                "root_path": data.get("root_path"),
+                "git_remote": data.get("git_remote"),
+            }
+        )
+
+    def post(self):
+        try:
+            payload = json.loads(self.request.body.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            self.write_error_json(400, "invalid json")
+            return
+        username = sanitize_segment(payload.get("user") or "paperagent", "paperagent")
+        project_id = sanitize_segment(payload.get("project") or "demo-paper", "demo-paper")
+        git_remote = normalize_remote(payload.get("git_remote", ""))
+        root_path = f"/home/{username}/Projects/{project_id}"
+        if not self.store.upsert_project(username, project_id, root_path, git_remote):
+            self.write_error_json(503, "database unavailable")
+            return
+        self.set_header("Content-Type", "application/json")
+        self.set_header("Cache-Control", "no-store")
+        self.write({"ok": True, "user": username, "project": project_id})
 
 
 class CodexLogger:
@@ -999,6 +1158,7 @@ class TerminalWebSocket(tornado.websocket.WebSocketHandler):
 
 def make_app(shell, cwd, dev_mode=False):
     codex_manager = CodexManager()
+    project_store = ProjectStore()
     settings = {
         "static_path": STATIC_DIR,
         "template_path": STATIC_DIR,
@@ -1013,6 +1173,7 @@ def make_app(shell, cwd, dev_mode=False):
         (r"/api/file", FileHandler),
         (r"/api/tree", TreeHandler),
         (r"/api/ssh-key", SshKeyHandler),
+        (r"/api/project", ProjectHandler, {"store": project_store}),
         (r"/(manifest.json)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
         (r"/(sw.js)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),
         (r"/(icon.svg)", tornado.web.StaticFileHandler, {"path": STATIC_DIR}),

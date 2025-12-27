@@ -10,9 +10,13 @@ CREATE TABLE IF NOT EXISTS projects (
   user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
   project_id TEXT NOT NULL,
   root_path TEXT,
+  git_remote TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (user_id, project_id)
 );
+
+ALTER TABLE projects
+  ADD COLUMN IF NOT EXISTS git_remote TEXT;
 
 CREATE TABLE IF NOT EXISTS codex_sessions (
   session_id TEXT PRIMARY KEY,
