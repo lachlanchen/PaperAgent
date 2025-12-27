@@ -6,10 +6,24 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 ENV_FILE="${ENV_FILE:-$PROJECT_ROOT/.env}"
 if [[ -f "$ENV_FILE" ]]; then
-  set -a
-  # shellcheck disable=SC1090
-  source "$ENV_FILE"
-  set +a
+  while IFS= read -r line; do
+    line="${line%%$'\r'}"
+    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" != *"="* ]] && continue
+    key="${line%%=*}"
+    value="${line#*=}"
+    key="${key#"${key%%[![:space:]]*}"}"
+    key="${key%"${key##*[![:space:]]}"}"
+    value="${value#"${value%%[![:space:]]*}"}"
+    value="${value%"${value##*[![:space:]]}"}"
+    value="${value%\"}"
+    value="${value#\"}"
+    value="${value%\'}"
+    value="${value#\'}"
+    case "$key" in
+      DB_* ) export "$key=$value" ;;
+    esac
+  done < "$ENV_FILE"
 fi
 
 DB_NAME="${DB_NAME:-paperagent_db}"
@@ -25,6 +39,13 @@ log() {
 if ! command -v psql >/dev/null 2>&1; then
   log "psql not found. Install PostgreSQL client tools first."
   exit 1
+fi
+
+if [[ "$(id -u)" -ne 0 ]]; then
+  if ! sudo -n true >/dev/null 2>&1; then
+    log "sudo access required. Run 'sudo -v' and re-run this script."
+    exit 1
+  fi
 fi
 
 log "Creating role/database if needed..."
