@@ -19,7 +19,7 @@ import tornado.autoreload
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 SAFE_SEGMENT = re.compile(r"[^a-zA-Z0-9._-]+")
-SAFE_PDF = re.compile(r"^[a-zA-Z0-9._-]+\\.pdf$")
+SAFE_PDF = re.compile(r"^[a-zA-Z0-9._-]+\.pdf$", re.IGNORECASE)
 
 
 def resolve_default_shell():
