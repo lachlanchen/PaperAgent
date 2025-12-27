@@ -61,6 +61,8 @@
   const CODEX_SESSION_KEY = "paperagent.codex.session";
   const CODEX_OUTPUT_LIMIT = 60000;
   const CODEX_SESSIONS_REFRESH_MS = 8000;
+  const CODEX_READY_RE = /(?:^|[\r\n])\s*\d+% context left\b/i;
+  const CODEX_DONE_RE = /(?:^|[\r\n])─ Worked for /;
   const PROJECT_REMOTE_PREFIX = "paperagent.project.remote";
   const USER_IDENTITY_PREFIX = "paperagent.user.git";
 
@@ -101,7 +103,6 @@
   let codexStatusClass = "";
   let codexRunState = "idle";
   let codexOutputBuffer = "";
-  let codexAwaitingPrompt = false;
   let projectRemoteTimer = null;
   let gitRemoteDirty = false;
   let userIdentityTimer = null;
@@ -711,13 +712,16 @@
   }
 
   function markCodexRunning() {
-    codexAwaitingPrompt = true;
     setCodexRunState("running");
   }
 
   function markCodexIdle() {
-    codexAwaitingPrompt = false;
     setCodexRunState("idle");
+  }
+
+  function startCodexRun() {
+    codexOutputBuffer = "";
+    markCodexRunning();
   }
 
   function renderCodexStatus() {
@@ -765,7 +769,7 @@
         return;
       }
       if (data.includes("\r")) {
-        markCodexRunning();
+        startCodexRun();
       }
       codexSocket.send(JSON.stringify({ type: "input", data }));
     });
@@ -804,23 +808,23 @@
       .replace(/\x1b\[[0-9;?]*[ -/]*[@-~]/g, "");
   }
 
-  function updateCodexRunStateFromOutput(text) {
+  function updateCodexRunStateFromOutput(text, source) {
     const cleaned = stripAnsi(text);
     if (!cleaned) {
       return;
     }
     codexOutputBuffer = `${codexOutputBuffer}${cleaned}`.slice(-2000);
-    if (/(^|[\r\n])›\s/.test(codexOutputBuffer)) {
+    if (CODEX_READY_RE.test(codexOutputBuffer) || CODEX_DONE_RE.test(codexOutputBuffer)) {
       markCodexIdle();
       return;
     }
-    if (codexAwaitingPrompt && codexRunState !== "running") {
+    if (source === "output" && codexRunState !== "running") {
       markCodexRunning();
     }
   }
 
-  function appendCodexOutput(text) {
-    updateCodexRunStateFromOutput(text);
+  function appendCodexOutput(text, source) {
+    updateCodexRunStateFromOutput(text, source);
     ensureCodexTerminal();
     if (codexTerm) {
       codexTerm.write(text);
@@ -1061,10 +1065,10 @@
         return;
       }
       if (payload && (payload.type === "output" || payload.type === "history")) {
-        appendCodexOutput(payload.data || "");
+        appendCodexOutput(payload.data || "", payload.type);
         return;
       }
-      appendCodexOutput(String(event.data || ""));
+      appendCodexOutput(String(event.data || ""), "output");
     });
 
     codexSocket.addEventListener("close", () => {
@@ -1090,7 +1094,7 @@
     const payload = `\u001b[200~${text}\u001b[201~\r`;
     codexSocket.send(JSON.stringify({ type: "input", data: payload }));
     codexPrompt.value = "";
-    markCodexRunning();
+    startCodexRun();
   }
 
   function sendCodexCommand(command) {
@@ -1104,7 +1108,7 @@
     }
     const payload = `\u001b[200~${text}\u001b[201~\r`;
     codexSocket.send(JSON.stringify({ type: "input", data: payload }));
-    markCodexRunning();
+    startCodexRun();
   }
 
   function buildCodexGitignorePrompt() {
