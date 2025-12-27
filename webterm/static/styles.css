@@ -390,6 +390,7 @@ body {
   grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
   gap: 16px;
   align-items: stretch;
+  height: clamp(360px, 56vh, 680px);
 }
 
 .file-tree {
@@ -399,7 +400,8 @@ body {
   box-shadow: var(--soft-shadow);
   display: flex;
   flex-direction: column;
-  min-height: 48vh;
+  min-height: 0;
+  height: 100%;
 }
 
 .file-tree-header {
@@ -421,7 +423,7 @@ body {
   padding: 8px 10px 12px;
   overflow: auto;
   flex: 1;
-  height: 52vh;
+  min-height: 0;
 }
 
 .file-tree-status {
@@ -556,12 +558,42 @@ body {
   border: 1px solid rgba(15, 23, 42, 0.12);
   overflow: hidden;
   background: #12161c;
-  min-height: 48vh;
-  height: 52vh;
+  min-height: 0;
+  height: 100%;
   box-shadow: var(--soft-shadow);
+  display: flex;
+  flex-direction: column;
 }
 
-.editor-body textarea {
+.editor-pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.editor-pane-title {
+  font-weight: 700;
+  font-size: 12px;
+  color: #cbd5f5;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.editor-pane-file {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.editor-pane-content {
+  flex: 1;
+  min-height: 0;
+}
+
+.editor-pane-content textarea {
   width: 100%;
   height: 100%;
   border: none;
@@ -573,7 +605,7 @@ body {
   resize: none;
 }
 
-.editor-body .CodeMirror {
+.editor-pane-content .CodeMirror {
   height: 100%;
   font-family: "JetBrains Mono", monospace;
   font-size: 13px;
@@ -849,15 +881,21 @@ body {
 
   .editor-layout {
     grid-template-columns: 1fr;
+    height: auto;
   }
 
   .file-tree {
     min-height: 32vh;
+    height: auto;
+  }
+
+  .file-tree-body {
+    max-height: 32vh;
   }
 
   .editor-body {
     min-height: 42vh;
-    height: 46vh;
+    height: auto;
   }
 
   .codex-inputs {

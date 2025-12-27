@@ -28,6 +28,7 @@
   const pdfStatus = document.getElementById("pdfStatus");
   const editorPathInput = document.getElementById("editorPath");
   const editorTextArea = document.getElementById("editorText");
+  const editorFileLabel = document.getElementById("editorFileLabel");
   const loadFileBtn = document.getElementById("loadFile");
   const saveFileBtn = document.getElementById("saveFile");
   const editorStatus = document.getElementById("editorStatus");
@@ -745,6 +746,14 @@
   function setCodexRunState(state) {
     codexRunState = state === "running" ? "running" : "idle";
     renderCodexStatus();
+  }
+
+  function updateEditorFileLabel(value) {
+    if (!editorFileLabel) {
+      return;
+    }
+    const label = value || editorPathInput?.value || DEFAULT_EDITOR_FILE;
+    editorFileLabel.textContent = label || DEFAULT_EDITOR_FILE;
   }
 
   function markCodexRunning() {
@@ -1616,6 +1625,7 @@
     const { user, project } = buildBasePath();
     const relPath = sanitizeRelPath(editorPathInput.value, DEFAULT_EDITOR_FILE);
     editorPathInput.value = relPath;
+    updateEditorFileLabel(relPath);
     setEditorStatus("Status: loading", "loading");
     try {
       const url = buildFileApiUrl({ user, project, path: relPath });
@@ -1651,6 +1661,7 @@
     const { user, project } = buildBasePath();
     const relPath = sanitizeRelPath(editorPathInput.value, DEFAULT_EDITOR_FILE);
     editorPathInput.value = relPath;
+    updateEditorFileLabel(relPath);
     setEditorStatus("Status: saving", "loading");
     try {
       const response = await fetch("/api/file", {
@@ -2234,6 +2245,7 @@
         DEFAULT_EDITOR_FILE
       );
       editorPathInput.value = nextPath;
+      updateEditorFileLabel(nextPath);
       setActiveTreePath(nextPath);
       scheduleEditorLoad(200);
     });
@@ -2255,6 +2267,7 @@
       if (editorPathInput) {
         editorPathInput.value = nextPath;
       }
+      updateEditorFileLabel(nextPath);
       setActiveTreePath(nextPath);
       loadEditorFile();
     });
@@ -2323,6 +2336,7 @@
   setProjectStatus("unknown");
   setPdfStatus("Status: idle");
   setEditorStatus("Status: idle");
+  updateEditorFileLabel();
   setTreeStatus("Status: idle");
   setCodexStatus("Status: idle");
   ensureCodexTerminal();
