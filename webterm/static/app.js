@@ -361,6 +361,19 @@
     codexFitAddon.fit();
   }
 
+  function sendCodexResize() {
+    if (!codexSocket || codexSocket.readyState !== WebSocket.OPEN || !codexTerm) {
+      return;
+    }
+    codexSocket.send(
+      JSON.stringify({
+        type: "resize",
+        cols: codexTerm.cols,
+        rows: codexTerm.rows,
+      })
+    );
+  }
+
   function resetCodexOutput() {
     if (codexTerm) {
       codexTerm.reset();
@@ -436,6 +449,16 @@
 
     codexSocket.addEventListener("open", () => {
       setCodexStatus(`Status: connected (${id})`, "ready");
+      ensureCodexTerminal();
+      if (codexFitAddon) {
+        codexFitAddon.fit();
+      }
+      setTimeout(() => {
+        if (codexFitAddon) {
+          codexFitAddon.fit();
+        }
+        sendCodexResize();
+      }, 50);
     });
 
     codexSocket.addEventListener("message", (event) => {
@@ -992,6 +1015,7 @@
       sendResize();
       if (codexFitAddon) {
         codexFitAddon.fit();
+        sendCodexResize();
       }
     }, 150);
   });

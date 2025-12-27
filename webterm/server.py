@@ -551,6 +551,7 @@ class CodexSession:
         )
         os.close(slave_fd)
         os.set_blocking(self.master_fd, False)
+        set_pty_size(self.master_fd, 30, 120)
         self._loop.add_handler(self.master_fd, self._on_read, self._loop.READ)
 
     def _append_buffer(self, data):
@@ -612,6 +613,16 @@ class CodexSession:
         if not text.endswith("\n"):
             text = text + "\n"
         os.write(self.master_fd, text.encode())
+
+    def resize(self, rows, cols):
+        if self._closed or self.master_fd is None:
+            return
+        try:
+            set_pty_size(self.master_fd, rows, cols)
+            if self.proc and self.proc.poll() is None:
+                os.killpg(os.getpgid(self.proc.pid), signal.SIGWINCH)
+        except OSError:
+            pass
 
     def stop(self):
         self._broadcast({"type": "status", "state": "stopping"})
@@ -708,6 +719,15 @@ class CodexWebSocket(tornado.websocket.WebSocketHandler):
             except json.JSONDecodeError:
                 payload = None
         if payload:
+            if payload.get("type") == "resize":
+                try:
+                    rows = int(payload.get("rows", 24))
+                    cols = int(payload.get("cols", 80))
+                except (TypeError, ValueError):
+                    return
+                if self.session:
+                    self.session.resize(rows, cols)
+                return
             if payload.get("type") == "prompt":
                 text = payload.get("text", "")
                 if self.session:
