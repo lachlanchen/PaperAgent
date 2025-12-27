@@ -43,6 +43,12 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 SAFE_SEGMENT = re.compile(r"[^a-zA-Z0-9._-]+")
 SAFE_PDF = re.compile(r"^[a-zA-Z0-9._-]+\.pdf$", re.IGNORECASE)
+CODEX_WORK_RE = re.compile(
+    r"(?:^|[\r\n])\s*[\u2022\u25e6][^\r\n]*esc to interrupt",
+    re.IGNORECASE,
+)
+CODEX_DONE_RE = re.compile(r"(?:^|[\r\n])\u2500 Worked for ")
+CODEX_PROMPT_RE = re.compile(r"(?:^|[\r\n])\u203a\s")
 MAX_FILE_BYTES = 1024 * 1024
 logger = logging.getLogger("paperterm")
 
@@ -979,6 +985,9 @@ class CodexSession:
         self.created_at = time.time()
         self.last_activity = self.created_at
         self.state = "running"
+        self.run_state = "idle"
+        self._run_state_buffer = ""
+        self._had_work_line = False
         if self.logger:
             self.logger.log_session(self.session_id, self.username, self.project)
         self._spawn()
@@ -1025,6 +1034,33 @@ class CodexSession:
         for client in stale:
             self.clients.discard(client)
 
+    def _set_run_state(self, state):
+        if state == self.run_state:
+            return
+        self.run_state = state
+        self._broadcast({"type": "run_state", "state": state})
+
+    def _update_run_state(self, text):
+        if not text:
+            return
+        self._run_state_buffer = f"{self._run_state_buffer}{text}"[-2000:]
+        if CODEX_WORK_RE.search(self._run_state_buffer):
+            self._had_work_line = True
+            self._set_run_state("running")
+            return
+        if self._had_work_line and (
+            CODEX_DONE_RE.search(self._run_state_buffer)
+            or CODEX_PROMPT_RE.search(self._run_state_buffer)
+        ):
+            self._had_work_line = False
+            self._run_state_buffer = ""
+            self._set_run_state("idle")
+
+    def note_user_input(self):
+        self._had_work_line = False
+        self._run_state_buffer = ""
+        self._set_run_state("idle")
+
     def _on_read(self, fd, events):
         try:
             data = os.read(fd, 4096)
@@ -1043,6 +1079,7 @@ class CodexSession:
             data = data.replace(b"\x1b[6n", b"")
         text = data.decode("utf-8", errors="ignore")
         self._append_buffer(text)
+        self._update_run_state(text)
         if self.logger:
             self.logger.log_message(self.session_id, "assistant", text)
         self._broadcast({"type": "output", "data": text})
@@ -1057,7 +1094,12 @@ class CodexSession:
             history = self.logger.fetch_output_history(self.session_id)
             if history:
                 client.write_message(json.dumps({"type": "history", "data": history}))
-        client.write_message(json.dumps({"type": "status", "state": "ready"}))
+        client.write_message(
+            json.dumps(
+                {"type": "status", "state": "ready", "run_state": self.run_state}
+            )
+        )
+        client.write_message(json.dumps({"type": "run_state", "state": self.run_state}))
 
     def detach(self, client):
         self.clients.discard(client)
@@ -1066,6 +1108,7 @@ class CodexSession:
         if self._closed or self.master_fd is None:
             return
         self.last_activity = time.time()
+        self.note_user_input()
         payload = text.replace("\r", "")
         if "\n" in payload:
             payload = payload.replace("\n", "\r")
@@ -1182,6 +1225,7 @@ class CodexManager:
                     "username": session.username,
                     "project": session.project,
                     "state": state,
+                    "run_state": session.run_state,
                     "clients": len(session.clients),
                     "created_at": session.created_at,
                     "last_activity": session.last_activity,
@@ -1269,11 +1313,14 @@ class CodexWebSocket(tornado.websocket.WebSocketHandler):
             if payload.get("type") == "input":
                 data = payload.get("data", "")
                 if self.session and data:
+                    if "\r" in data or "\n" in data:
+                        self.session.note_user_input()
                     self.session.send_raw(data)
                 return
             if payload.get("type") == "prompt":
                 text = payload.get("text", "")
                 if self.session:
+                    self.session.note_user_input()
                     self.session.send_input(text)
                 if self.session_id and self.manager.logger:
                     self.manager.logger.log_message(self.session_id, "user", text)

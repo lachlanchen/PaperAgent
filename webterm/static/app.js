@@ -919,6 +919,11 @@
       }
       const data = await response.json();
       updateCodexSessionList(data.sessions || []);
+      const activeId = codexSessionInput?.value || "";
+      const match = (data.sessions || []).find((session) => session.id === activeId);
+      if (match?.run_state) {
+        setCodexRunState(match.run_state);
+      }
     } catch (err) {
       if (!silent) {
         updateCodexSessionList([]);
@@ -1063,7 +1068,11 @@
         const state = payload.state || "unknown";
         if (state === "ready") {
           setCodexStatus(`Status: ready (${id})`, "ready");
-          markCodexIdle();
+          if (payload.run_state) {
+            setCodexRunState(payload.run_state);
+          } else {
+            markCodexIdle();
+          }
         } else if (state === "closed") {
           setCodexStatus("Status: closed", "error");
           markCodexIdle();
@@ -1075,6 +1084,10 @@
         } else {
           setCodexStatus(`Status: ${state}`);
         }
+        return;
+      }
+      if (payload && payload.type === "run_state") {
+        setCodexRunState(payload.state || "idle");
         return;
       }
       if (payload && (payload.type === "output" || payload.type === "history")) {
