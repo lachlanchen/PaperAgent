@@ -98,11 +98,11 @@ body {
 .stage {
   padding: 28px;
   display: grid;
-  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr) minmax(260px, 360px);
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr) minmax(0, 1.35fr);
   gap: 22px;
   align-items: stretch;
   animation: fadeUp 0.8s ease;
-  max-width: 1480px;
+  max-width: 96vw;
   margin: 0 auto;
 }
 
@@ -353,7 +353,7 @@ body {
 }
 
 .editor-section {
-  max-width: 1480px;
+  max-width: 96vw;
   margin: 0 auto 24px;
   padding: 0 28px;
   display: flex;
@@ -584,7 +584,7 @@ body {
 
 .hint {
   margin: 0 auto 28px;
-  max-width: 1480px;
+  max-width: 96vw;
   padding: 0 28px;
   display: flex;
   align-items: center;
