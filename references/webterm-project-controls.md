@@ -147,6 +147,15 @@ DB_USER=lachlan
 DB_PASSWORD=...
 ```
 
+### Codex run state
+
+The server tracks a lightweight run state so the UI can show **running** vs **idle** even after refresh:
+
+- **running**: when Codex emits a line with `esc to interrupt` (the “Working …” line).
+- **idle**: when a new prompt appears or `Worked for ...` is printed.
+
+This state is broadcast over the WebSocket as `{"type":"run_state","state":"running|idle"}` and also included in `/api/codex/sessions` for session dropdown refreshes.
+
 ## Defaults
 
 - Container user: `paperagent`
