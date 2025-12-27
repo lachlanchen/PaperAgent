@@ -122,6 +122,67 @@ Option B: manual attach (debug or ad-hoc use)
 docker exec -it paperagent-sandbox bash
 ```
 
+## Step 3b: Create a project layout inside the container
+
+You can run these commands either:
+- inside the web terminal (Option A), or
+- from the host using `docker exec`.
+
+### Container-only path (lives inside the container)
+
+Pick a username and project id:
+
+```
+USER_IN_CONTAINER=paperagent
+PROJECT_ID=demo-paper
+```
+
+Create the folder structure:
+
+```
+mkdir -p /home/$USER_IN_CONTAINER/Projects/$PROJECT_ID/{code,data,figures,latex/latex_figures,artifacts}
+```
+
+Note: this path is **not** on the host unless you explicitly mount it.
+
+### Host-visible path (recommended for persistence)
+
+If you want files to show up on the host, create it under `/workspace`:
+
+```
+PROJECT_ID=demo-paper
+mkdir -p /workspace/Projects/$PROJECT_ID/{code,data,figures,latex/latex_figures,artifacts}
+```
+
+### Run from the host (no web terminal)
+
+```
+docker exec -u 0 paperagent-sandbox bash -lc \
+  "mkdir -p /workspace/Projects/demo-paper/{code,data,figures,latex/latex_figures,artifacts}"
+```
+
+## Step 3c: Write and compile LaTeX inside the container
+
+Example (using the host-visible `/workspace` path):
+
+```
+cat > /workspace/Projects/demo-paper/latex/main.tex <<'EOF'
+\\documentclass{article}
+\\begin{document}
+Hello PaperAgent.
+\\end{document}
+EOF
+
+cd /workspace/Projects/demo-paper/latex
+latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
+```
+
+If you prefer XeLaTeX:
+
+```
+latexmk -pdf -xelatex -interaction=nonstopmode -halt-on-error main.tex
+```
+
 ## Step 4: LAN access (optional)
 
 If you want LAN access to the web terminal:
