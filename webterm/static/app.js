@@ -46,6 +46,7 @@
   const codexStatusSyncBtn = document.getElementById("codexStatusSync");
   const codexStopBtn = document.getElementById("codexStop");
   const codexInitBtn = document.getElementById("codexInit");
+  const codexCompileLatexBtn = document.getElementById("codexCompileLatex");
   const createGitignoreBtn = document.getElementById("createGitignore");
   const gitCommitPushBtn = document.getElementById("gitCommitPush");
   const codexOutput = document.getElementById("codexOutput");
@@ -1377,6 +1378,18 @@
     ].join("\n");
   }
 
+  function buildCodexCompilePrompt() {
+    const { path } = buildBasePath();
+    const latexDir = `${path}/latex`;
+    return [
+      "Compile LaTeX for this project.",
+      "Run:",
+      `cd ${latexDir}`,
+      "latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex",
+      "If main.tex is missing, report it.",
+    ].join("\n");
+  }
+
   function buildGitIdentityCommand(name, email) {
     return [
       `git config --global user.name ${shellQuote(name)}`,
@@ -2177,6 +2190,12 @@
         "- Use .gitignore to avoid large data files or generated artifacts.",
       ].join("\n");
       sendCodexCommand(initPrompt);
+    });
+  }
+
+  if (codexCompileLatexBtn) {
+    codexCompileLatexBtn.addEventListener("click", () => {
+      sendCodexCommand(buildCodexCompilePrompt());
     });
   }
 
