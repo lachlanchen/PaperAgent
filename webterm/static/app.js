@@ -62,7 +62,7 @@
   const CODEX_OUTPUT_LIMIT = 60000;
   const CODEX_SESSIONS_REFRESH_MS = 8000;
   const CODEX_HISTORY_REFRESH_MS = 30000;
-  const CODEX_HISTORY_LIMIT = 50;
+  const CODEX_HISTORY_LIMIT = 0;
   const CODEX_DONE_RE = /(?:^|[\r\n])─ Worked for /;
   const CODEX_PROMPT_RE = /(^|[\r\n])›\s/g;
   const CODEX_WORK_RE = /(?:^|[\r\n])\s*[•◦][^\r\n]*esc to interrupt/i;
@@ -267,7 +267,7 @@
     if (project) {
       params.set("project", project);
     }
-    if (limit) {
+    if (limit !== undefined && limit !== null) {
       params.set("limit", String(limit));
     }
     return `/api/codex/history?${params.toString()}`;

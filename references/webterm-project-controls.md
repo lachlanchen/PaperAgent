@@ -133,6 +133,7 @@ The Codex panel opens a direct WebSocket to `/codex/ws?session=<id>` and lets yo
 - send prompts without opening the interactive CLI
 
 If Postgres logging is enabled, the session dropdown also includes **Recent sessions (DB)** so you can pick and resume older runs.
+By default the UI requests `limit=0` (no limit) so it shows all stored sessions for the current user/project.
 
 Default Codex args can be configured with:
 

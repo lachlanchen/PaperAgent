@@ -1020,20 +1020,32 @@ class CodexLogger:
             return []
         name = username or None
         proj = project or None
-        bounded = max(1, min(limit or 50, 200))
         try:
             with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT session_id, username, project_id, updated_at
-                    FROM codex_sessions
-                    WHERE (%s IS NULL OR username = %s)
-                      AND (%s IS NULL OR project_id = %s)
-                    ORDER BY updated_at DESC
-                    LIMIT %s
-                    """,
-                    (name, name, proj, proj, bounded),
-                )
+                if limit is None or limit <= 0:
+                    cur.execute(
+                        """
+                        SELECT session_id, username, project_id, updated_at
+                        FROM codex_sessions
+                        WHERE (%s IS NULL OR username = %s)
+                          AND (%s IS NULL OR project_id = %s)
+                        ORDER BY updated_at DESC
+                        """,
+                        (name, name, proj, proj),
+                    )
+                else:
+                    bounded = max(1, min(limit, 200))
+                    cur.execute(
+                        """
+                        SELECT session_id, username, project_id, updated_at
+                        FROM codex_sessions
+                        WHERE (%s IS NULL OR username = %s)
+                          AND (%s IS NULL OR project_id = %s)
+                        ORDER BY updated_at DESC
+                        LIMIT %s
+                        """,
+                        (name, name, proj, proj, bounded),
+                    )
                 rows = cur.fetchall()
         except Exception:
             return []
