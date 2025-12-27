@@ -1,16 +1,16 @@
-[![Main Project](https://img.shields.io/badge/Main_Project-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying)
+[![메인 프로젝트](https://img.shields.io/badge/메인_프로젝트-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying)
 
-English | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md) | [Français](README.fr.md) | [Español](README.es.md)
+[English](README.md) | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) | [日本語](README.ja.md) | 한국어 | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md) | [Français](README.fr.md) | [Español](README.es.md)
 
 # PaperAgent
 
-PaperAgent is a local-first web workspace for writing papers: edit LaTeX and code in the browser, run Python/R and compile LaTeX on the backend, and preview PDFs with logs in one place.
+PaperAgent는 로컬 우선 논문 작성 워크스페이스입니다. 브라우저에서 LaTeX와 코드를 편집하고, 백엔드에서 Python/R과 LaTeX을 실행·컴파일하며, PDF와 로그를 한 곳에서 미리 볼 수 있습니다.
 
-## Main project
+## 메인 프로젝트
 
 - https://github.com/lachlanchen/the-art-of-lazying
 
-## Ecosystem links
+## 에코시스템 링크
 
 - https://lazying.art
 - https://chat.lazying.art
@@ -22,7 +22,7 @@ PaperAgent is a local-first web workspace for writing papers: edit LaTeX and cod
 - https://robot.lazying.art
 - https://glass.lazying.art
 
-### Donate
+### 후원
 
 <div align="center">
 <table style="margin:0 auto; text-align:center; border-collapse:collapse;">
@@ -57,4 +57,4 @@ PaperAgent is a local-first web workspace for writing papers: edit LaTeX and cod
 </table>
 </div>
 
-Your support sustains my research, development, and ops so I can keep sharing more open projects and improvements.
+여러분의 지원은 연구·개발과 운영을 지속하고 더 많은 오픈 프로젝트를 공유할 수 있게 해줍니다.

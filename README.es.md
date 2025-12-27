@@ -1,16 +1,16 @@
-[![Main Project](https://img.shields.io/badge/Main_Project-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying)
+[![Proyecto principal](https://img.shields.io/badge/Proyecto_principal-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying)
 
-English | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md) | [Français](README.fr.md) | [Español](README.es.md)
+[English](README.md) | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md) | [Français](README.fr.md) | Español
 
 # PaperAgent
 
-PaperAgent is a local-first web workspace for writing papers: edit LaTeX and code in the browser, run Python/R and compile LaTeX on the backend, and preview PDFs with logs in one place.
+PaperAgent es un espacio de trabajo local-first para escribir papers: edita LaTeX y código en el navegador, ejecuta Python/R y compila LaTeX en el backend, y previsualiza PDFs y logs en un solo lugar.
 
-## Main project
+## Proyecto principal
 
 - https://github.com/lachlanchen/the-art-of-lazying
 
-## Ecosystem links
+## Enlaces del ecosistema
 
 - https://lazying.art
 - https://chat.lazying.art
@@ -22,7 +22,7 @@ PaperAgent is a local-first web workspace for writing papers: edit LaTeX and cod
 - https://robot.lazying.art
 - https://glass.lazying.art
 
-### Donate
+### Donar
 
 <div align="center">
 <table style="margin:0 auto; text-align:center; border-collapse:collapse;">
@@ -57,4 +57,4 @@ PaperAgent is a local-first web workspace for writing papers: edit LaTeX and cod
 </table>
 </div>
 
-Your support sustains my research, development, and ops so I can keep sharing more open projects and improvements.
+Tu apoyo sostiene la investigación, el desarrollo y las operaciones para poder compartir más proyectos abiertos y mejoras.
