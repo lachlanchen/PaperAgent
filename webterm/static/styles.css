@@ -104,6 +104,7 @@ body {
   animation: fadeUp 0.8s ease;
   max-width: 96vw;
   margin: 0 auto;
+  min-height: calc(100vh - 170px);
 }
 
 .panel {
@@ -119,7 +120,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  min-height: 68vh;
+  min-height: calc(100vh - 170px);
   position: relative;
   overflow: hidden;
 }
@@ -246,6 +247,10 @@ body {
   color: var(--muted);
 }
 
+.helper.hidden {
+  display: none;
+}
+
 .helper.code {
   font-family: "JetBrains Mono", monospace;
 }
@@ -253,7 +258,7 @@ body {
 .terminal-panel {
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  min-height: 68vh;
+  min-height: calc(100vh - 170px);
   display: flex;
 }
 
@@ -271,7 +276,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 68vh;
+  min-height: calc(100vh - 170px);
 }
 
 .preview-header {
@@ -731,7 +736,7 @@ body {
 
   .preview-panel {
     grid-column: 1 / -1;
-    min-height: 48vh;
+    min-height: 52vh;
   }
 }
 
@@ -740,6 +745,16 @@ body {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .stage {
+    min-height: auto;
+  }
+
+  .control-panel,
+  .terminal-panel,
+  .preview-panel {
+    min-height: 58vh;
   }
 
   .status-wrap {
