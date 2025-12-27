@@ -988,6 +988,7 @@
   function buildCodexCommitPushPrompt() {
     return [
       "Please run: git status -sb, git add -A, git commit, git push.",
+      "Choose a concise commit message based on the actual changes.",
       "If there are no changes, just report that.",
     ].join("\n");
   }
