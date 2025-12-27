@@ -892,7 +892,11 @@
   function formatCodexSessionLabel(session) {
     const parts = [];
     if (session?.id) {
-      parts.push(session.id);
+      if (session?.cli_session_id) {
+        parts.push(`${session.cli_session_id} (bridge ${session.id})`);
+      } else {
+        parts.push(session.id);
+      }
     }
     if (session?.username || session?.project) {
       parts.push(`${session.username || "?"}/${session.project || "?"}`);
@@ -927,7 +931,11 @@
   function formatCodexHistoryLabel(session) {
     const parts = [];
     if (session?.session_id) {
-      parts.push(session.session_id);
+      if (session?.cli_session_id) {
+        parts.push(`${session.cli_session_id} (bridge ${session.session_id})`);
+      } else {
+        parts.push(session.session_id);
+      }
     }
     if (session?.username || session?.project_id) {
       parts.push(`${session.username || "?"}/${session.project_id || "?"}`);
@@ -1234,6 +1242,10 @@
       }
       if (payload && payload.type === "run_state") {
         setCodexRunState(payload.state || "idle");
+        return;
+      }
+      if (payload && payload.type === "cli_session") {
+        loadCodexSessions({ silent: true });
         return;
       }
       if (payload && (payload.type === "output" || payload.type === "history")) {

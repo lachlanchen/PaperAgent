@@ -49,6 +49,7 @@ CODEX_WORK_RE = re.compile(
 )
 CODEX_DONE_RE = re.compile(r"(?:^|[\r\n])\u2500 Worked for ")
 CODEX_PROMPT_RE = re.compile(r"(?:^|[\r\n])\u203a\s")
+CODEX_CLI_SESSION_RE = re.compile(r"Session:\s*([0-9a-f-]{8,})", re.IGNORECASE)
 MAX_FILE_BYTES = 1024 * 1024
 logger = logging.getLogger("paperterm")
 
@@ -918,6 +919,26 @@ class CodexLogger:
         except Exception:
             return
 
+    def log_cli_session_id(self, session_id, cli_session_id):
+        if not cli_session_id:
+            return
+        conn = self._connect()
+        if not conn:
+            return
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    UPDATE codex_sessions
+                    SET cli_session_id = %s,
+                        updated_at = NOW()
+                    WHERE session_id = %s
+                    """,
+                    (cli_session_id, session_id),
+                )
+        except Exception:
+            return
+
     def log_message(self, session_id, role, content):
         if role == "assistant" and not self.log_output:
             return
@@ -993,7 +1014,7 @@ class CodexLogger:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT session_id, username, project_id, updated_at
+                    SELECT session_id, username, project_id, cli_session_id, updated_at
                     FROM codex_sessions
                     WHERE (%s IS NULL OR username = %s)
                       AND (%s IS NULL OR project_id = %s)
@@ -1011,7 +1032,8 @@ class CodexLogger:
             "session_id": row[0],
             "username": row[1],
             "project_id": row[2],
-            "updated_at": row[3].isoformat() if row[3] else None,
+            "cli_session_id": row[3],
+            "updated_at": row[4].isoformat() if row[4] else None,
         }
 
     def list_sessions(self, username=None, project=None, limit=50):
@@ -1025,7 +1047,7 @@ class CodexLogger:
                 if limit is None or limit <= 0:
                     cur.execute(
                         """
-                        SELECT session_id, username, project_id, updated_at
+                        SELECT session_id, username, project_id, cli_session_id, updated_at
                         FROM codex_sessions
                         WHERE (%s IS NULL OR username = %s)
                           AND (%s IS NULL OR project_id = %s)
@@ -1037,7 +1059,7 @@ class CodexLogger:
                     bounded = max(1, min(limit, 200))
                     cur.execute(
                         """
-                        SELECT session_id, username, project_id, updated_at
+                        SELECT session_id, username, project_id, cli_session_id, updated_at
                         FROM codex_sessions
                         WHERE (%s IS NULL OR username = %s)
                           AND (%s IS NULL OR project_id = %s)
@@ -1056,7 +1078,8 @@ class CodexLogger:
                     "session_id": row[0],
                     "username": row[1],
                     "project_id": row[2],
-                    "updated_at": row[3].isoformat() if row[3] else None,
+                    "cli_session_id": row[3],
+                    "updated_at": row[4].isoformat() if row[4] else None,
                 }
             )
         return sessions
@@ -1082,6 +1105,7 @@ class CodexSession:
         self.run_state = "idle"
         self._run_state_buffer = ""
         self._had_work_line = False
+        self.cli_session_id = None
         if self.logger:
             self.logger.log_session(self.session_id, self.username, self.project)
         self._spawn()
@@ -1150,6 +1174,22 @@ class CodexSession:
             self._run_state_buffer = ""
             self._set_run_state("idle")
 
+    def _update_cli_session_id(self, text):
+        if not text:
+            return
+        match = None
+        for entry in CODEX_CLI_SESSION_RE.finditer(text):
+            match = entry
+        if not match:
+            return
+        cli_id = match.group(1)
+        if not cli_id or cli_id == self.cli_session_id:
+            return
+        self.cli_session_id = cli_id
+        if self.logger:
+            self.logger.log_cli_session_id(self.session_id, cli_id)
+        self._broadcast({"type": "cli_session", "id": cli_id})
+
     def note_user_input(self):
         self._had_work_line = False
         self._run_state_buffer = ""
@@ -1174,6 +1214,7 @@ class CodexSession:
         text = data.decode("utf-8", errors="ignore")
         self._append_buffer(text)
         self._update_run_state(text)
+        self._update_cli_session_id(text)
         if self.logger:
             self.logger.log_message(self.session_id, "assistant", text)
         self._broadcast({"type": "output", "data": text})
@@ -1196,6 +1237,10 @@ class CodexSession:
             )
         )
         client.write_message(json.dumps({"type": "run_state", "state": self.run_state}))
+        if self.cli_session_id:
+            client.write_message(
+                json.dumps({"type": "cli_session", "id": self.cli_session_id})
+            )
 
     def detach(self, client):
         self.clients.discard(client)
@@ -1321,6 +1366,7 @@ class CodexManager:
                     "username": session.username,
                     "project": session.project,
                     "state": state,
+                    "cli_session_id": session.cli_session_id,
                     "run_state": session.run_state,
                     "clients": len(session.clients),
                     "created_at": session.created_at,
@@ -1395,6 +1441,8 @@ class CodexLatestHandler(tornado.web.RequestHandler):
         if active:
             payload["session"]["run_state"] = active.run_state
             payload["session"]["state"] = "attached" if active.clients else "idle"
+            if active.cli_session_id:
+                payload["session"]["cli_session_id"] = active.cli_session_id
         self.set_header("Content-Type", "application/json")
         self.set_header("Cache-Control", "no-store")
         self.write(payload)

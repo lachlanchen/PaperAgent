@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS codex_sessions (
   session_id TEXT PRIMARY KEY,
   username TEXT,
   project_id TEXT,
+  cli_session_id TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -47,3 +48,6 @@ CREATE INDEX IF NOT EXISTS codex_messages_session_id_idx
 
 CREATE INDEX IF NOT EXISTS codex_sessions_user_project_updated_idx
   ON codex_sessions(username, project_id, updated_at);
+
+ALTER TABLE codex_sessions
+  ADD COLUMN IF NOT EXISTS cli_session_id TEXT;

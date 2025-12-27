@@ -135,6 +135,8 @@ The Codex panel opens a direct WebSocket to `/codex/ws?session=<id>` and lets yo
 If Postgres logging is enabled, the session dropdown also includes **Recent sessions (DB)** so you can pick and resume older runs.
 By default the UI requests `limit=0` (no limit) so it shows all stored sessions for the current user/project.
 
+When available, the dropdown label shows the Codex CLI session ID (parsed from `/status` output) and the bridge session ID in parentheses.
+
 Default Codex args can be configured with:
 
 ```
