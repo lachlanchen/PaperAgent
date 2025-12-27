@@ -68,6 +68,10 @@ class QuietAccessFilter(logging.Filter):
         except (ValueError, IndexError):
             return True
         if status >= 400:
+            if status == 404 and "GET /api/project" in message:
+                return False
+            if status == 404 and "GET /__dev__/version" in message:
+                return False
             return True
         if "GET /api/file" in message and "meta=1" in message:
             return False
@@ -143,6 +147,34 @@ def normalize_remote(value):
     if not trimmed:
         return ""
     return trimmed[:512]
+
+
+def get_db_params():
+    return {
+        "host": os.environ.get("DB_HOST", "localhost"),
+        "port": os.environ.get("DB_PORT", "5432"),
+        "dbname": os.environ.get("DB_NAME", "paperagent_db"),
+        "user": os.environ.get("DB_USER", "lachlan"),
+        "password": os.environ.get("DB_PASSWORD", ""),
+    }
+
+
+def open_db_connection():
+    params = get_db_params()
+    errors = []
+    try:
+        import psycopg2
+
+        return psycopg2.connect(**params), None
+    except Exception as exc:
+        errors.append(f"psycopg2: {exc}")
+    try:
+        import psycopg
+
+        return psycopg.connect(**params), None
+    except Exception as exc:
+        errors.append(f"psycopg: {exc}")
+    return None, "; ".join(errors)
 
 
 def resolve_container_name():
@@ -525,26 +557,14 @@ class ProjectStore:
         if self._connect_error:
             self._log_connect_error()
             return None
-        try:
-            import psycopg2
-        except ImportError as exc:
-            self._connect_error = str(exc)
+        conn, error = open_db_connection()
+        if not conn:
+            self._connect_error = error or "unknown db error"
             self._log_connect_error()
             return None
-        try:
-            self._conn = psycopg2.connect(
-                host=os.environ.get("DB_HOST", "localhost"),
-                port=os.environ.get("DB_PORT", "5432"),
-                dbname=os.environ.get("DB_NAME", "paperagent_db"),
-                user=os.environ.get("DB_USER", "lachlan"),
-                password=os.environ.get("DB_PASSWORD", ""),
-            )
-            self._conn.autocommit = True
-            return self._conn
-        except Exception as exc:
-            self._connect_error = str(exc)
-            self._log_connect_error()
-            return None
+        self._conn = conn
+        self._conn.autocommit = True
+        return self._conn
 
     def _ensure_user(self, username):
         conn = self._connect()
@@ -692,24 +712,13 @@ class CodexLogger:
             return self._conn
         if self._connect_error:
             return None
-        try:
-            import psycopg2
-        except ImportError as exc:
-            self._connect_error = str(exc)
+        conn, error = open_db_connection()
+        if not conn:
+            self._connect_error = error or "unknown db error"
             return None
-        try:
-            self._conn = psycopg2.connect(
-                host=os.environ.get("DB_HOST", "localhost"),
-                port=os.environ.get("DB_PORT", "5432"),
-                dbname=os.environ.get("DB_NAME", "paperagent_db"),
-                user=os.environ.get("DB_USER", "lachlan"),
-                password=os.environ.get("DB_PASSWORD", ""),
-            )
-            self._conn.autocommit = True
-            return self._conn
-        except Exception as exc:
-            self._connect_error = str(exc)
-            return None
+        self._conn = conn
+        self._conn.autocommit = True
+        return self._conn
 
     def log_session(self, session_id, username=None, project=None):
         conn = self._connect()

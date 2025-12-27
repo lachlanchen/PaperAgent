@@ -35,7 +35,13 @@ set in `.env`:
 CODEX_LOG_DB=0
 ```
 
-Then install the Postgres driver in your Python environment:
+Then install the Postgres driver in your Python environment (Python 3.13+ prefers psycopg v3):
+
+```
+pip install "psycopg[binary]"
+```
+
+If you are on Python <= 3.12 you can also use:
 
 ```
 pip install psycopg2-binary
