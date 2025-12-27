@@ -6,15 +6,44 @@ English | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) 
 
 PaperAgent is a local-first web workspace for writing papers: edit LaTeX and code in the browser, run Python/R and compile LaTeX on the backend, and preview PDFs with logs in one place.
 
+## Vision
+
+PaperAgent is built to **liberate people from research busy-work to “Only Ideas.”**  
+The goal is simple: keep the thinking human and make the system do the repetitive work.  
+You focus on the idea and the narrative; PaperAgent handles the execution loops.
+
+## Philosophy
+
+- **Local-first, privacy-first**: your data and execution stay on your machine by default.
+- **Idea-first workflow**: move from a concept to a runnable paper without friction.
+- **Small, reversible steps**: every change is transparent and easy to undo.
+- **Tools should remove work**: automation exists to delete toil, not add it.
+
+## Logic (how it works)
+
+1) **Chat → Edit**: describe the change, and PaperAgent edits the right files.  
+2) **Run → Compile**: execute Python/R, compile LaTeX, generate figures.  
+3) **Preview → Iterate**: inspect PDF + logs, fix fast, repeat.
+
+This mirrors how researchers actually work, but makes the loops faster and safer.
+
+## What you get
+
+- Web terminal connected to a Docker sandbox
+- LaTeX project scaffolding and one-click compile
+- Python/R execution for figures and experiments
+- PDF preview with logs
+- A clean, minimal PWA interface
+
 ## Main project
 
 - https://github.com/lachlanchen/the-art-of-lazying
 
 ## Ecosystem links
 
-- https://lazying.art
+- https://lazying.art 🎨 <img src="https://img.shields.io/badge/Main-Visit-0f766e?style=flat-square" alt="Main site">
 - https://chat.lazying.art
-- https://onlyideas.art
+- https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://ideas.onlyideas.art
 - https://coin.lazying.art
 - https://earn.lazying.art
