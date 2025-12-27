@@ -35,7 +35,7 @@ Bạn tập trung vào ý tưởng và câu chuyện, PaperAgent lo các vòng l
 
 ## Demo
 
-![PaperAgent demo](figures/demo.png)
+![PaperAgent demo](figures/demo-full.png)
 
 ## Dự án chính
 

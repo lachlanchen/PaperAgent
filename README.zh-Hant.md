@@ -35,7 +35,7 @@ PaperAgent 的願景是讓每個人從研究的瑣事中解放，回到「只有
 
 ## 示範
 
-![PaperAgent 示範](figures/demo.png)
+![PaperAgent 示範](figures/demo-full.png)
 
 ## 主專案
 

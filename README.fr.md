@@ -35,7 +35,7 @@ Vous vous concentrez sur l’idée et le récit; PaperAgent gère les boucles d�
 
 ## Démo
 
-![Démo PaperAgent](figures/demo.png)
+![Démo PaperAgent](figures/demo-full.png)
 
 ## Projet principal
 
