@@ -8,6 +8,7 @@
   const createProjectBtn = document.getElementById("createProject");
   const initLatexBtn = document.getElementById("initLatex");
   const compileLatexBtn = document.getElementById("compileLatex");
+  const initGitBtn = document.getElementById("initGit");
   const installCodexBtn = document.getElementById("installCodex");
   const installCudaBtn = document.getElementById("installCuda");
   const pathPreview = document.getElementById("pathPreview");
@@ -238,6 +239,21 @@
       "  fi",
       "fi",
       "ls -lh main.pdf",
+      "pwd",
+    ].join("\n");
+  }
+
+  function buildGitInitCommand(basePath) {
+    return [
+      'if command -v sudo >/dev/null 2>&1; then SUDO=sudo; else SUDO=""; fi',
+      'if ! command -v git >/dev/null 2>&1; then',
+      '  if ! command -v apt-get >/dev/null 2>&1; then echo "apt-get not found"; exit 1; fi',
+      '  $SUDO apt-get update && $SUDO apt-get install -y git',
+      "fi",
+      `mkdir -p ${basePath}`,
+      `cd ${basePath}`,
+      'if [ ! -d ".git" ]; then git init; fi',
+      "git status -sb",
       "pwd",
     ].join("\n");
   }
@@ -1209,6 +1225,19 @@
       term.focus();
       schedulePdfRefresh(1500);
       scheduleTreeLoad(1200);
+    });
+  }
+
+  if (initGitBtn) {
+    initGitBtn.addEventListener("click", () => {
+      const { user, project, path } = buildBasePath();
+      userInput.value = user;
+      projectInput.value = project;
+      updatePathPreview();
+
+      const command = buildGitInitCommand(path);
+      sendCommand(`${command}\n`);
+      term.focus();
     });
   }
 
