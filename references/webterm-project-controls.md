@@ -139,6 +139,8 @@ When available, the dropdown label shows the Codex CLI session ID (parsed from `
 
 If a session is missing the CLI ID, the UI sends `/status` automatically after connect (and you can click **Sync /status**) to populate it.
 
+Auto-sync is off by default. Use the **Auto sync /status to DB** toggle in the Codex panel to opt in.
+
 Default Codex args can be configured with:
 
 ```

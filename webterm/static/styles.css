@@ -734,6 +734,10 @@ body {
   flex-direction: column;
 }
 
+.codex-sync-toggle {
+  margin-top: 6px;
+}
+
 .codex-prompt {
   flex: 1;
   border-radius: 12px;

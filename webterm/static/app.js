@@ -53,6 +53,7 @@
   const codexPrompt = document.getElementById("codexPrompt");
   const codexSendBtn = document.getElementById("codexSend");
   const codexStatus = document.getElementById("codexStatus");
+  const codexAutoSyncToggle = document.getElementById("codexAutoSync");
 
   const DEFAULT_USER = "paperagent";
   const DEFAULT_PROJECT = "demo-paper";
@@ -62,6 +63,7 @@
   const DEFAULT_EDITOR_FILE = "latex/main.tex";
   const DEFAULT_TREE_DEPTH = 5;
   const CODEX_SESSION_KEY = "paperagent.codex.session";
+  const CODEX_SYNC_KEY = "paperagent.codex.autosync";
   const CODEX_OUTPUT_LIMIT = 60000;
   const CODEX_SESSIONS_REFRESH_MS = 8000;
   const CODEX_HISTORY_REFRESH_MS = 30000;
@@ -116,6 +118,7 @@
   let codexHistorySessions = [];
   let codexStatusSyncTimer = null;
   const codexStatusRequested = new Set();
+  let codexAutoSyncEnabled = false;
   let projectRemoteTimer = null;
   let gitRemoteDirty = false;
   let userIdentityTimer = null;
@@ -977,6 +980,30 @@
     return historical?.cli_session_id || "";
   }
 
+  function getStoredCodexAutoSync() {
+    try {
+      return localStorage.getItem(CODEX_SYNC_KEY) === "1";
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function setStoredCodexAutoSync(value) {
+    try {
+      localStorage.setItem(CODEX_SYNC_KEY, value ? "1" : "0");
+    } catch (err) {
+      // ignore
+    }
+  }
+
+  function setCodexAutoSyncState(value) {
+    codexAutoSyncEnabled = Boolean(value);
+    if (codexAutoSyncToggle) {
+      codexAutoSyncToggle.checked = codexAutoSyncEnabled;
+    }
+    setStoredCodexAutoSync(codexAutoSyncEnabled);
+  }
+
   function requestCodexStatus({ force } = {}) {
     if (!codexSocket || codexSocket.readyState !== WebSocket.OPEN) {
       return;
@@ -986,6 +1013,9 @@
       return;
     }
     if (!force) {
+      if (!codexAutoSyncEnabled) {
+        return;
+      }
       if (resolveCliSessionId(sessionId)) {
         return;
       }
@@ -2161,6 +2191,15 @@
     });
   }
 
+  if (codexAutoSyncToggle) {
+    codexAutoSyncToggle.addEventListener("change", () => {
+      setCodexAutoSyncState(codexAutoSyncToggle.checked);
+      if (codexAutoSyncEnabled) {
+        scheduleCodexStatusSync(0);
+      }
+    });
+  }
+
   if (codexStopBtn) {
     codexStopBtn.addEventListener("click", () => {
       if (!codexSocket || codexSocket.readyState !== WebSocket.OPEN) {
@@ -2359,6 +2398,7 @@
   setTreeStatus("Status: idle");
   setCodexStatus("Status: idle");
   ensureCodexTerminal();
+  setCodexAutoSyncState(getStoredCodexAutoSync());
   if (codexSessionInput) {
     const storedSession = getStoredCodexSession();
     if (storedSession) {
