@@ -55,6 +55,12 @@ mkdir -p /home/<user>/Projects/<project>/latex && \
   pwd
 ```
 
+If a `*.sty` package is missing, the PWA will attempt to install dependencies
+and re-run the compile. Example mapping:
+
+- `siunitx.sty` -> `texlive-science`
+- fallback -> `texlive-full`
+
 ### Install NVM + Codex
 
 Runs a multi-line install script inside the container:

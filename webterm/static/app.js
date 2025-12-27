@@ -181,10 +181,35 @@
 
   function buildLatexCompileCommand(basePath) {
     const latexDir = `${basePath}/latex`;
+    const latexmkCmd =
+      "latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex";
+    const missingPattern = "File \\`[^']\\+\\.sty' not found";
+    const missingExtract =
+      "grep -o \"File \\`[^']\\+\\.sty' not found\" main.log | head -n1 | sed \"s/.*\\`//; s/' not found//\"";
     return [
       `mkdir -p ${latexDir}`,
       `cd ${latexDir}`,
-      "latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex",
+      'if command -v sudo >/dev/null 2>&1; then SUDO=sudo; else SUDO=""; fi',
+      `${latexmkCmd} || {`,
+      `  if [ -f main.log ] && grep -q "${missingPattern}" main.log; then`,
+      `    missing=$(${missingExtract})`,
+      '    echo "[webterm] Missing LaTeX package: $missing"',
+      '    if command -v apt-get >/dev/null 2>&1; then',
+      '      case "$missing" in',
+      '        siunitx.sty) pkg="texlive-science" ;;',
+      '        *) pkg="texlive-full" ;;',
+      "      esac",
+      '      echo "[webterm] Installing $pkg..."',
+      '      $SUDO apt-get update && $SUDO apt-get install -y "$pkg"',
+      `      ${latexmkCmd}`,
+      "    else",
+      '      echo "[webterm] apt-get not available; install TeX packages manually."',
+      "      exit 1",
+      "    fi",
+      "  else",
+      "    exit 1",
+      "  fi",
+      "}",
       "ls -lh main.pdf",
       "pwd",
     ].join(" && ");
