@@ -1751,11 +1751,7 @@
 
   if (gitCommitPushBtn) {
     gitCommitPushBtn.addEventListener("click", () => {
-      const message = window.prompt("Commit message:", "update");
-      if (message === null) {
-        return;
-      }
-      sendCodexCommand(buildCodexCommitPushPrompt(message));
+      sendCodexCommand(buildCodexCommitPushPrompt("update"));
     });
   }
 
