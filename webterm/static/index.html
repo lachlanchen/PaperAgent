@@ -155,6 +155,31 @@
       <div id="editorStatus" class="editor-status">Status: idle</div>
     </section>
 
+    <section class="codex-section">
+      <div class="codex-header">
+        <div>
+          <div class="codex-title">Codex Bridge</div>
+          <div class="codex-subtitle">
+            Send prompts to Codex CLI without entering the interactive shell.
+          </div>
+        </div>
+        <div class="codex-actions">
+          <input id="codexSession" class="input" type="text" />
+          <button id="codexNew" class="btn ghost">New Session</button>
+          <button id="codexResume" class="btn ghost">Resume</button>
+          <button id="codexStop" class="btn">Stop</button>
+        </div>
+      </div>
+      <div class="codex-body">
+        <div id="codexOutput" class="codex-output"></div>
+      </div>
+      <div class="codex-inputs">
+        <textarea id="codexPrompt" class="codex-prompt" rows="3"></textarea>
+        <button id="codexSend" class="btn primary">Send</button>
+      </div>
+      <div id="codexStatus" class="codex-status">Status: idle</div>
+    </section>
+
     <section class="hint">
       <div class="pill">Scope: Docker shell</div>
       <div class="meta">Run: python server.py --host 0.0.0.0 --port 8766</div>

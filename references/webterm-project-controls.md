@@ -118,6 +118,20 @@ The **Watch** toggle polls every ~3s and reloads when it detects a newer mtime (
 
 The editor includes a left file tree that lists files under `/home/<user>/Projects/<project>` (default depth 5). Click a file to load it into the editor.
 
+## Codex Bridge
+
+The Codex panel opens a direct WebSocket to `/codex/ws?session=<id>` and lets you:
+
+- start a new session
+- resume a session by ID
+- send prompts without opening the interactive CLI
+
+Default Codex args can be configured with:
+
+```
+CODEX_ARGS="-s danger-full-access -a never"
+```
+
 ## Defaults
 
 - Container user: `paperagent`

@@ -9,6 +9,9 @@ import fcntl
 import termios
 import struct
 import shutil
+import shlex
+import uuid
+from collections import deque
 from urllib.parse import urlparse
 
 import tornado.ioloop
@@ -21,6 +24,7 @@ STATIC_DIR = os.path.join(BASE_DIR, "static")
 SAFE_SEGMENT = re.compile(r"[^a-zA-Z0-9._-]+")
 SAFE_PDF = re.compile(r"^[a-zA-Z0-9._-]+\.pdf$", re.IGNORECASE)
 MAX_FILE_BYTES = 1024 * 1024
+CODEX_MAX_BUFFER = int(os.environ.get("CODEX_MAX_BUFFER", "40000"))
 
 
 def resolve_default_shell():
@@ -76,6 +80,18 @@ def resolve_container_name():
     if os.path.isfile(docker_shell):
         return "paperagent-sandbox"
     return None
+
+
+def resolve_codex_command():
+    cmd = os.environ.get("CODEX_CMD", "codex")
+    args = shlex.split(os.environ.get("CODEX_ARGS", "-s danger-full-access -a never"))
+    cwd = os.environ.get("CODEX_CWD", "/workspace")
+    container = resolve_container_name()
+    if container and shutil.which("docker"):
+        quoted = " ".join([shlex.quote(cmd)] + [shlex.quote(arg) for arg in args])
+        shell_cmd = f"cd {shlex.quote(cwd)} && {quoted}"
+        return ["docker", "exec", "-it", container, "bash", "-lc", shell_cmd], None
+    return [cmd] + args, cwd
 
 
 def read_file_bytes(path):
@@ -388,6 +404,194 @@ class TreeHandler(tornado.web.RequestHandler):
         self.write({"base": base_path, "entries": entries})
 
 
+class CodexSession:
+    def __init__(self, session_id, max_buffer=CODEX_MAX_BUFFER):
+        self.session_id = session_id
+        self.max_buffer = max_buffer
+        self.buffer = deque()
+        self.buffer_len = 0
+        self.clients = set()
+        self.master_fd = None
+        self.proc = None
+        self._closed = False
+        self._loop = tornado.ioloop.IOLoop.current()
+        self._spawn()
+
+    def _spawn(self):
+        self.master_fd, slave_fd = pty.openpty()
+        env = os.environ.copy()
+        env.setdefault("TERM", "xterm-256color")
+        cmd, cwd = resolve_codex_command()
+        self.proc = subprocess.Popen(
+            cmd,
+            stdin=slave_fd,
+            stdout=slave_fd,
+            stderr=slave_fd,
+            cwd=cwd,
+            env=env,
+            start_new_session=True,
+        )
+        os.close(slave_fd)
+        os.set_blocking(self.master_fd, False)
+        self._loop.add_handler(self.master_fd, self._on_read, self._loop.READ)
+
+    def _append_buffer(self, data):
+        if not data:
+            return
+        self.buffer.append(data)
+        self.buffer_len += len(data)
+        while self.buffer_len > self.max_buffer and self.buffer:
+            dropped = self.buffer.popleft()
+            self.buffer_len -= len(dropped)
+
+    def _broadcast(self, payload):
+        if not self.clients:
+            return
+        message = json.dumps(payload)
+        stale = []
+        for client in self.clients:
+            try:
+                client.write_message(message)
+            except tornado.websocket.WebSocketClosedError:
+                stale.append(client)
+        for client in stale:
+            self.clients.discard(client)
+
+    def _on_read(self, fd, events):
+        try:
+            data = os.read(fd, 4096)
+        except OSError:
+            data = b""
+        if not data:
+            self._broadcast({"type": "status", "state": "closed"})
+            self.close()
+            return
+        text = data.decode("utf-8", errors="ignore")
+        self._append_buffer(text)
+        self._broadcast({"type": "output", "data": text})
+
+    def attach(self, client):
+        self.clients.add(client)
+        if self.buffer:
+            history = "".join(self.buffer)
+            client.write_message(json.dumps({"type": "history", "data": history}))
+        client.write_message(json.dumps({"type": "status", "state": "ready"}))
+
+    def detach(self, client):
+        self.clients.discard(client)
+
+    def send_input(self, text):
+        if self._closed or self.master_fd is None:
+            return
+        if not text.endswith("\n"):
+            text = text + "\n"
+        os.write(self.master_fd, text.encode())
+
+    def stop(self):
+        self._broadcast({"type": "status", "state": "stopping"})
+        self.close()
+
+    def close(self):
+        if self._closed:
+            return
+        self._closed = True
+        if self.master_fd is not None:
+            try:
+                self._loop.remove_handler(self.master_fd)
+            except Exception:
+                pass
+            try:
+                os.close(self.master_fd)
+            except OSError:
+                pass
+            self.master_fd = None
+        if self.proc and self.proc.poll() is None:
+            try:
+                os.killpg(os.getpgid(self.proc.pid), signal.SIGTERM)
+            except OSError:
+                pass
+        self.proc = None
+
+
+class CodexManager:
+    def __init__(self):
+        self.sessions = {}
+
+    def get_or_create(self, session_id):
+        session = self.sessions.get(session_id)
+        if session and not session._closed:
+            return session
+        session = CodexSession(session_id)
+        self.sessions[session_id] = session
+        return session
+
+    def stop(self, session_id):
+        session = self.sessions.get(session_id)
+        if not session:
+            return
+        session.stop()
+        self.sessions.pop(session_id, None)
+
+    def restart(self, session_id):
+        self.stop(session_id)
+        return self.get_or_create(session_id)
+
+
+class CodexWebSocket(tornado.websocket.WebSocketHandler):
+    def initialize(self, manager):
+        self.manager = manager
+        self.session = None
+        self.session_id = None
+
+    def check_origin(self, origin):
+        if not origin:
+            return True
+        try:
+            host = urlparse(origin).hostname
+        except Exception:
+            return False
+        request_host = self.request.host.split(":")[0]
+        return host in ("localhost", "127.0.0.1", "::1", request_host)
+
+    def open(self):
+        session_id = self.get_argument("session", "").strip()
+        if not session_id:
+            session_id = uuid.uuid4().hex[:12]
+        self.session_id = session_id
+        self.session = self.manager.get_or_create(session_id)
+        self.session.attach(self)
+        self.write_message(json.dumps({"type": "session", "id": session_id}))
+
+    def on_message(self, message):
+        payload = None
+        if isinstance(message, str) and message.startswith("{"):
+            try:
+                payload = json.loads(message)
+            except json.JSONDecodeError:
+                payload = None
+        if payload:
+            if payload.get("type") == "prompt":
+                text = payload.get("text", "")
+                if self.session:
+                    self.session.send_input(text)
+                return
+            if payload.get("type") == "control":
+                action = payload.get("action")
+                if action == "stop" and self.session_id:
+                    self.manager.stop(self.session_id)
+                elif action == "new" and self.session_id:
+                    self.session = self.manager.restart(self.session_id)
+                    self.session.attach(self)
+                return
+        if self.session:
+            self.session.send_input(str(message))
+
+    def on_close(self):
+        if self.session:
+            self.session.detach(self)
+        self.session = None
+
+
 class TerminalWebSocket(tornado.websocket.WebSocketHandler):
     def initialize(self, shell, cwd):
         self.shell = shell
@@ -484,6 +688,7 @@ class TerminalWebSocket(tornado.websocket.WebSocketHandler):
 
 
 def make_app(shell, cwd, dev_mode=False):
+    codex_manager = CodexManager()
     settings = {
         "static_path": STATIC_DIR,
         "template_path": STATIC_DIR,
@@ -492,6 +697,7 @@ def make_app(shell, cwd, dev_mode=False):
     routes = [
         (r"/", MainHandler),
         (r"/ws", TerminalWebSocket, {"shell": shell, "cwd": cwd}),
+        (r"/codex/ws", CodexWebSocket, {"manager": codex_manager}),
         (r"/api/pdf", PdfHandler),
         (r"/api/file", FileHandler),
         (r"/api/tree", TreeHandler),

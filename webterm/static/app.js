@@ -27,6 +27,14 @@
   const fileTreeEl = document.getElementById("fileTree");
   const refreshTreeBtn = document.getElementById("refreshTree");
   const fileTreeStatus = document.getElementById("fileTreeStatus");
+  const codexSessionInput = document.getElementById("codexSession");
+  const codexNewBtn = document.getElementById("codexNew");
+  const codexResumeBtn = document.getElementById("codexResume");
+  const codexStopBtn = document.getElementById("codexStop");
+  const codexOutput = document.getElementById("codexOutput");
+  const codexPrompt = document.getElementById("codexPrompt");
+  const codexSendBtn = document.getElementById("codexSend");
+  const codexStatus = document.getElementById("codexStatus");
 
   const DEFAULT_USER = "paperagent";
   const DEFAULT_PROJECT = "demo-paper";
@@ -35,6 +43,8 @@
   const PDF_NAME_RE = /^[a-zA-Z0-9._-]+\.pdf$/i;
   const DEFAULT_EDITOR_FILE = "latex/main.tex";
   const DEFAULT_TREE_DEPTH = 5;
+  const CODEX_SESSION_KEY = "paperagent.codex.session";
+  const CODEX_OUTPUT_LIMIT = 60000;
 
   const term = new Terminal({
     cursorBlink: true,
@@ -65,6 +75,7 @@
   let editorLoading = false;
   let activeTreePath = null;
   let treeLoadTimer = null;
+  let codexSocket = null;
 
   function sanitizeSegment(value, fallback) {
     const trimmed = String(value || "").trim();
@@ -312,6 +323,136 @@
     if (state) {
       fileTreeStatus.classList.add(state);
     }
+  }
+
+  function setCodexStatus(text, state) {
+    if (!codexStatus) {
+      return;
+    }
+    codexStatus.textContent = text;
+    codexStatus.classList.remove("ready", "loading", "error");
+    if (state) {
+      codexStatus.classList.add(state);
+    }
+  }
+
+  function appendCodexOutput(text) {
+    if (!codexOutput) {
+      return;
+    }
+    const shouldScroll =
+      codexOutput.scrollTop + codexOutput.clientHeight >=
+      codexOutput.scrollHeight - 40;
+    codexOutput.textContent += text;
+    if (codexOutput.textContent.length > CODEX_OUTPUT_LIMIT) {
+      codexOutput.textContent = codexOutput.textContent.slice(-CODEX_OUTPUT_LIMIT);
+    }
+    if (shouldScroll) {
+      codexOutput.scrollTop = codexOutput.scrollHeight;
+    }
+  }
+
+  function generateCodexSessionId() {
+    if (window.crypto?.randomUUID) {
+      return window.crypto.randomUUID().slice(0, 12);
+    }
+    return Math.random().toString(36).slice(2, 14);
+  }
+
+  function getStoredCodexSession() {
+    try {
+      return localStorage.getItem(CODEX_SESSION_KEY);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function setStoredCodexSession(value) {
+    try {
+      localStorage.setItem(CODEX_SESSION_KEY, value);
+    } catch (err) {
+      // ignore
+    }
+  }
+
+  function connectCodex(sessionId) {
+    if (!codexSessionInput) {
+      return;
+    }
+    const id = sanitizeSegment(sessionId, generateCodexSessionId());
+    codexSessionInput.value = id;
+    setStoredCodexSession(id);
+    if (codexSocket) {
+      try {
+        codexSocket.close();
+      } catch (err) {
+        // ignore
+      }
+    }
+    setCodexStatus("Status: connecting", "loading");
+    const protocol = location.protocol === "https:" ? "wss" : "ws";
+    const wsUrl = `${protocol}://${location.host}/codex/ws?session=${encodeURIComponent(
+      id
+    )}`;
+    codexSocket = new WebSocket(wsUrl);
+
+    codexSocket.addEventListener("open", () => {
+      setCodexStatus(`Status: connected (${id})`, "ready");
+    });
+
+    codexSocket.addEventListener("message", (event) => {
+      let payload = null;
+      try {
+        payload = JSON.parse(event.data);
+      } catch (err) {
+        payload = null;
+      }
+      if (payload && payload.type === "session" && payload.id) {
+        codexSessionInput.value = payload.id;
+        setStoredCodexSession(payload.id);
+        return;
+      }
+      if (payload && payload.type === "status") {
+        const state = payload.state || "unknown";
+        if (state === "ready") {
+          setCodexStatus(`Status: ready (${id})`, "ready");
+        } else if (state === "closed") {
+          setCodexStatus("Status: closed", "error");
+        } else if (state === "stopping") {
+          setCodexStatus("Status: stopping", "loading");
+        } else {
+          setCodexStatus(`Status: ${state}`);
+        }
+        return;
+      }
+      if (payload && (payload.type === "output" || payload.type === "history")) {
+        appendCodexOutput(payload.data || "");
+        return;
+      }
+      appendCodexOutput(String(event.data || ""));
+    });
+
+    codexSocket.addEventListener("close", () => {
+      setCodexStatus("Status: disconnected", "error");
+    });
+
+    codexSocket.addEventListener("error", () => {
+      setCodexStatus("Status: error", "error");
+    });
+  }
+
+  function sendCodexPrompt() {
+    if (!codexPrompt || !codexSocket || codexSocket.readyState !== WebSocket.OPEN) {
+      setCodexStatus("Status: not connected", "error");
+      return;
+    }
+    const text = codexPrompt.value.trim();
+    if (!text) {
+      return;
+    }
+    codexSocket.send(JSON.stringify({ type: "prompt", text }));
+    appendCodexOutput(`\n> ${text}\n`);
+    codexPrompt.value = "";
   }
 
   function setActiveTreePath(path) {
@@ -905,6 +1046,48 @@
     });
   }
 
+  if (codexNewBtn) {
+    codexNewBtn.addEventListener("click", () => {
+      if (codexOutput) {
+        codexOutput.textContent = "";
+      }
+      connectCodex(generateCodexSessionId());
+    });
+  }
+
+  if (codexResumeBtn) {
+    codexResumeBtn.addEventListener("click", () => {
+      if (codexOutput) {
+        codexOutput.textContent = "";
+      }
+      connectCodex(codexSessionInput?.value || "");
+    });
+  }
+
+  if (codexStopBtn) {
+    codexStopBtn.addEventListener("click", () => {
+      if (!codexSocket || codexSocket.readyState !== WebSocket.OPEN) {
+        return;
+      }
+      codexSocket.send(JSON.stringify({ type: "control", action: "stop" }));
+    });
+  }
+
+  if (codexSendBtn) {
+    codexSendBtn.addEventListener("click", () => {
+      sendCodexPrompt();
+    });
+  }
+
+  if (codexPrompt) {
+    codexPrompt.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        sendCodexPrompt();
+      }
+    });
+  }
+
   if (loadFileBtn) {
     loadFileBtn.addEventListener("click", () => {
       loadEditorFile();
@@ -1005,6 +1188,12 @@
   setPdfStatus("Status: idle");
   setEditorStatus("Status: idle");
   setTreeStatus("Status: idle");
+  setCodexStatus("Status: idle");
+  if (codexSessionInput) {
+    const storedSession = getStoredCodexSession() || generateCodexSessionId();
+    codexSessionInput.value = storedSession;
+    connectCodex(storedSession);
+  }
   fitAddon.fit();
   ensureEditor();
   connect();
