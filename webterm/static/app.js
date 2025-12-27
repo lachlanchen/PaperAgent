@@ -477,6 +477,9 @@
         throw new Error("missing");
       }
       const data = await response.json();
+      if (data && data.disabled) {
+        throw new Error("disabled");
+      }
       const remote = data?.git_remote || "";
       setStoredProjectRemote(user, project, remote);
       if (!gitRemoteDirty || !gitRemoteInput.value.trim()) {
@@ -531,6 +534,9 @@
         throw new Error("missing");
       }
       const data = await response.json();
+      if (data && data.disabled) {
+        throw new Error("disabled");
+      }
       const name = data?.git_name || "";
       const email = data?.git_email || "";
       setStoredUserIdentity(user, name, email);
