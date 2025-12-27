@@ -874,7 +874,7 @@ class CodexLogger:
         )
         self.username = os.environ.get("CODEX_USERNAME", "")
         self.project = os.environ.get("CODEX_PROJECT", "")
-        self.history_messages = int(os.environ.get("CODEX_HISTORY_MESSAGES", "200"))
+        self.history_messages = int(os.environ.get("CODEX_HISTORY_MESSAGES", "1000"))
         self._conn = None
         self._connect_error = None
 
@@ -946,25 +946,39 @@ class CodexLogger:
         conn = self._connect()
         if not conn:
             return ""
-        limit = max(1, min(self.history_messages, 1000))
+        limit = self.history_messages
         try:
             with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT content
-                    FROM codex_messages
-                    WHERE session_id = %s AND role = 'assistant'
-                    ORDER BY created_at DESC
-                    LIMIT %s
-                    """,
-                    (session_id, limit),
-                )
-                rows = cur.fetchall()
+                if limit <= 0:
+                    cur.execute(
+                        """
+                        SELECT content
+                        FROM codex_messages
+                        WHERE session_id = %s AND role = 'assistant'
+                        ORDER BY created_at ASC
+                        """,
+                        (session_id,),
+                    )
+                    rows = cur.fetchall()
+                else:
+                    bounded = max(1, min(limit, 5000))
+                    cur.execute(
+                        """
+                        SELECT content
+                        FROM codex_messages
+                        WHERE session_id = %s AND role = 'assistant'
+                        ORDER BY created_at DESC
+                        LIMIT %s
+                        """,
+                        (session_id, bounded),
+                    )
+                    rows = cur.fetchall()
         except Exception:
             return ""
         if not rows:
             return ""
-        rows.reverse()
+        if limit > 0:
+            rows.reverse()
         return "".join((row[0] or "") for row in rows)
 
     def fetch_latest_session(self, username=None, project=None):

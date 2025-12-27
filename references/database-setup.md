@@ -68,5 +68,13 @@ CODEX_AUTO_RESTORE=1
 
 (`1` is the default.)
 
+You can control how much history is replayed with:
+
+```
+CODEX_HISTORY_MESSAGES=1000
+```
+
+Set it to `0` to replay the full stored history (may be large).
+
 The `projects` table also stores `git_remote` so the UI can prefill the remote URL.
 The `users` table stores `git_name` and `git_email` for git identity persistence.
