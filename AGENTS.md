@@ -12,7 +12,8 @@
 ## Build, Test, and Development Commands
 
 - `conda activate paperagent`: Use the project Python environment.
-- `pip install tornado`: Install backend dependency.
+- `pip install tornado psycopg2-binary`: Install backend dependencies in the env.
+- `conda run -n paperagent pip install tornado psycopg2-binary`: Use this when you are not inside the env.
 - `cd webterm && python server.py --host 127.0.0.1 --port 8765`: Run the PWA locally.
 - `python server.py --host 0.0.0.0 --port 8766 --shell ./docker-shell.sh`: Run against Docker shell.
 
