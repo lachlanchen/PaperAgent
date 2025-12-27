@@ -145,10 +145,6 @@
     return trimmed.replace(/[^a-zA-Z0-9@._:/+-]/g, "_");
   }
 
-  function shellQuote(value) {
-    const raw = String(value ?? "");
-    return `'${raw.replace(/'/g, "'\"'\"'")}'`;
-  }
 
   function pickEditorMode(relPath) {
     if (!relPath) {
@@ -394,60 +390,6 @@
       '  git remote add origin "$REMOTE"',
       "fi",
       "git remote -v",
-    ].join("\n");
-  }
-
-  function buildGitignoreCommand(basePath) {
-    const ignoreLines = [
-      "# LaTeX build artifacts",
-      "*.aux",
-      "*.fdb_latexmk",
-      "*.fls",
-      "*.log",
-      "*.out",
-      "*.toc",
-      "*.synctex.gz",
-      "*.pdf",
-      "",
-      "# Build artifacts",
-      "artifacts/",
-      "",
-      "# Data (large files)",
-      "data/",
-      "",
-      "# Python",
-      "__pycache__/",
-      "*.pyc",
-      "",
-      "# R",
-      ".Rhistory",
-      "",
-      "# OS",
-      ".DS_Store",
-    ];
-    const hereDoc = ["cat > .gitignore <<'EOF'", ...ignoreLines, "EOF"].join("\n");
-    return [
-      `mkdir -p ${basePath}`,
-      `cd ${basePath}`,
-      'if [ -f .gitignore ]; then echo "[webterm] .gitignore already exists"; else',
-      `  ${hereDoc}`,
-      '  echo "[webterm] .gitignore created"',
-      "fi",
-      "ls -la .gitignore",
-    ].join("\n");
-  }
-
-  function buildGitCommitPushCommand(basePath, message) {
-    const safeMsg = shellQuote(message || "update");
-    return [
-      `cd ${basePath}`,
-      "git status -sb",
-      "git add -A",
-      "if git diff --cached --quiet; then",
-      '  echo "[webterm] No changes to commit."',
-      "else",
-      `  git commit -m ${safeMsg} && git push`,
-      "fi",
     ].join("\n");
   }
 
@@ -1026,6 +968,30 @@
     const payload = `\u001b[200~${text}\u001b[201~\r`;
     codexSocket.send(JSON.stringify({ type: "input", data: payload }));
     setCodexRunState("running");
+  }
+
+  function buildCodexGitignorePrompt() {
+    return [
+      "Create a .gitignore for this project.",
+      "Include:",
+      "- LaTeX build artifacts (*.aux, *.fdb_latexmk, *.fls, *.log, *.out, *.toc, *.synctex.gz, *.pdf)",
+      "- artifacts/ output",
+      "- data/ (large files)",
+      "- __pycache__/, *.pyc",
+      "- .Rhistory",
+      "- .DS_Store",
+      "",
+      "If .gitignore already exists, append missing entries.",
+    ].join("\n");
+  }
+
+  function buildCodexCommitPushPrompt(message) {
+    const safeMessage = String(message || "update").trim() || "update";
+    return [
+      "Please run: git status -sb, git add -A, git commit, git push.",
+      `Use commit message: ${safeMessage}`,
+      "If there are no changes, just report that.",
+    ].join("\n");
   }
 
   function setActiveTreePath(path) {
@@ -1779,31 +1745,17 @@
 
   if (createGitignoreBtn) {
     createGitignoreBtn.addEventListener("click", () => {
-      const { user, project, path } = buildBasePath();
-      userInput.value = user;
-      projectInput.value = project;
-      updatePathPreview();
-
-      const command = buildGitignoreCommand(path);
-      sendCommand(`${command}\n`);
-      term.focus();
+      sendCodexCommand(buildCodexGitignorePrompt());
     });
   }
 
   if (gitCommitPushBtn) {
     gitCommitPushBtn.addEventListener("click", () => {
-      const { user, project, path } = buildBasePath();
-      userInput.value = user;
-      projectInput.value = project;
-      updatePathPreview();
-
       const message = window.prompt("Commit message:", "update");
-      if (!message) {
+      if (message === null) {
         return;
       }
-      const command = buildGitCommitPushCommand(path, message);
-      sendCommand(`${command}\n`);
-      term.focus();
+      sendCodexCommand(buildCodexCommitPushPrompt(message));
     });
   }
 

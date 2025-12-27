@@ -55,7 +55,7 @@ In dev mode, the PWA service worker is disabled to avoid stale assets.
 - Codex logging is enabled by default when the Postgres config is reachable. Set `CODEX_LOG_DB=0` to disable.
 - Active Codex sessions are exposed at `/api/codex/sessions` and appear in the session dropdown (idle vs attached).
 - The Codex panel includes a `/init` helper button and shows busy/idle status based on prompt detection.
-- The Codex panel includes buttons to create a project `.gitignore` and run status/add/commit/push.
+- The Codex panel includes buttons that prompt Codex to create a `.gitignore` and run status/add/commit/push.
 - See `references/database-setup.md` for database initialization.
 - Codex output is rendered via xterm.js to handle ANSI/TUI output.
 - You can type directly in the Codex output panel; keystrokes are forwarded to the Codex session.
