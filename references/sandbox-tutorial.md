@@ -31,6 +31,27 @@ sudo usermod -aG docker $USER
 newgrp docker
 ```
 
+### One-shot bootstrap (host + container)
+
+If you want a single script to install Docker on the host, create the sandbox
+container, and install LaTeX/Python/R/NVM/Codex inside it:
+
+```
+./scripts/setup_docker_env.sh
+```
+
+Optional environment variables:
+
+```
+CONTAINER_NAME=paperagent-sandbox
+IMAGE=ubuntu:22.04
+TEXLIVE_PROFILE=full   # set to "minimal" for a lighter install
+CODEX_USER=root        # user inside container to install Codex for
+PROJECT_USER=paperagent
+PROJECT_ID=demo-paper
+CREATE_PROJECT_LAYOUT=1
+```
+
 ### macOS (Docker Desktop)
 
 1. Install Docker Desktop from docker.com.
