@@ -60,6 +60,7 @@ mkdir -p /home/<user>/Projects/<project>/latex && \
 Runs a multi-line install script inside the container:
 
 ```
+bash -lc 'set -e
 export NVM_DIR="$HOME/.nvm"
 if [ ! -s "$NVM_DIR/nvm.sh" ]; then
   if ! command -v curl >/dev/null 2>&1; then apt-get update && apt-get install -y curl ca-certificates; fi
@@ -69,6 +70,8 @@ fi
 nvm install --lts
 nvm use --lts
 npm install -g @openai/codex
+command -v codex >/dev/null 2>&1 && codex --version || true
+'
 ```
 
 ## PDF preview panel
