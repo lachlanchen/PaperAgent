@@ -30,7 +30,7 @@ If the directory exists, the **Create Project + cd** button is disabled to preve
 
 ### Init LaTeX
 
-It creates a minimal `latex/main.tex` (if missing) and prepares the LaTeX folder. If it detects a broken header like `\\documentclass`, it rewrites the file.
+It creates a minimal `latex/main.tex` (if missing) and prepares the LaTeX folder. If it detects a broken header (like `\\documentclass`) or literal `\\n` sequences, it rewrites the file.
 
 ```
 mkdir -p /home/<user>/Projects/<project>/latex/latex_figures && \

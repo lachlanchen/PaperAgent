@@ -65,7 +65,7 @@
 
     return [
       `mkdir -p ${latexDir}/latex_figures`,
-      `if [ ! -f ${texPath} ] || grep -q '^\\\\\\\\documentclass' ${texPath}; then printf '%s\\\\n' ${printfArgs} > ${texPath}; fi`,
+      `if [ ! -f ${texPath} ] || grep -q '^\\\\\\\\documentclass' ${texPath} || grep -q '\\\\n' ${texPath}; then printf '%s\\n' ${printfArgs} > ${texPath}; fi`,
       `cd ${latexDir}`,
       "ls -la",
       "pwd",
