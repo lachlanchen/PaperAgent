@@ -41,6 +41,8 @@
   const codexResumeBtn = document.getElementById("codexResume");
   const codexStopBtn = document.getElementById("codexStop");
   const codexInitBtn = document.getElementById("codexInit");
+  const createGitignoreBtn = document.getElementById("createGitignore");
+  const gitCommitPushBtn = document.getElementById("gitCommitPush");
   const codexOutput = document.getElementById("codexOutput");
   const codexPrompt = document.getElementById("codexPrompt");
   const codexSendBtn = document.getElementById("codexSend");
@@ -141,6 +143,11 @@
       return "";
     }
     return trimmed.replace(/[^a-zA-Z0-9@._:/+-]/g, "_");
+  }
+
+  function shellQuote(value) {
+    const raw = String(value ?? "");
+    return `'${raw.replace(/'/g, "'\"'\"'")}'`;
   }
 
   function pickEditorMode(relPath) {
@@ -387,6 +394,60 @@
       '  git remote add origin "$REMOTE"',
       "fi",
       "git remote -v",
+    ].join("\n");
+  }
+
+  function buildGitignoreCommand(basePath) {
+    const ignoreLines = [
+      "# LaTeX build artifacts",
+      "*.aux",
+      "*.fdb_latexmk",
+      "*.fls",
+      "*.log",
+      "*.out",
+      "*.toc",
+      "*.synctex.gz",
+      "*.pdf",
+      "",
+      "# Build artifacts",
+      "artifacts/",
+      "",
+      "# Data (large files)",
+      "data/",
+      "",
+      "# Python",
+      "__pycache__/",
+      "*.pyc",
+      "",
+      "# R",
+      ".Rhistory",
+      "",
+      "# OS",
+      ".DS_Store",
+    ];
+    const hereDoc = ["cat > .gitignore <<'EOF'", ...ignoreLines, "EOF"].join("\n");
+    return [
+      `mkdir -p ${basePath}`,
+      `cd ${basePath}`,
+      'if [ -f .gitignore ]; then echo "[webterm] .gitignore already exists"; else',
+      `  ${hereDoc}`,
+      '  echo "[webterm] .gitignore created"',
+      "fi",
+      "ls -la .gitignore",
+    ].join("\n");
+  }
+
+  function buildGitCommitPushCommand(basePath, message) {
+    const safeMsg = shellQuote(message || "update");
+    return [
+      `cd ${basePath}`,
+      "git status -sb",
+      "git add -A",
+      "if git diff --cached --quiet; then",
+      '  echo "[webterm] No changes to commit."',
+      "else",
+      `  git commit -m ${safeMsg} && git push`,
+      "fi",
     ].join("\n");
   }
 
@@ -1713,6 +1774,36 @@
         "- Use .gitignore to avoid large data files or generated artifacts.",
       ].join("\n");
       sendCodexCommand(initPrompt);
+    });
+  }
+
+  if (createGitignoreBtn) {
+    createGitignoreBtn.addEventListener("click", () => {
+      const { user, project, path } = buildBasePath();
+      userInput.value = user;
+      projectInput.value = project;
+      updatePathPreview();
+
+      const command = buildGitignoreCommand(path);
+      sendCommand(`${command}\n`);
+      term.focus();
+    });
+  }
+
+  if (gitCommitPushBtn) {
+    gitCommitPushBtn.addEventListener("click", () => {
+      const { user, project, path } = buildBasePath();
+      userInput.value = user;
+      projectInput.value = project;
+      updatePathPreview();
+
+      const message = window.prompt("Commit message:", "update");
+      if (!message) {
+        return;
+      }
+      const command = buildGitCommitPushCommand(path, message);
+      sendCommand(`${command}\n`);
+      term.focus();
     });
   }
 
