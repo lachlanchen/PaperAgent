@@ -47,9 +47,9 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: #0f1419 url("logo.png") center/contain no-repeat;
-  box-shadow: 0 10px 30px var(--glow);
-  border: 1px solid rgba(15, 118, 110, 0.2);
+  background: #ffffff url("logo.png") center/contain no-repeat;
+  box-shadow: 0 10px 24px rgba(15, 118, 110, 0.18);
+  border: 1px solid rgba(15, 118, 110, 0.16);
 }
 
 .title {
