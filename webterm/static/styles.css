@@ -47,8 +47,9 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: conic-gradient(from 120deg at 50% 50%, #0f766e 0%, #9ae6b4 60%, #0f766e 100%);
+  background: #0f1419 url("logo.png") center/contain no-repeat;
   box-shadow: 0 10px 30px var(--glow);
+  border: 1px solid rgba(15, 118, 110, 0.2);
 }
 
 .title {
