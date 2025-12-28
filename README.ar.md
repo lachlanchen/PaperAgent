@@ -2,6 +2,11 @@
 
 [English](README.md) | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Tiếng Việt](README.vi.md) | العربية | [Français](README.fr.md) | [Español](README.es.md)
 
+<p align="center">
+  <img src="logos/banner.png" alt="لافتة PaperAgent" width="100%">
+</p>
+
+
 # PaperAgent
 
 PaperAgent مساحة عمل محلية أولاً لكتابة الأوراق: تحرير LaTeX والكود في المتصفح، تشغيل Python/R وتجميع LaTeX في الخلفية، ومعاينة ملفات PDF والسجلات في مكان واحد.

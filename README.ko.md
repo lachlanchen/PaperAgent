@@ -2,6 +2,11 @@
 
 [English](README.md) | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) | [日本語](README.ja.md) | 한국어 | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md) | [Français](README.fr.md) | [Español](README.es.md)
 
+<p align="center">
+  <img src="logos/banner.png" alt="PaperAgent 배너" width="100%">
+</p>
+
+
 # PaperAgent
 
 PaperAgent는 로컬 우선 논문 작성 워크스페이스입니다. 브라우저에서 LaTeX와 코드를 편집하고, 백엔드에서 Python/R을 실행해 LaTeX을 컴파일하며, PDF와 로그를 한 곳에서 확인합니다.

@@ -2,6 +2,11 @@
 
 [English](README.md) | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md) | [Français](README.fr.md) | Español
 
+<p align="center">
+  <img src="logos/banner.png" alt="Banner de PaperAgent" width="100%">
+</p>
+
+
 # PaperAgent
 
 PaperAgent es un espacio de trabajo local-first para escribir papers: edita LaTeX y código en el navegador, ejecuta Python/R y compila LaTeX en el backend, y previsualiza PDFs y logs en un solo lugar.

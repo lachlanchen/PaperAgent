@@ -2,6 +2,11 @@
 
 [English](README.md) | 繁體中文 | [简体中文](README.zh-Hans.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md) | [Français](README.fr.md) | [Español](README.es.md)
 
+<p align="center">
+  <img src="logos/banner.png" alt="PaperAgent 橫幅" width="100%">
+</p>
+
+
 # PaperAgent
 
 PaperAgent 是一個本地優先的論文寫作工作台：在瀏覽器中編輯 LaTeX 與程式碼，後端執行 Python/R 並編譯 LaTeX，在同一處預覽 PDF 與編譯日誌。

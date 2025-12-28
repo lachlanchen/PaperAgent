@@ -2,6 +2,11 @@
 
 [English](README.md) | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | Tiếng Việt | [العربية](README.ar.md) | [Français](README.fr.md) | [Español](README.es.md)
 
+<p align="center">
+  <img src="logos/banner.png" alt="Biểu ngữ PaperAgent" width="100%">
+</p>
+
+
 # PaperAgent
 
 PaperAgent là không gian làm việc local-first để viết bài nghiên cứu: chỉnh sửa LaTeX và mã trong trình duyệt, chạy Python/R và biên dịch LaTeX ở backend, và xem PDF cùng log tại một nơi.

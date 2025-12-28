@@ -2,6 +2,11 @@
 
 [English](README.md) | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) | 日本語 | [한국어](README.ko.md) | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md) | [Français](README.fr.md) | [Español](README.es.md)
 
+<p align="center">
+  <img src="logos/banner.png" alt="PaperAgent バナー" width="100%">
+</p>
+
+
 # PaperAgent
 
 PaperAgent はローカルファーストの論文執筆ワークスペースです。ブラウザで LaTeX とコードを編集し、バックエンドで Python/R を実行して LaTeX をコンパイルし、PDF とログを一か所で確認できます。
