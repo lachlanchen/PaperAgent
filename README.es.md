@@ -48,7 +48,7 @@ Tú te concentras en la idea y la narrativa; PaperAgent maneja los bucles de eje
 
 ## Demo
 
-![Demo PaperAgent](figures/demo-full.png)
+![Demo PaperAgent](demos/demo-full.png)
 
 ## Proyecto principal
 

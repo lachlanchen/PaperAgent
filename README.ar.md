@@ -48,7 +48,7 @@ PaperAgent مساحة عمل محلية أولاً لكتابة الأوراق: 
 
 ## عرض توضيحي
 
-![عرض PaperAgent](figures/demo-full.png)
+![عرض PaperAgent](demos/demo-full.png)
 
 ## المشروع الرئيسي
 

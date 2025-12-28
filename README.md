@@ -52,7 +52,7 @@ You focus on the idea and the narrative; PaperAgent handles the execution loops.
 
 ## Demo
 
-![PaperAgent demo](figures/demo-full.png)
+![PaperAgent demo](demos/demo-full.png)
 
 ## Main project
 

@@ -48,7 +48,7 @@ PaperAgent は研究の雑務から人を解放し、「Only Ideas」に戻す�
 
 ## デモ
 
-![PaperAgent デモ](figures/demo-full.png)
+![PaperAgent デモ](demos/demo-full.png)
 
 ## メインプロジェクト
 

@@ -48,7 +48,7 @@ PaperAgent는 연구의 잡무에서 모두를 해방해 ‘Only Ideas’에 집
 
 ## 데모
 
-![PaperAgent 데모](figures/demo-full.png)
+![PaperAgent 데모](demos/demo-full.png)
 
 ## 메인 프로젝트
 
