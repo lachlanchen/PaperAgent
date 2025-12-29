@@ -9,6 +9,8 @@ const translations = {
     nav_demo: 'Demo',
     nav_ecosystem: 'Ecosystem',
     nav_github: 'GitHub',
+    lang_label: 'Language',
+    lang_select_label: 'Select language',
     hero_title: 'Overleaf meets Codex. Ideas to paper with zero friction.',
     hero_lead:
       'PaperAgent Terminal is a local-first workspace where you can edit LaTeX and code in the browser, execute Python/R on the backend, and preview PDFs with logs in one place.',
@@ -86,6 +88,8 @@ const translations = {
     nav_demo: '演示',
     nav_ecosystem: '生态',
     nav_github: 'GitHub',
+    lang_label: '语言',
+    lang_select_label: '选择语言',
     hero_title: 'Overleaf × Codex，想法直达论文。',
     hero_lead: 'PaperAgent Terminal 是本地优先工作台，可在浏览器编辑 LaTeX 与代码，后端执行 Python/R，并在同处预览 PDF 与日志。',
     hero_cta_demo: '查看演示',
@@ -160,6 +164,8 @@ const translations = {
     nav_demo: '示範',
     nav_ecosystem: '生態系',
     nav_github: 'GitHub',
+    lang_label: '語言',
+    lang_select_label: '選擇語言',
     hero_title: 'Overleaf × Codex，想法直達論文。',
     hero_lead: 'PaperAgent Terminal 是本地優先工作台，可在瀏覽器編輯 LaTeX 與程式碼，後端執行 Python/R，並在同處預覽 PDF 與日誌。',
     hero_cta_demo: '查看示範',
@@ -234,6 +240,8 @@ const translations = {
     nav_demo: 'デモ',
     nav_ecosystem: 'エコシステム',
     nav_github: 'GitHub',
+    lang_label: '言語',
+    lang_select_label: '言語を選択',
     hero_title: 'Overleaf × Codex。アイデアを論文へ、摩擦ゼロ。',
     hero_lead:
       'PaperAgent Terminal はローカルファーストなワークスペース。ブラウザで LaTeX とコードを編集し、バックエンドで Python/R を実行、PDF とログを同じ場所で確認できます。',
@@ -309,6 +317,8 @@ const translations = {
     nav_demo: '데모',
     nav_ecosystem: '에코시스템',
     nav_github: 'GitHub',
+    lang_label: '언어',
+    lang_select_label: '언어 선택',
     hero_title: 'Overleaf × Codex. 아이디어를 논문으로, 마찰 없이.',
     hero_lead: 'PaperAgent Terminal은 로컬 우선 워크스페이스로, 브라우저에서 LaTeX와 코드를 편집하고 백엔드에서 Python/R을 실행하며 PDF와 로그를 한곳에서 확인합니다.',
     hero_cta_demo: '데모 보기',
@@ -383,6 +393,8 @@ const translations = {
     nav_demo: 'Demo',
     nav_ecosystem: 'Hệ sinh thái',
     nav_github: 'GitHub',
+    lang_label: 'Ngôn ngữ',
+    lang_select_label: 'Chọn ngôn ngữ',
     hero_title: 'Overleaf × Codex. Ý tưởng thành bài báo không ma sát.',
     hero_lead:
       'PaperAgent Terminal là không gian làm việc ưu tiên cục bộ: chỉnh sửa LaTeX và mã trong trình duyệt, chạy Python/R ở backend, xem PDF và log tại một nơi.',
@@ -458,6 +470,8 @@ const translations = {
     nav_demo: 'العرض',
     nav_ecosystem: 'المنظومة',
     nav_github: 'GitHub',
+    lang_label: 'اللغة',
+    lang_select_label: 'اختر اللغة',
     hero_title: 'أوفرليف × كودكس. من الفكرة إلى الورقة بلا احتكاك.',
     hero_lead:
       'PaperAgent Terminal مساحة محلية أولاً تتيح تحرير LaTeX والشفرة في المتصفح، تشغيل Python/R في الخلفية، ومعاينة PDF والسجلات في مكان واحد.',
@@ -533,6 +547,8 @@ const translations = {
     nav_demo: 'Démo',
     nav_ecosystem: 'Écosystème',
     nav_github: 'GitHub',
+    lang_label: 'Langue',
+    lang_select_label: 'Choisir la langue',
     hero_title: 'Overleaf × Codex. Des idées au papier sans friction.',
     hero_lead:
       'PaperAgent Terminal est un espace local-first pour éditer LaTeX et du code dans le navigateur, exécuter Python/R côté backend et prévisualiser PDF et logs au même endroit.',
@@ -608,6 +624,8 @@ const translations = {
     nav_demo: 'Demo',
     nav_ecosystem: 'Ecosistema',
     nav_github: 'GitHub',
+    lang_label: 'Idioma',
+    lang_select_label: 'Elegir idioma',
     hero_title: 'Overleaf × Codex. Ideas a paper sin fricción.',
     hero_lead:
       'PaperAgent Terminal es un espacio local-first para editar LaTeX y código en el navegador, ejecutar Python/R en backend y previsualizar PDFs y logs en un solo lugar.',
@@ -750,21 +768,29 @@ const resolveLang = () => {
   if (override) {
     const normalizedOverride = normalizeLang(override);
     if (translations[normalizedOverride]) {
-      localStorage.setItem('lang', normalizedOverride);
+      try {
+        localStorage.setItem('lang', normalizedOverride);
+      } catch (err) {
+        // Ignore storage failures (private mode).
+      }
       return normalizedOverride;
     }
   }
-  const stored = localStorage.getItem('lang');
-  if (stored && translations[stored]) {
-    return stored;
-  }
-  const browserLang = normalizeLang((navigator.languages && navigator.languages[0]) || navigator.language);
-  if (browserLang !== 'en' && translations[browserLang]) {
-    return browserLang;
+  try {
+    const stored = localStorage.getItem('lang');
+    if (stored && translations[stored]) {
+      return stored;
+    }
+  } catch (err) {
+    // Ignore storage failures (private mode).
   }
   const tzLang = guessLangFromTimeZone();
   if (tzLang && translations[tzLang]) {
     return tzLang;
+  }
+  const browserLang = normalizeLang((navigator.languages && navigator.languages[0]) || navigator.language);
+  if (browserLang !== 'en' && translations[browserLang]) {
+    return browserLang;
   }
   return translations[browserLang] ? browserLang : 'en';
 };
@@ -794,9 +820,29 @@ const applyTranslations = () => {
       el.textContent = value;
     }
   });
+
+  const langSelect = document.getElementById('langSelect');
+  if (langSelect) {
+    langSelect.value = lang;
+  }
 };
 
 applyTranslations();
+
+const langSelect = document.getElementById('langSelect');
+if (langSelect) {
+  langSelect.addEventListener('change', (event) => {
+    const selected = event.target.value;
+    if (translations[selected]) {
+      try {
+        localStorage.setItem('lang', selected);
+      } catch (err) {
+        // Ignore storage failures (private mode).
+      }
+      applyTranslations();
+    }
+  });
+}
 
 const revealItems = document.querySelectorAll('.reveal');
 
