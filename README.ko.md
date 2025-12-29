@@ -1,11 +1,10 @@
-[![메인 프로젝트](https://img.shields.io/badge/메인_프로젝트-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying)
-
 [English](README.md) | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) | [日本語](README.ja.md) | 한국어 | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md) | [Français](README.fr.md) | [Español](README.es.md)
 
 <p align="center">
   <img src="logos/banner.png" alt="PaperAgent 배너" width="100%">
 </p>
 
+[![메인 프로젝트](https://img.shields.io/badge/%EB%A9%94%EC%9D%B8%20%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying) [![메인 사이트](https://img.shields.io/badge/%EB%A9%94%EC%9D%B8%20%EC%82%AC%EC%9D%B4%ED%8A%B8-lazying.art-0f766e?style=for-the-badge)](https://lazying.art)
 
 # PaperAgent
 
@@ -58,6 +57,7 @@ PaperAgent는 연구의 잡무에서 모두를 해방해 ‘Only Ideas’에 집
 
 - https://lazying.art 🎨 <img src="https://img.shields.io/badge/메인-Visit-0f766e?style=flat-square" alt="메인 사이트">
 - https://chat.lazying.art
+- https://paper.lazying.art
 - https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://ideas.onlyideas.art
 - https://coin.lazying.art

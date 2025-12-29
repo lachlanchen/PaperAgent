@@ -1,11 +1,10 @@
-[![Projet principal](https://img.shields.io/badge/Projet_principal-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying)
-
 [English](README.md) | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md) | Français | [Español](README.es.md)
 
 <p align="center">
   <img src="logos/banner.png" alt="Bannière PaperAgent" width="100%">
 </p>
 
+[![Projet principal](https://img.shields.io/badge/Projet%20principal-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying) [![Site principal](https://img.shields.io/badge/Site%20principal-lazying.art-0f766e?style=for-the-badge)](https://lazying.art)
 
 # PaperAgent
 
@@ -58,6 +57,7 @@ Vous vous concentrez sur l’idée et le récit; PaperAgent gère les boucles d�
 
 - https://lazying.art 🎨 <img src="https://img.shields.io/badge/Main-Visit-0f766e?style=flat-square" alt="Site principal">
 - https://chat.lazying.art
+- https://paper.lazying.art
 - https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://ideas.onlyideas.art
 - https://coin.lazying.art

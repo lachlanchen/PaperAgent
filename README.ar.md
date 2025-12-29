@@ -1,11 +1,10 @@
-[![المشروع الرئيسي](https://img.shields.io/badge/المشروع_الرئيسي-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying)
-
 [English](README.md) | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Tiếng Việt](README.vi.md) | العربية | [Français](README.fr.md) | [Español](README.es.md)
 
 <p align="center">
   <img src="logos/banner.png" alt="لافتة PaperAgent" width="100%">
 </p>
 
+[![المشروع الرئيسي](https://img.shields.io/badge/%D8%A7%D9%84%D9%85%D8%B4%D8%B1%D9%88%D8%B9%20%D8%A7%D9%84%D8%B1%D8%A6%D9%8A%D8%B3%D9%8A-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying) [![الموقع الرئيسي](https://img.shields.io/badge/%D8%A7%D9%84%D9%85%D9%88%D9%82%D8%B9%20%D8%A7%D9%84%D8%B1%D8%A6%D9%8A%D8%B3%D9%8A-lazying.art-0f766e?style=for-the-badge)](https://lazying.art)
 
 # PaperAgent
 
@@ -58,6 +57,7 @@ PaperAgent مساحة عمل محلية أولاً لكتابة الأوراق: 
 
 - https://lazying.art 🎨 <img src="https://img.shields.io/badge/Main-Visit-0f766e?style=flat-square" alt="الموقع الرئيسي">
 - https://chat.lazying.art
+- https://paper.lazying.art
 - https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://ideas.onlyideas.art
 - https://coin.lazying.art

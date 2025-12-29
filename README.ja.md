@@ -1,11 +1,10 @@
-[![メインプロジェクト](https://img.shields.io/badge/メインプロジェクト-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying)
-
 [English](README.md) | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) | 日本語 | [한국어](README.ko.md) | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md) | [Français](README.fr.md) | [Español](README.es.md)
 
 <p align="center">
   <img src="logos/banner.png" alt="PaperAgent バナー" width="100%">
 </p>
 
+[![メインプロジェクト](https://img.shields.io/badge/%E3%83%A1%E3%82%A4%E3%83%B3%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying) [![公式サイト](https://img.shields.io/badge/%E5%85%AC%E5%BC%8F%E3%82%B5%E3%82%A4%E3%83%88-lazying.art-0f766e?style=for-the-badge)](https://lazying.art)
 
 # PaperAgent
 
@@ -58,6 +57,7 @@ PaperAgent は研究の雑務から人を解放し、「Only Ideas」に戻す�
 
 - https://lazying.art 🎨 <img src="https://img.shields.io/badge/メイン-Visit-0f766e?style=flat-square" alt="メインサイト">
 - https://chat.lazying.art
+- https://paper.lazying.art
 - https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://ideas.onlyideas.art
 - https://coin.lazying.art

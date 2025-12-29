@@ -1,11 +1,10 @@
-[![主專案](https://img.shields.io/badge/主專案-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying)
-
 [English](README.md) | 繁體中文 | [简体中文](README.zh-Hans.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md) | [Français](README.fr.md) | [Español](README.es.md)
 
 <p align="center">
   <img src="logos/banner.png" alt="PaperAgent 橫幅" width="100%">
 </p>
 
+[![主專案](https://img.shields.io/badge/%E4%B8%BB%E5%B0%88%E6%A1%88-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying) [![主站](https://img.shields.io/badge/%E4%B8%BB%E7%AB%99-lazying.art-0f766e?style=for-the-badge)](https://lazying.art)
 
 # PaperAgent
 
@@ -58,6 +57,7 @@ PaperAgent 的願景是讓每個人從研究的瑣事中解放，回到「只有
 
 - https://lazying.art 🎨 <img src="https://img.shields.io/badge/主站-Visit-0f766e?style=flat-square" alt="主站">
 - https://chat.lazying.art
+- https://paper.lazying.art
 - https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://ideas.onlyideas.art
 - https://coin.lazying.art
