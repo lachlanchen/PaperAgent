@@ -56,15 +56,15 @@ PaperAgent 的愿景是让每个人从研究的琐事中解放，回到“只有
 ## 生态链接
 
 - https://lazying.art 🎨 <img src="https://img.shields.io/badge/主站-Visit-0f766e?style=flat-square" alt="主站">
-- https://chat.lazying.art
-- https://paper.lazying.art
+- https://chat.lazying.art 🧠
+- https://paper.lazying.art 📄
 - https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
-- https://ideas.onlyideas.art
-- https://coin.lazying.art
-- https://earn.lazying.art
-- https://learn.lazying.art
-- https://robot.lazying.art
-- https://glass.lazying.art
+- https://coin.lazying.art 🪙
+- https://earn.lazying.art 💸
+- https://learn.lazying.art 📚
+- https://robot.lazying.art 🤖
+- https://glass.lazying.art 👓
+- https://ideas.onlyideas.art 🧪
 
 ### 捐赠
 

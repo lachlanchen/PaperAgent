@@ -55,16 +55,16 @@ PaperAgent は研究の雑務から人を解放し、「Only Ideas」に戻す�
 
 ## エコシステムのリンク
 
-- https://lazying.art 🎨 <img src="https://img.shields.io/badge/メイン-Visit-0f766e?style=flat-square" alt="メインサイト">
-- https://chat.lazying.art
-- https://paper.lazying.art
+- https://lazying.art 🎨 <img src="https://img.shields.io/badge/公式サイト-Visit-0f766e?style=flat-square" alt="公式サイト">
+- https://chat.lazying.art 🧠
+- https://paper.lazying.art 📄
 - https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
-- https://ideas.onlyideas.art
-- https://coin.lazying.art
-- https://earn.lazying.art
-- https://learn.lazying.art
-- https://robot.lazying.art
-- https://glass.lazying.art
+- https://coin.lazying.art 🪙
+- https://earn.lazying.art 💸
+- https://learn.lazying.art 📚
+- https://robot.lazying.art 🤖
+- https://glass.lazying.art 👓
+- https://ideas.onlyideas.art 🧪
 
 ### 寄付
 

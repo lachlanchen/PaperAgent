@@ -55,16 +55,16 @@ PaperAgent مساحة عمل محلية أولاً لكتابة الأوراق: 
 
 ## روابط المنظومة
 
-- https://lazying.art 🎨 <img src="https://img.shields.io/badge/Main-Visit-0f766e?style=flat-square" alt="الموقع الرئيسي">
-- https://chat.lazying.art
-- https://paper.lazying.art
+- https://lazying.art 🎨 <img src="https://img.shields.io/badge/الموقع الرئيسي-Visit-0f766e?style=flat-square" alt="الموقع الرئيسي">
+- https://chat.lazying.art 🧠
+- https://paper.lazying.art 📄
 - https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
-- https://ideas.onlyideas.art
-- https://coin.lazying.art
-- https://earn.lazying.art
-- https://learn.lazying.art
-- https://robot.lazying.art
-- https://glass.lazying.art
+- https://coin.lazying.art 🪙
+- https://earn.lazying.art 💸
+- https://learn.lazying.art 📚
+- https://robot.lazying.art 🤖
+- https://glass.lazying.art 👓
+- https://ideas.onlyideas.art 🧪
 
 ### تبرّع
 
