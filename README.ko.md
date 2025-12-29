@@ -55,7 +55,7 @@ PaperAgent는 연구의 잡무에서 모두를 해방해 ‘Only Ideas’에 집
 
 ## 에코시스템 링크
 
-- https://lazying.art 🎨 <img src="https://img.shields.io/badge/메인 사이트-Visit-0f766e?style=flat-square" alt="메인 사이트">
+- https://lazying.art 🎨 <img src="https://img.shields.io/badge/%EB%A9%94%EC%9D%B8%20%EC%82%AC%EC%9D%B4%ED%8A%B8-Visit-0f766e?style=flat-square" alt="메인 사이트">
 - https://chat.lazying.art 🧠
 - https://paper.lazying.art 📄
 - https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
