@@ -56,9 +56,9 @@ Vous vous concentrez sur l’idée et le récit; PaperAgent gère les boucles d�
 ## Liens de l’écosystème
 
 - https://lazying.art 🎨 <img src="https://img.shields.io/badge/Site%20principal-Visit-0f766e?style=flat-square" alt="Site principal">
+- https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://chat.lazying.art 🧠
 - https://paper.lazying.art 📄
-- https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://coin.lazying.art 🪙
 - https://earn.lazying.art 💸
 - https://learn.lazying.art 📚

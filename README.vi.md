@@ -56,9 +56,9 @@ Bạn tập trung vào ý tưởng và câu chuyện, PaperAgent lo các vòng l
 ## Liên kết hệ sinh thái
 
 - https://lazying.art 🎨 <img src="https://img.shields.io/badge/Trang%20ch%C3%ADnh-Visit-0f766e?style=flat-square" alt="Trang chính">
+- https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://chat.lazying.art 🧠
 - https://paper.lazying.art 📄
-- https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://coin.lazying.art 🪙
 - https://earn.lazying.art 💸
 - https://learn.lazying.art 📚

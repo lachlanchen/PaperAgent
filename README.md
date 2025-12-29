@@ -56,9 +56,9 @@ You focus on the idea and the narrative; PaperAgent handles the execution loops.
 ## Ecosystem links
 
 - https://lazying.art 🎨 <img src="https://img.shields.io/badge/Main-Visit-0f766e?style=flat-square" alt="Main site">
+- https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://chat.lazying.art 🧠
 - https://paper.lazying.art 📄
-- https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
 - https://coin.lazying.art 🪙
 - https://earn.lazying.art 💸
 - https://learn.lazying.art 📚
