@@ -1,7 +1,7 @@
 [English](README.md) | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-Hans.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md) | Français | [Español](README.es.md)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/lachlanchen/lachlanchen/main/https://raw.githubusercontent.com/lachlanchen/lachlanchen/main/logos/banner.png" alt="Bannière PaperAgent" width="100%">
+  <img src="https://raw.githubusercontent.com/lachlanchen/lachlanchen/main/logos/banner.png" alt="Bannière PaperAgent" width="100%">
 </p>
 
 [![Projet principal](https://img.shields.io/badge/Projet%20principal-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying) [![Site principal](https://img.shields.io/badge/Site%20principal-lazying.art-0f766e?style=for-the-badge)](https://lazying.art)
