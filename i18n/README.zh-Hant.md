@@ -1,4 +1,4 @@
-[English](README.md) · [العربية](i18n/README.ar.md) · [Español](i18n/README.es.md) · [Français](i18n/README.fr.md) · [日本語](i18n/README.ja.md) · [한국어](i18n/README.ko.md) · [Tiếng Việt](i18n/README.vi.md) · [中文 (简体)](i18n/README.zh-Hans.md) · [中文（繁體）](i18n/README.zh-Hant.md) · [Deutsch](i18n/README.de.md) · [Русский](i18n/README.ru.md)
+[English](../README.md) · [العربية](README.ar.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [中文 (简体)](README.zh-Hans.md) · [中文（繁體）](README.zh-Hant.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 
 
 <p align="center">
@@ -17,36 +17,36 @@
 [![Postgres Optional](https://img.shields.io/badge/PostgreSQL-Optional-1d4ed8?style=flat-square)](#prerequisites)
 [![License](https://img.shields.io/badge/License-Pending-lightgrey?style=flat-square)](#license)
 
-PaperAgent is a local-first web workspace for writing papers: edit LaTeX and code in the browser, run Python/R and compile LaTeX on the backend, and preview PDFs with logs in one place.
+PaperAgent 是一個 local-first 的論文寫作網頁工作空間：你可以在瀏覽器編輯 LaTeX 與程式碼、在後端執行 Python/R 並編譯 LaTeX，且在同一處預覽 PDF 與檢視日誌。
 
 ## Vision
 
-PaperAgent is built to liberate everyone from research busy-work to “Only Ideas.”  
-The goal is simple: keep the thinking human and make the system do the repetitive work.  
-You focus on the idea and the narrative; PaperAgent handles the execution loops.
+PaperAgent 的建立目標，是把每個人從研究中的繁瑣雜務解放到「Only Ideas」。  
+核心目標很簡單：保留人類的思考，把重複性工作交給系統。  
+你專注在想法與敘事，PaperAgent 負責執行迴圈。
 
 ## Philosophy
 
-- Local-first, privacy-first: data and execution stay on your machine by default.
-- Idea-first workflow: move from a concept to a runnable paper with minimal friction.
-- Small, reversible steps: every change is transparent and easy to undo.
-- Tools should remove work: automation exists to delete toil, not add it.
+- Local-first、privacy-first：資料與執行預設都留在你的機器上。
+- Idea-first workflow：以最小摩擦，從概念走到可執行的論文。
+- 小步且可逆：每次變更都透明、容易回復。
+- 工具應該減少工作：自動化是為了消除苦工，不是增加負擔。
 
 ## Logic (how it works)
 
-1. Chat -> Edit: describe the change, and PaperAgent edits the right files.
-2. Run -> Compile: execute Python/R, compile LaTeX, generate figures.
-3. Preview -> Iterate: inspect PDF + logs, fix fast, repeat.
+1. Chat -> Edit：描述變更需求，PaperAgent 會編輯正確的檔案。
+2. Run -> Compile：執行 Python/R、編譯 LaTeX、產生圖表。
+3. Preview -> Iterate：檢視 PDF + 日誌，快速修正，反覆迭代。
 
 ## Overview
 
-PaperAgent is centered on `webterm/`, a Tornado + WebSocket server that powers a browser-based PWA workspace:
+PaperAgent 以 `webterm/` 為核心，這是一個 Tornado + WebSocket 伺服器，提供瀏覽器中的 PWA 工作空間：
 
-- PTY terminal streaming (`/ws`) for interactive shell work.
-- Codex Bridge WebSocket/API (`/codex/ws`, `/api/codex/*`) for session-based agent workflows.
-- File, tree, and PDF APIs (`/api/file`, `/api/tree`, `/api/pdf`) for in-browser editing and preview.
-- Optional Postgres-backed persistence for users, projects, git metadata, and Codex history.
-- Optional Docker-shell execution via `webterm/docker-shell.sh`.
+- PTY terminal 串流（`/ws`）用於互動式 shell 工作。
+- Codex Bridge WebSocket/API（`/codex/ws`、`/api/codex/*`）用於以 session 為基礎的 agent 工作流程。
+- 檔案、目錄樹與 PDF API（`/api/file`、`/api/tree`、`/api/pdf`）用於瀏覽器內編輯與預覽。
+- 可選的 Postgres 持久化，儲存使用者、專案、git 中繼資料與 Codex 歷史。
+- 可透過 `webterm/docker-shell.sh` 啟用可選的 Docker-shell 執行模式。
 
 ### At a glance
 
@@ -60,21 +60,21 @@ PaperAgent is centered on `webterm/`, a Tornado + WebSocket server that powers a
 
 ## What you get
 
-- Web terminal connected to a Docker sandbox
-- LaTeX project scaffolding and one-click compile
-- Python/R execution for figures and experiments
-- PDF preview with logs
-- A clean, minimal PWA interface
+- 連接 Docker sandbox 的網頁終端機
+- LaTeX 專案骨架與一鍵編譯
+- 用於圖表與實驗的 Python/R 執行
+- 含日誌的 PDF 預覽
+- 乾淨、極簡的 PWA 介面
 
 ## Features
 
-- Browser terminal with PTY resize support and persistent workflow controls.
-- Project control panel for workspace creation, LaTeX init, and compile flows.
-- File tree + CodeMirror editor with save and optional watch/reload polling.
-- PDF preview pipeline for `/home/<user>/Projects/<project>/latex/<file>.pdf`.
-- Codex Bridge with session start/resume, status sync, and optional DB logging.
-- Git/SSH helpers in UI (identity save, remote prefill, SSH key generation/check).
-- Docker-aware command/file operations with fallback to host shell/filesystem.
+- 支援 PTY resize 的瀏覽器終端機與持久化工作流程控制。
+- 用於工作空間建立、LaTeX 初始化與編譯流程的專案控制面板。
+- 檔案樹 + CodeMirror 編輯器，支援儲存與可選的 watch/reload 輪詢。
+- 對應 `/home/<user>/Projects/<project>/latex/<file>.pdf` 的 PDF 預覽管線。
+- Codex Bridge，支援 session start/resume、狀態同步與可選 DB 記錄。
+- UI 內建 Git/SSH 輔助（身分設定保存、remote 預填、SSH 金鑰產生/檢查）。
+- 可感知 Docker 的命令/檔案操作，並可回退到 host shell/filesystem。
 
 ### Feature map
 
@@ -88,11 +88,11 @@ PaperAgent is centered on `webterm/`, a Tornado + WebSocket server that powers a
 
 ## Project status
 
-- PWA workspace: web terminal, PDF preview, editor.
-- Project Controls: create workspace, init LaTeX, compile, Git/SSH helpers.
-- Codex Bridge: session resume, DB history list, /status sync toggle.
-- File tree + CodeMirror editor with save/watch.
-- Docker-backed execution (optional) with LaTeX/Python/R toolchain.
+- PWA workspace：web terminal、PDF 預覽、編輯器。
+- Project Controls：建立工作空間、初始化 LaTeX、編譯、Git/SSH 輔助。
+- Codex Bridge：session 恢復、DB 歷史清單、/status sync 切換。
+- 具備 save/watch 的檔案樹 + CodeMirror 編輯器。
+- 可選的 Docker-backed 執行，包含 LaTeX/Python/R 工具鏈。
 
 ## Demo
 
@@ -134,17 +134,17 @@ PaperAgent/
 
 ## Prerequisites
 
-- OS: Linux recommended (Docker and shell tooling expected).
-- Python: use the existing Conda env (`paperagent`) when available.
-- Dependencies:
+- OS：建議 Linux（預期使用 Docker 與 shell 工具鏈）。
+- Python：可用時請使用既有 Conda 環境（`paperagent`）。
+- 相依套件：
   - `tornado`
-  - `psycopg[binary]` (optional but recommended for DB-backed features)
-- Optional runtime services:
-  - Docker (for sandbox shell and containerized project paths)
-  - PostgreSQL (for persisted users/projects/Codex session history)
-- Optional toolchains inside sandbox/container:
-  - LaTeX (`latexmk` and TeX packages)
-  - Python, R
+  - `psycopg[binary]`（可選但建議，用於 DB-backed 功能）
+- 可選執行服務：
+  - Docker（用於 sandbox shell 與容器化專案路徑）
+  - PostgreSQL（用於持久化 users/projects/Codex session history）
+- 容器/sandbox 內可選工具鏈：
+  - LaTeX（`latexmk` 與 TeX 套件）
+  - Python、R
   - Node + `@openai/codex`
 
 ### Dependency matrix
@@ -165,7 +165,7 @@ git clone --recurse-submodules https://github.com/lachlanchen/PaperAgent.git
 cd PaperAgent
 ```
 
-If already cloned without submodules:
+如果先前 clone 時沒有帶 submodules：
 
 ```bash
 git submodule update --init --recursive
@@ -178,7 +178,7 @@ conda activate paperagent
 pip install tornado "psycopg[binary]"
 ```
 
-Alternative (if not inside env):
+替代方式（若你不在 env 內）：
 
 ```bash
 conda run -n paperagent pip install tornado "psycopg[binary]"
@@ -190,7 +190,7 @@ conda run -n paperagent pip install tornado "psycopg[binary]"
 cp .env.example .env
 ```
 
-Edit `.env` for your machine (DB credentials, Codex defaults, etc.).
+依你的機器設定編輯 `.env`（DB 憑證、Codex 預設值等）。
 
 ### 4) Optional database bootstrap
 
@@ -198,7 +198,7 @@ Edit `.env` for your machine (DB credentials, Codex defaults, etc.).
 ./scripts/init_db.sh
 ```
 
-This creates/updates role + DB and applies `scripts/db_schema.sql`.
+這會建立/更新 role + DB，並套用 `scripts/db_schema.sql`。
 
 ### 5) Optional Docker sandbox bootstrap
 
@@ -206,7 +206,7 @@ This creates/updates role + DB and applies `scripts/db_schema.sql`.
 ./scripts/setup_docker_env.sh
 ```
 
-For NVIDIA host setup (if needed):
+NVIDIA 主機設定（若需要）：
 
 ```bash
 ./scripts/install_nvidia_host.sh
@@ -221,7 +221,7 @@ cd webterm
 python server.py --host 127.0.0.1 --port 8765
 ```
 
-Open: `http://127.0.0.1:8765`
+開啟：`http://127.0.0.1:8765`
 
 ### Run with Docker shell target
 
@@ -237,17 +237,17 @@ cd webterm
 python server.py --host 127.0.0.1 --port 8765 --dev
 ```
 
-In `--dev` mode, service worker caching is disabled to avoid stale assets.
+在 `--dev` 模式下，會停用 service worker 快取以避免舊資產殘留。
 
 ### Typical UI flow
 
-1. Enter user + project in the control panel.
-2. Click **Create Project + cd** to create:
+1. 在控制面板輸入 user + project。
+2. 點擊 **Create Project + cd** 建立：
    `/home/<user>/Projects/<project>/{code,data,figures,latex/latex_figures,artifacts}`
-3. Click **Init LaTeX** to scaffold `latex/main.tex`.
-4. Click **Compile LaTeX** (`latexmk`) and refresh/open PDF preview.
-5. Edit files in CodeMirror via file tree and save.
-6. Use Codex Bridge for prompt-driven edits and session resume.
+3. 點擊 **Init LaTeX** 產生 `latex/main.tex`。
+4. 點擊 **Compile LaTeX**（`latexmk`）並重新整理/開啟 PDF 預覽。
+5. 透過檔案樹在 CodeMirror 編輯檔案並儲存。
+6. 使用 Codex Bridge 進行 prompt-driven 編輯與 session 恢復。
 
 ### API quick routes
 
@@ -261,7 +261,7 @@ In `--dev` mode, service worker caching is disabled to avoid stale assets.
 
 ## Configuration
 
-PaperAgent reads env vars from `.env` (or `ENV_FILE`) and process environment.
+PaperAgent 會從 `.env`（或 `ENV_FILE`）及程序環境讀取環境變數。
 
 ### Core DB settings
 
@@ -287,12 +287,12 @@ CODEX_HISTORY_MESSAGES=1000
 
 ### Additional useful toggles
 
-- `CODEX_AUTO_RESTORE=1`: recreate missing session IDs and replay stored history.
-- `PROJECT_DB=1`: enable DB-backed project metadata persistence.
-- `WEBTERM_QUIET_LOGS=1`: suppress noisy polling/static access logs.
-- `CODEX_CMD=codex`: Codex executable command.
-- `CODEX_CWD=/workspace`: fallback working directory when user/project path is unavailable.
-- `WEBTERM_CONTAINER=<name>`: override detected container name.
+- `CODEX_AUTO_RESTORE=1`：重建遺失的 session IDs 並重播已儲存歷史。
+- `PROJECT_DB=1`：啟用 DB-backed 專案中繼資料持久化。
+- `WEBTERM_QUIET_LOGS=1`：抑制輪詢/靜態資源存取等較雜訊的日誌。
+- `CODEX_CMD=codex`：Codex 可執行命令。
+- `CODEX_CWD=/workspace`：當 user/project 路徑不可用時的回退工作目錄。
+- `WEBTERM_CONTAINER=<name>`：覆寫自動偵測的容器名稱。
 
 ## Examples
 
@@ -325,21 +325,21 @@ curl "http://127.0.0.1:8765/api/file?user=paperagent&project=demo-paper&path=lat
 
 ## Development Notes
 
-- Code style:
-  - Python: 4-space indentation, small direct functions.
-  - Frontend: 2-space indentation, kebab-case CSS class names.
-- No formal automated test suite yet; manual checks are primary.
-- Manual checks:
-  - Load PWA, connect terminal, run `pwd`.
-  - Verify project creation and LaTeX compile actions from UI.
-- If you update PWA assets, bump service worker cache name in `webterm/static/sw.js`.
-- Treat `codex/` and `overleaf/` as submodules; avoid direct edits here unless intentional.
+- 程式碼風格：
+  - Python：4 個空白縮排，函式小而直接。
+  - Frontend：2 個空白縮排，CSS class 採 kebab-case。
+- 目前尚無正式自動化測試套件；以手動檢查為主。
+- 手動檢查：
+  - 載入 PWA、連線 terminal、執行 `pwd`。
+  - 驗證 UI 的專案建立與 LaTeX 編譯動作。
+- 若你更新了 PWA 資產，請在 `webterm/static/sw.js` bump service worker cache name。
+- `codex/` 與 `overleaf/` 為 submodule；除非有明確需求，避免直接在此處修改。
 
 ## Troubleshooting
 
 ### Docker shell permission denied
 
-If docker access fails, ensure your shell has docker-group membership:
+如果 docker 存取失敗，請確認目前 shell 具有 docker 群組成員資格：
 
 ```bash
 newgrp docker
@@ -349,35 +349,35 @@ python server.py --host 0.0.0.0 --port 8766
 
 ### PDF not found in preview
 
-- Confirm compile completed successfully in terminal.
-- Confirm file exists at `/home/<user>/Projects/<project>/latex/main.pdf`.
-- Refresh PDF panel or use **Open** button.
+- 確認 terminal 中編譯已成功完成。
+- 確認檔案存在於 `/home/<user>/Projects/<project>/latex/main.pdf`。
+- 重新整理 PDF 面板或使用 **Open** 按鈕。
 
 ### DB features not available
 
-- Check `.env` DB credentials.
-- Ensure Postgres is running and reachable.
-- Install driver: `pip install "psycopg[binary]"`.
-- If needed, run `./scripts/init_db.sh` and restart server.
+- 檢查 `.env` 中的 DB 憑證。
+- 確認 Postgres 正在執行且可連線。
+- 安裝 driver：`pip install "psycopg[binary]"`。
+- 如有需要，執行 `./scripts/init_db.sh` 後重啟 server。
 
 ### Codex command not found
 
-- Install Codex via UI installer (NVM + Node LTS + `@openai/codex`) or manually.
-- Ensure `CODEX_CMD` and `CODEX_NVM_DIR` are set correctly for your runtime context.
+- 透過 UI installer（NVM + Node LTS + `@openai/codex`）或手動方式安裝 Codex。
+- 確認 `CODEX_CMD` 與 `CODEX_NVM_DIR` 已依執行環境正確設定。
 
 ### LAN binding safety
 
-`--host 0.0.0.0` is for trusted networks only. Do not expose publicly without auth/TLS.
+`--host 0.0.0.0` 僅適用於受信任網路。未加上 auth/TLS 前請勿公開暴露。
 
 ## Roadmap
 
-Planned and in-progress direction (see `references/roadmap-blueprint.md` and related docs):
+規劃中與進行中的方向（見 `references/roadmap-blueprint.md` 與相關文件）：
 
-- Improve multi-step paper automation loop and reproducibility workflows.
-- Expand Codex Bridge session reliability and observability.
-- Harden sandbox/runtime setup paths (CPU/GPU variants).
-- Improve project controls and editor ergonomics.
-- Continue multilingual docs and website alignment.
+- 改善多步驟論文自動化迴圈與可重現性工作流程。
+- 擴充 Codex Bridge 的 session 可靠性與可觀測性。
+- 強化 sandbox/runtime 設定路徑（CPU/GPU 變體）。
+- 改善專案控制與編輯器操作體驗。
+- 持續推進多語文件與網站內容對齊。
 
 ## Main project
 
@@ -431,30 +431,30 @@ Planned and in-progress direction (see `references/roadmap-blueprint.md` and rel
 </table>
 </div>
 
-Your support sustains my research, development, and ops so I can keep sharing more open projects and improvements.
+你的支持能持續支撐我的研究、開發與營運，讓我能分享更多開源專案與改進成果。
 
 ## Contributing
 
-Contributions are welcome.
+歡迎貢獻。
 
-- Open an issue describing the problem/proposal.
-- Keep changes focused and small.
-- Follow commit style used in this repo: `Add ...`, `Update ...`, `Expand ...`.
-- For frontend/UI changes, include screenshots or GIFs in PRs.
-- If updating README content, keep all language variants aligned (`README.*.md`).
+- 開 issue 說明問題或提案。
+- 讓變更維持聚焦且小步。
+- 遵循此 repo 的 commit 風格：`Add ...`、`Update ...`、`Expand ...`。
+- Frontend/UI 變更請在 PR 附上截圖或 GIF。
+- 若更新 README 內容，請保持所有語言版本一致（`README.*.md`）。
 
-Note: submodule contribution policies are defined upstream in their own repositories (`codex/`, `overleaf/`).
+註：submodule 的貢獻規範由其上游倉庫各自定義（`codex/`、`overleaf/`）。
 
 ## License
 
-Repository-level license file is not present at the root in the current tree.
+目前根目錄樹中沒有 repository-level 授權檔。
 
-- Assumption: this project may currently be shared without a finalized top-level license file.
-- Confirm licensing intent before redistributing substantial modified versions.
-- Submodules carry their own upstream licenses (for example, `overleaf/LICENSE`).
+- 假設：此專案目前可能以尚未定稿的頂層授權狀態分享。
+- 在重新散布大量修改版本前，請先確認授權意圖。
+- Submodule 仍遵循各自上游授權（例如 `overleaf/LICENSE`）。
 
 ## Acknowledgements
 
-- [Overleaf](https://github.com/overleaf/overleaf) for collaborative LaTeX platform infrastructure ideas and components.
-- [OpenAI Codex CLI](https://github.com/openai/codex) for agentic terminal workflows.
-- The broader `the-art-of-lazying` ecosystem for product vision and cross-project integration.
+- [Overleaf](https://github.com/overleaf/overleaf)：提供協作式 LaTeX 平台基礎設施理念與元件。
+- [OpenAI Codex CLI](https://github.com/openai/codex)：提供 agentic terminal workflow。
+- 更廣泛的 `the-art-of-lazying` 生態系：提供產品願景與跨專案整合。
