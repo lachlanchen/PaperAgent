@@ -1,104 +1,105 @@
 [English](../README.md) · [العربية](README.ar.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [中文 (简体)](README.zh-Hans.md) · [中文（繁體）](README.zh-Hant.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lachlanchen/lachlanchen/main/logos/banner.png" alt="PaperAgent banner" width="100%">
-</p>
+[![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 [![Main Project](https://img.shields.io/badge/Main%20Project-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying) [![Main Website](https://img.shields.io/badge/Main%20Website-lazying.art-0f766e?style=for-the-badge)](https://lazying.art)
+[![GitHub stars](https://img.shields.io/badge/GitHub%20stars-lachlanchen%2FPaperAgent-0f766e?style=for-the-badge)](https://github.com/lachlanchen/PaperAgent/stargazers)
+[![GitHub issues](https://img.shields.io/badge/GitHub%20issues-lachlanchen%2FPaperAgent-7c3aed?style=for-the-badge)](https://github.com/lachlanchen/PaperAgent/issues)
+[![Docs](https://img.shields.io/badge/Docs-README-2563eb?style=for-the-badge)](README.md)
 
 # PaperAgent
 
-[![Local First](https://img.shields.io/badge/Local--First-Yes-0f766e?style=flat-square)](#uberblick)
-[![PWA](https://img.shields.io/badge/PWA-Enabled-2563eb?style=flat-square)](#uberblick)
-[![Backend](https://img.shields.io/badge/Backend-Tornado-7c3aed?style=flat-square)](#uberblick)
+[![Local First](https://img.shields.io/badge/Local--First-Yes-0f766e?style=flat-square)](#overview)
+[![PWA](https://img.shields.io/badge/PWA-Enabled-2563eb?style=flat-square)](#overview)
+[![Backend](https://img.shields.io/badge/Backend-Tornado-7c3aed?style=flat-square)](#overview)
 [![Terminal](https://img.shields.io/badge/PTY-WebSocket-0891b2?style=flat-square)](#funktionen)
 [![Docker Optional](https://img.shields.io/badge/Docker-Optional-0ea5e9?style=flat-square)](#voraussetzungen)
 [![Postgres Optional](https://img.shields.io/badge/PostgreSQL-Optional-1d4ed8?style=flat-square)](#voraussetzungen)
 [![License](https://img.shields.io/badge/License-Pending-lightgrey?style=flat-square)](#lizenz)
 
-PaperAgent ist ein lokal-priorisierter Web-Workspace zum Schreiben wissenschaftlicher Arbeiten: Du bearbeitest LaTeX und Code im Browser, führst Python/R aus und kompilierst LaTeX im Backend, und kannst PDFs zusammen mit Logs an einem Ort prüfen.
+PaperAgent ist ein lokal ausgerichteter Web-Arbeitsbereich für wissenschaftliches Schreiben: Bearbeite LaTeX und Code im Browser, führe Python/R aus und kompiliere LaTeX im Backend, und prüfe PDFs mit Logs an einer Stelle.
 
-## Vision
+## 💡 Vision
 
-PaperAgent wurde entwickelt, um alle von Forschungs-Beschäftigungstherapie zu „Only Ideas“ zu befreien.  
-Das Ziel ist einfach: menschliches Denken bleibt menschlich, und das System übernimmt repetitive Arbeit.  
-Du fokussierst dich auf Idee und Erzählung; PaperAgent übernimmt die Ausführungsschleifen.
+PaperAgent ist darauf ausgelegt, alle im Forschungsalltag anfallenden Routinetätigkeiten auf ein Minimum zu reduzieren – damit nur noch „Only Ideas“ bleibt.
+Das Ziel ist klar: Lass das Denken menschlich, und überlasse dem System die repetitiven Abläufe.
+Du kümmerst dich um Idee und Storyline; PaperAgent übernimmt die Ausführungsschleifen.
 
-## Philosophie
+## 🧭 Philosophie
 
-- Local-first, privacy-first: Daten und Ausführung bleiben standardmäßig auf deiner Maschine.
-- Idea-first-Workflow: von einem Konzept mit minimaler Reibung zu einem ausführbaren Paper.
-- Kleine, reversible Schritte: jede Änderung ist transparent und leicht rückgängig zu machen.
-- Tools sollen Arbeit entfernen: Automatisierung dient dazu, Mühe zu löschen, nicht neue zu erzeugen.
+- Local-first, privacy-first: Daten und Ausführung bleiben standardmäßig auf deinem Gerät.
+- Idea-first-Workflow: Gehe mit möglichst wenig Reibung von einer Idee zu einem ausführbaren Paper.
+- Kleine, reversible Schritte: Jede Änderung ist transparent und leicht rückgängig zu machen.
+- Werkzeuge sollen Arbeit reduzieren: Automatisierung soll Last entfernen, nicht neue Last erzeugen.
 
-## Logik (wie es funktioniert)
+## 🛠️ Logik (wie es funktioniert)
 
-1. Chat -> Edit: Beschreibe die Änderung, und PaperAgent bearbeitet die richtigen Dateien.
+1. Chat -> Edit: Beschreibe die Änderung, und PaperAgent editiert die passenden Dateien.
 2. Run -> Compile: Führe Python/R aus, kompiliere LaTeX, erzeuge Abbildungen.
-3. Preview -> Iterate: Prüfe PDF + Logs, behebe schnell, wiederhole.
+3. Preview -> Iterate: Prüfe PDF + Logs, korrigiere schnell, wiederhole.
 
-## Uberblick
+## 📚 Überblick
 
-PaperAgent konzentriert sich auf `webterm/`, einen Tornado- + WebSocket-Server, der einen browserbasierten PWA-Workspace bereitstellt:
+PaperAgent basiert auf `webterm/`, einem Tornado + WebSocket-Server, der eine browserbasierte PWA-Workspace-Umgebung bereitstellt:
 
 - PTY-Terminal-Streaming (`/ws`) für interaktive Shell-Arbeit.
 - Codex-Bridge-WebSocket/API (`/codex/ws`, `/api/codex/*`) für sitzungsbasierte Agent-Workflows.
-- Datei-, Baum- und PDF-APIs (`/api/file`, `/api/tree`, `/api/pdf`) für Bearbeitung und Vorschau im Browser.
-- Optionale Postgres-gestützte Persistenz für Benutzer, Projekte, Git-Metadaten und Codex-Historie.
+- Datei-, Baum- und PDF-APIs (`/api/file`, `/api/tree`, `/api/pdf`) für In-Browser-Editing und Vorschau.
+- Optional: Postgres-gestützte Persistenz für Nutzer, Projekte, Git-Metadaten und Codex-Verlauf.
 - Optionale Docker-Shell-Ausführung über `webterm/docker-shell.sh`.
 
 ### Auf einen Blick
 
-| Bereich | Was es bietet |
+| Bereich | Liefert | 
 |---|---|
 | Workspace | Browser-Terminal + Editor + Dateibaum + PDF-Panel |
-| Automationsschleife | Prompt-gesteuerte Edits, kompilieren, Logs prüfen, iterieren |
-| Laufzeit | Standardmäßig Host-Shell, optional Docker-Shell |
+| Automationsschleife | Prompt-gesteuerte Änderungen, Kompilieren, Logs prüfen, iterieren |
+| Runtime | Standardmäßig Host-Shell, optionale Docker-Shell |
 | Persistenz | Standardmäßig zustandslos; optional Postgres-gestützte Historie/Metadaten |
-| Docs/i18n | Mehrsprachige README-Sammlung und `i18n/`-Verzeichnis im Repository |
+| Docs/i18n | Mehrsprachiger README-Satz und `i18n/`-Verzeichnis im Repo |
 
-## Was du bekommst
+## 🎯 Was du bekommst
 
-- Web-Terminal mit Verbindung zu einer Docker-Sandbox
-- LaTeX-Projektgerüst und Kompilierung mit einem Klick
+- Webterminal mit Verbindung zu einer Docker-Sandbox
+- LaTeX-Projektstruktur und Ein-Klick-Kompilierung
 - Python/R-Ausführung für Abbildungen und Experimente
 - PDF-Vorschau mit Logs
-- Eine klare, minimalistische PWA-Oberfläche
+- Eine klare, minimalistische PWA-Benutzeroberfläche
 
-## Funktionen
+## ⚙️ Funktionen
 
-- Browser-Terminal mit PTY-Resize-Unterstützung und persistenten Workflow-Steuerelementen.
-- Projekt-Kontrollpanel für Workspace-Erstellung, LaTeX-Initialisierung und Compile-Abläufe.
-- Dateibaum + CodeMirror-Editor mit Speichern und optionalem Watch/Reload-Polling.
+- Browserterminal mit PTY-Resize-Unterstützung und persistenten Workflow-Steuerelementen.
+- Projektsteuerungs-Panel für Workspace-Erstellung, LaTeX-Initialisierung und Kompilierungsabläufe.
+- Dateibaum + CodeMirror-Editor mit Speichern und optionalem Watch-/Reload-Polling.
 - PDF-Vorschau-Pipeline für `/home/<user>/Projects/<project>/latex/<file>.pdf`.
-- Codex Bridge mit Session-Start/Fortsetzen, Status-Sync und optionalem DB-Logging.
-- Git/SSH-Helfer in der UI (Identity speichern, Remote-Prefill, SSH-Key erzeugen/prufen).
-- Docker-bewusste Kommando-/Dateioperationen mit Fallback auf Host-Shell/Dateisystem.
+- Codex Bridge mit Sitzungsstart/-wiederaufnahme, Statusabgleich und optionaler DB-Protokollierung.
+- Git/SSH-Helfer in der UI (Identity speichern, Remote vorausfüllen, SSH-Schlüssel generieren/prüfen).
+- Docker-aware Befehls-/Dateioperationen mit Fallback auf Host-Shell/Filesystem.
 
-### Funktionskarte
+### Funktionsübersicht
 
 | Fähigkeit | Details |
 |---|---|
 | Terminal | WebSocket-PTY-Stream über `/ws`, interaktiver Shell-Workflow |
-| Agent-Bridge | `/codex/ws` + `/api/codex/*` Sitzungsorchestrierung |
-| Dateien | `/api/file` Lesen/Schreiben, `/api/tree` Struktur-Browsing |
-| PDF-Vorschau | `/api/pdf` liefert kompilierte Artefakte |
-| Controls | Projekt erstellen, LaTeX initialisieren, kompilieren, Git/SSH-Setup |
+| Agent-Bridge | `/codex/ws` + `/api/codex/*`-Session-Orchestrierung |
+| Dateien | `/api/file` Lesen/Schreiben, `/api/tree` Strukturansicht |
+| PDF-Vorschau | Auslieferung kompilierter Artefakte über `/api/pdf` |
+| Controls | Projekt anlegen, LaTeX initialisieren, kompilieren, Git/SSH einrichten |
 
-## Projektstatus
+## 📈 Projektstatus
 
-- PWA-Workspace: Web-Terminal, PDF-Vorschau, Editor.
-- Projekt-Controls: Workspace erstellen, LaTeX initialisieren, kompilieren, Git/SSH-Helfer.
-- Codex Bridge: Session-Fortsetzung, DB-History-Liste, /status-Sync-Toggle.
+- PWA-Workspace: Webterminal, PDF-Vorschau, Editor.
+- Projektsteuerung: Workspace erstellen, LaTeX initialisieren, kompilieren, Git/SSH-Helfer.
+- Codex Bridge: Sitzungs-Wiederaufnahme, DB-Historien-Liste, `/status`-Synchronisierung ein/aus.
 - Dateibaum + CodeMirror-Editor mit Speichern/Watch.
-- Docker-gestutzte Ausführung (optional) mit LaTeX/Python/R-Toolchain.
+- Docker-basierte Ausführung (optional) mit LaTeX/Python/R Toolchain.
 
-## Demo
+## 🎬 Demo
 
 ![PaperAgent demo](demos/demo-full.png)
 
-## Projektstruktur
+## 🗂️ Projektstruktur
 
 ```text
 PaperAgent/
@@ -132,17 +133,17 @@ PaperAgent/
 └─ overleaf/   (git submodule)
 ```
 
-## Voraussetzungen
+## 🧪 Voraussetzungen
 
-- OS: Linux empfohlen (Docker- und Shell-Tooling wird erwartet).
-- Python: Wenn verfügbar, vorhandene Conda-Umgebung (`paperagent`) verwenden.
+- OS: Linux empfohlen (Docker- und Shell-Tools vorausgesetzt).
+- Python: Nutze die bestehende Conda-Umgebung (`paperagent`), sofern vorhanden.
 - Abhängigkeiten:
   - `tornado`
-  - `psycopg[binary]` (optional, aber für DB-gestützte Funktionen empfohlen)
+  - `psycopg[binary]` (optional, empfohlen für DB-Features)
 - Optionale Laufzeitdienste:
   - Docker (für Sandbox-Shell und containerisierte Projektpfade)
-  - PostgreSQL (für persistierte Benutzer/Projekte/Codex-Session-Historie)
-- Optionale Toolchains innerhalb der Sandbox/des Containers:
+  - PostgreSQL (für persistente Nutzer-/Projekt- und Codex-Session-Historie)
+- Optionale Toolchains in Sandbox/Container:
   - LaTeX (`latexmk` und TeX-Pakete)
   - Python, R
   - Node + `@openai/codex`
@@ -152,15 +153,16 @@ PaperAgent/
 | Typ | Komponenten |
 |---|---|
 | Erforderlich | Python + `tornado` |
-| Empfohlen | `psycopg[binary]` für DB-gestützte Funktionen |
+| Empfohlen | `psycopg[binary]` für DB-gestützte Fähigkeiten |
 | Optionale Dienste | Docker, PostgreSQL |
 | Optionale Toolchains | LaTeX (`latexmk`), Python/R, Node + `@openai/codex` |
 
-## Installation
+## 🚀 Installation
 
 ### 1) Repository klonen (mit Submodulen)
 
 ```bash
+
 git clone --recurse-submodules https://github.com/lachlanchen/PaperAgent.git
 cd PaperAgent
 ```
@@ -178,7 +180,7 @@ conda activate paperagent
 pip install tornado "psycopg[binary]"
 ```
 
-Alternative (wenn nicht in der Umgebung):
+Alternative (falls du nicht in der Umgebung bist):
 
 ```bash
 conda run -n paperagent pip install tornado "psycopg[binary]"
@@ -190,7 +192,7 @@ conda run -n paperagent pip install tornado "psycopg[binary]"
 cp .env.example .env
 ```
 
-Bearbeite `.env` fur dein System (DB-Credentials, Codex-Defaults usw.).
+Bearbeite `.env` für deine Maschine (DB-Credentials, Codex-Standards usw.).
 
 ### 4) Optionales Datenbank-Bootstrap
 
@@ -198,7 +200,7 @@ Bearbeite `.env` fur dein System (DB-Credentials, Codex-Defaults usw.).
 ./scripts/init_db.sh
 ```
 
-Das erzeugt/aktualisiert Rolle + DB und wendet `scripts/db_schema.sql` an.
+Das erstellt/aktualisiert Rolle + DB und wendet `scripts/db_schema.sql` an.
 
 ### 5) Optionales Docker-Sandbox-Bootstrap
 
@@ -206,22 +208,22 @@ Das erzeugt/aktualisiert Rolle + DB und wendet `scripts/db_schema.sql` an.
 ./scripts/setup_docker_env.sh
 ```
 
-Für NVIDIA-Host-Setup (falls benötigt):
+Für NVIDIA-Host-Setups (falls benötigt):
 
 ```bash
 ./scripts/install_nvidia_host.sh
 ```
 
-## Nutzung
+## 🧑‍💻 Nutzung
 
-### Lokal ausführen (empfohlener Standard)
+### Lokal ausführen (empfohlen)
 
 ```bash
 cd webterm
 python server.py --host 127.0.0.1 --port 8765
 ```
 
-Offnen: `http://127.0.0.1:8765`
+Öffne: `http://127.0.0.1:8765`
 
 ### Mit Docker-Shell-Ziel ausführen
 
@@ -230,36 +232,36 @@ cd webterm
 python server.py --host 0.0.0.0 --port 8766 --shell ./docker-shell.sh
 ```
 
-### Dev-Auto-Reload-Modus
+### Dev Auto-Reload-Modus
 
 ```bash
 cd webterm
 python server.py --host 127.0.0.1 --port 8765 --dev
 ```
 
-Im `--dev`-Modus ist Service-Worker-Caching deaktiviert, um veraltete Assets zu vermeiden.
+Im `--dev`-Modus ist das Caching des Service Workers deaktiviert, um veraltete Assets zu vermeiden.
 
 ### Typischer UI-Ablauf
 
-1. Benutzer + Projekt im Kontrollpanel eingeben.
-2. **Create Project + cd** klicken, um Folgendes zu erstellen:
+1. Gib Nutzer + Projekt im Steuerungsfeld ein.
+2. Klicke **Create Project + cd**, damit dieser Pfad erzeugt wird:
    `/home/<user>/Projects/<project>/{code,data,figures,latex/latex_figures,artifacts}`
-3. **Init LaTeX** klicken, um `latex/main.tex` zu erzeugen.
-4. **Compile LaTeX** (`latexmk`) klicken und PDF-Vorschau aktualisieren/offnen.
-5. Dateien in CodeMirror uber den Dateibaum bearbeiten und speichern.
-6. Codex Bridge für prompt-gesteuerte Edits und Session-Fortsetzung nutzen.
+3. Klicke **Init LaTeX**, um `latex/main.tex` anzulegen.
+4. Klicke **Compile LaTeX** (`latexmk`) und aktualisiere/öffne anschließend die PDF-Vorschau.
+5. Bearbeite Dateien im CodeMirror über den Dateibaum und speichere.
+6. Nutze Codex Bridge für Prompt-gesteuerte Änderungen und Sitzungs-Wiederaufnahme.
 
 ### API-Schnellrouten
 
 | Endpoint | Zweck |
 |---|---|
-| `/api/tree` | Projekt-Verzeichnisbaum fur Editorpanel abfragen |
+| `/api/tree` | Projektverzeichnisbaum für das Editor-Panel abfragen |
 | `/api/file` | Projektdateien lesen/schreiben |
-| `/api/pdf` | Gerenderte PDF-Artefakte abrufen |
-| `/api/codex/*` | Session-Lifecycle, Historie, Status-Sync |
-| `/codex/ws` | WebSocket-Kanal fur Codex-Bridge-Events |
+| `/api/pdf` | gerenderte PDF-Artefakte holen |
+| `/api/codex/*` | Session-Lifecycle, Verlauf, Status-Sync |
+| `/codex/ws` | WebSocket-Kanal für Codex-Bridge-Events |
 
-## Konfiguration
+## 🔧 Konfiguration
 
 PaperAgent liest Umgebungsvariablen aus `.env` (oder `ENV_FILE`) und der Prozessumgebung.
 
@@ -273,7 +275,7 @@ DB_USER=lachlan
 DB_PASSWORD=change_me
 ```
 
-### Codex-Defaults
+### Codex-Standardwerte
 
 ```bash
 CODEX_LOG_DB=1
@@ -285,23 +287,23 @@ CODEX_NVM_DIR=/root/.nvm
 CODEX_HISTORY_MESSAGES=1000
 ```
 
-### Weitere nutzliche Schalter
+### Weitere nützliche Schalter
 
-- `CODEX_AUTO_RESTORE=1`: fehlende Session-IDs neu erstellen und gespeicherte Historie erneut abspielen.
-- `PROJECT_DB=1`: DB-gestutzte Persistenz von Projekt-Metadaten aktivieren.
-- `WEBTERM_QUIET_LOGS=1`: laute Polling-/Static-Access-Logs unterdrucken.
-- `CODEX_CMD=codex`: Ausfuhrungskommando für Codex.
-- `CODEX_CWD=/workspace`: Fallback-Arbeitsverzeichnis, wenn Benutzer-/Projektpfad nicht verfugbar ist.
-- `WEBTERM_CONTAINER=<name>`: erkannten Containernamen überschreiben.
+- `CODEX_AUTO_RESTORE=1`: Fehlende Session-IDs neu erstellen und gespeicherten Verlauf erneut abspielen.
+- `PROJECT_DB=1`: DB-gestützte Persistenz für Projektmetadaten aktivieren.
+- `WEBTERM_QUIET_LOGS=1`: Lärmende Polling-/Static-Access-Logs unterdrücken.
+- `CODEX_CMD=codex`: Codex-Befehl.
+- `CODEX_CWD=/workspace`: Ausweich-Arbeitsverzeichnis, wenn Nutzer-/Projektpfad nicht verfügbar ist.
+- `WEBTERM_CONTAINER=<name>`: Erkannten Container-Namen überschreiben.
 
-## Beispiele
+## 📦 Beispiele
 
-### Starten und Terminal verifizieren
+### Terminal starten und prüfen
 
 ```bash
 cd webterm
 python server.py --host 127.0.0.1 --port 8765
-# in browser terminal:
+# im Browser-Terminal:
 pwd
 ```
 
@@ -317,29 +319,29 @@ curl "http://127.0.0.1:8765/api/tree?user=paperagent&project=demo-paper&depth=4"
 curl -o main.pdf "http://127.0.0.1:8765/api/pdf?user=paperagent&project=demo-paper&file=main.pdf"
 ```
 
-### Datei über API lesen
+### Datei via API lesen
 
 ```bash
 curl "http://127.0.0.1:8765/api/file?user=paperagent&project=demo-paper&path=latex/main.tex"
 ```
 
-## Entwicklungshinweise
+## 🧪 Entwicklungshinweise
 
-- Code-Style:
-  - Python: 4 Leerzeichen Einruckung, kleine direkte Funktionen.
-  - Frontend: 2 Leerzeichen Einruckung, `kebab-case` CSS-Klassennamen.
-- Noch keine formale automatisierte Testsuite; manuelle Checks sind primär.
+- Coding Style:
+  - Python: 4-Leerzeichen-Einrückung, kleine direkte Funktionen.
+  - Frontend: 2-Leerzeichen-Einrückung, CSS-Klassennamen im `kebab-case`.
+- Noch keine formale automatisierte Test-Suite; manuelle Checks haben Priorität.
 - Manuelle Checks:
   - PWA laden, Terminal verbinden, `pwd` ausführen.
-  - Projekt-Erstellung und LaTeX-Kompilierung über die UI prüfen.
-- Wenn du PWA-Assets aktualisierst, den Service-Worker-Cache-Namen in `webterm/static/sw.js` erhöhen.
-- `codex/` und `overleaf/` als Submodule behandeln; direkte Edits hier nur bewusst vornehmen.
+  - Projekt-Erstellung und LaTeX-Kompilierung in der UI prüfen.
+- Bei PWA-Asset-Änderungen: den Service-Worker-Cache-Namen in `webterm/static/sw.js` erhöhen.
+- Behandle `codex/` und `overleaf/` als Submodule; direkte Änderungen dort nur absichtlich.
 
-## Fehlerbehebung
+## 🩺 Fehlerbehebung
 
-### Docker-Shell: permission denied
+### Docker-Shell: Berechtigung verweigert
 
-Wenn Docker-Zugriff fehlschlagt, stelle sicher, dass deine Shell Mitglied der Docker-Gruppe ist:
+Wenn der Docker-Zugriff fehlschlägt, stelle sicher, dass deine Shell Mitglied der Docker-Gruppe ist:
 
 ```bash
 newgrp docker
@@ -347,43 +349,43 @@ cd webterm
 python server.py --host 0.0.0.0 --port 8766
 ```
 
-### PDF in der Vorschau nicht gefunden
+### PDF nicht in Vorschau gefunden
 
-- Bestätige, dass die Kompilierung im Terminal erfolgreich abgeschlossen wurde.
-- Bestätige, dass die Datei unter `/home/<user>/Projects/<project>/latex/main.pdf` existiert.
-- PDF-Panel aktualisieren oder **Open** verwenden.
+- Vergewissere dich, dass die Kompilierung im Terminal erfolgreich abgeschlossen wurde.
+- Vergewissere dich, dass die Datei unter `/home/<user>/Projects/<project>/latex/main.pdf` existiert.
+- Aktualisiere das PDF-Panel oder nutze den **Open**-Button.
 
-### DB-Funktionen nicht verfügbar
+### DB-Features nicht verfügbar
 
-- `.env`-DB-Credentials prüfen.
-- Sicherstellen, dass Postgres läuft und erreichbar ist.
-- Treiber installieren: `pip install "psycopg[binary]"`.
-- Falls nötig `./scripts/init_db.sh` ausführen und Server neu starten.
+- Prüfe die DB-Zugänge in `.env`.
+- Stelle sicher, dass PostgreSQL läuft und erreichbar ist.
+- Installiere den Treiber: `pip install "psycopg[binary]"`.
+- Falls nötig, führe `./scripts/init_db.sh` aus und starte den Server neu.
 
-### Codex-Kommando nicht gefunden
+### Codex-Befehl nicht gefunden
 
-- Codex über den UI-Installer (NVM + Node LTS + `@openai/codex`) oder manuell installieren.
-- Sicherstellen, dass `CODEX_CMD` und `CODEX_NVM_DIR` für deinen Laufzeitkontext korrekt gesetzt sind.
+- Installiere Codex über den UI-Installer (NVM + Node LTS + `@openai/codex`) oder manuell.
+- Stelle sicher, dass `CODEX_CMD` und `CODEX_NVM_DIR` für deinen Laufzeitkontext korrekt gesetzt sind.
 
 ### Sicherheit bei LAN-Bindung
 
-`--host 0.0.0.0` ist nur für vertrauenswürdige Netzwerke gedacht. Nicht ohne Auth/TLS öffentlich exponieren.
+`--host 0.0.0.0` ist nur für vertrauenswürdige Netzwerke gedacht. Nicht ohne Auth/TLS öffentlich bereitstellen.
 
-## Roadmap
+## 🗺️ Roadmap
 
-Geplante und laufende Richtung (siehe `references/roadmap-blueprint.md` und verwandte Dokumente):
+Geplante und laufende Ausrichtung (siehe `references/roadmap-blueprint.md` und zugehörige Dokumente):
 
-- Multi-Step-Paper-Automationsschleife und Reproduzierbarkeits-Workflows verbessern.
-- Zuverlässigkeit und Observability der Codex-Bridge-Sessions ausbauen.
+- Mehrstufigen Paper-Automatisierungsfluss und Reproduzierbarkeit weiter verbessern.
+- Zuverlässigkeit und Beobachtbarkeit der Codex-Bridge-Sessions ausbauen.
 - Sandbox-/Runtime-Setup-Pfade härten (CPU/GPU-Varianten).
-- Projekt-Controls und Editor-Ergonomie verbessern.
-- Mehrsprachige Doku und Website-Ausrichtung weiterführen.
+- Projektsteuerung und Editor-Ergonomie verbessern.
+- Mehrsprachige Dokumentation und Website-Ausrichtung fortsetzen.
 
-## Hauptprojekt
+## 🌐 Hauptprojekt
 
 - https://github.com/lachlanchen/the-art-of-lazying
 
-## Ökosystem-Links
+## 🔗 Ökosystem-Links
 
 - https://lazying.art 🎨 <img src="https://img.shields.io/badge/Main-Visit-0f766e?style=flat-square" alt="Main site">
 - https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
@@ -396,65 +398,35 @@ Geplante und laufende Richtung (siehe `references/roadmap-blueprint.md` und verw
 - https://glass.lazying.art 👓
 - https://ideas.onlyideas.art 🧪
 
-## Spenden
-
-<div align="center">
-<table style="margin:0 auto; text-align:center; border-collapse:collapse;">
-  <tr>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;">
-      <a href="https://chat.lazying.art/donate">https://chat.lazying.art/donate</a>
-    </td>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;">
-      <a href="https://chat.lazying.art/donate"><img src="https://raw.githubusercontent.com/lachlanchen/the-art-of-lazying/main/figs/donate_button.svg" alt="Donate" height="44"></a>
-    </td>
-  </tr>
-  <tr>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;">
-      <a href="https://paypal.me/RongzhouChen">
-        <img src="https://img.shields.io/badge/PayPal-Donate-003087?logo=paypal&logoColor=white" alt="Donate with PayPal">
-      </a>
-    </td>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;">
-      <a href="https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400">
-        <img src="https://img.shields.io/badge/Stripe-Donate-635bff?logo=stripe&logoColor=white" alt="Donate with Stripe">
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;"><strong>WeChat</strong></td>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;"><strong>Alipay</strong></td>
-  </tr>
-  <tr>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;"><img alt="WeChat QR" src="https://raw.githubusercontent.com/lachlanchen/the-art-of-lazying/main/figs/donate_wechat.png" width="240"/></td>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;"><img alt="Alipay QR" src="https://raw.githubusercontent.com/lachlanchen/the-art-of-lazying/main/figs/donate_alipay.png" width="240"/></td>
-  </tr>
-</table>
-</div>
-
-Deine Unterstützung trägt meine Forschung, Entwicklung und den Betrieb, damit ich weiterhin offene Projekte und Verbesserungen teilen kann.
-
-## Beitragen
+## 🤝 Beiträge leisten
 
 Beiträge sind willkommen.
 
-- Ein Issue mit Problembeschreibung/Vorschlag öffnen.
-- Änderungen fokussiert und klein halten.
-- Commit-Stil aus diesem Repository einhalten: `Add ...`, `Update ...`, `Expand ...`.
-- Für Frontend/UI-Änderungen Screenshots oder GIFs in PRs beilegen.
-- Bei README-Änderungen alle Sprachvarianten synchron halten (`README.*.md`).
+- Erstelle ein Issue mit Problem oder Vorschlag.
+- Halte Änderungen fokussiert und klein.
+- Folge dem Commit-Stil im Repo: `Add ...`, `Update ...`, `Expand ...`.
+- Bei Frontend-/UI-Änderungen in PRs bitte Screenshots oder GIFs beilegen.
+- Wenn du README-Inhalte aktualisierst, halte alle Sprachvarianten konsistent (`README.*.md`).
 
-Hinweis: Submodule-Beitragsrichtlinien sind upstream in den jeweiligen Repositories definiert (`codex/`, `overleaf/`).
+Hinweis: Richtlinien für Beiträge in Submodulen sind in deren eigenen Repositories definiert (`codex/`, `overleaf/`).
 
-## Lizenz
+## 📜 Lizenz
 
-Im aktuellen Tree ist auf Repository-Ebene keine Lizenzdatei im Root vorhanden.
+Auf Repository-Ebene liegt im aktuellen Tree keine Lizenzdatei im Root.
 
-- Annahme: Dieses Projekt wird derzeit möglicherweise ohne finalisierte Top-Level-Lizenzdatei geteilt.
-- Lizenzabsicht vor der Weiterverteilung umfangreicher modifizierter Versionen bestätigen.
-- Submodule tragen ihre eigenen Upstream-Lizenzen (zum Beispiel `overleaf/LICENSE`).
+- Annahme: Das Projekt wird möglicherweise derzeit ohne finale Top-Level-Lizenzdatei geteilt.
+- Kläre die Lizenzabsicht, bevor du deutlich größere modifizierte Versionen weiterverbreitest.
+- Submodule besitzen eigene Upstream-Lizenzen (z. B. `overleaf/LICENSE`).
 
-## Danksagungen
+## 🙏 Danksagungen
 
-- [Overleaf](https://github.com/overleaf/overleaf) für Ideen und Komponenten zur kollaborativen LaTeX-Plattform-Infrastruktur.
+- [Overleaf](https://github.com/overleaf/overleaf) für Ideen und Komponenten rund um kollaborative LaTeX-Plattformen.
 - [OpenAI Codex CLI](https://github.com/openai/codex) für agentische Terminal-Workflows.
-- Das umfassendere `the-art-of-lazying`-Ökosystem für Produktvision und projektübergreifende Integration.
+- Das `the-art-of-lazying`-Ökosystem für die Produktvision und die Integration über Projekte hinweg.
+
+
+## ❤️ Support
+
+| Donate | PayPal | Stripe |
+| --- | --- | --- |
+| [![Donate](https://camo.githubusercontent.com/24a4914f0b42c6f435f9e101621f1e52535b02c225764b2f6cc99416926004b7/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f6e6174652d4c617a79696e674172742d3045413545393f7374796c653d666f722d7468652d6261646765266c6f676f3d6b6f2d6669266c6f676f436f6c6f723d7768697465)](https://chat.lazying.art/donate) | [![PayPal](https://camo.githubusercontent.com/d0f57e8b016517a4b06961b24d0ca87d62fdba16e18bbdb6aba28e978dc0ea21/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f50617950616c2d526f6e677a686f754368656e2d3030343537433f7374796c653d666f722d7468652d6261646765266c6f676f3d70617970616c266c6f676f436f6c6f723d7768697465)](https://paypal.me/RongzhouChen) | [![Stripe](https://camo.githubusercontent.com/1152dfe04b6943afe3a8d2953676749603fb9f95e24088c92c97a01a897b4942/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f5374726970652d446f6e6174652d3633354246463f7374796c653d666f722d7468652d6261646765266c6f676f3d737472697065266c6f676f436f6c6f723d7768697465)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |

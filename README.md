@@ -1,11 +1,12 @@
 [English](README.md) · [العربية](i18n/README.ar.md) · [Español](i18n/README.es.md) · [Français](i18n/README.fr.md) · [日本語](i18n/README.ja.md) · [한국어](i18n/README.ko.md) · [Tiếng Việt](i18n/README.vi.md) · [中文 (简体)](i18n/README.zh-Hans.md) · [中文（繁體）](i18n/README.zh-Hant.md) · [Deutsch](i18n/README.de.md) · [Русский](i18n/README.ru.md)
 
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lachlanchen/lachlanchen/main/logos/banner.png" alt="PaperAgent banner" width="100%">
-</p>
+[![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 [![Main Project](https://img.shields.io/badge/Main%20Project-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying) [![Main Website](https://img.shields.io/badge/Main%20Website-lazying.art-0f766e?style=for-the-badge)](https://lazying.art)
+[![GitHub stars](https://img.shields.io/github/stars/lachlanchen/PaperAgent?style=for-the-badge&label=Stars&color=0f766e)](https://github.com/lachlanchen/PaperAgent/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/lachlanchen/PaperAgent?style=for-the-badge&label=Issues&color=7c3aed)](https://github.com/lachlanchen/PaperAgent/issues)
+[![Docs](https://img.shields.io/badge/Docs-README-2563eb?style=for-the-badge)](README.md)
 
 # PaperAgent
 
@@ -19,26 +20,26 @@
 
 PaperAgent is a local-first web workspace for writing papers: edit LaTeX and code in the browser, run Python/R and compile LaTeX on the backend, and preview PDFs with logs in one place.
 
-## Vision
+## 💡 Vision
 
 PaperAgent is built to liberate everyone from research busy-work to “Only Ideas.”  
 The goal is simple: keep the thinking human and make the system do the repetitive work.  
 You focus on the idea and the narrative; PaperAgent handles the execution loops.
 
-## Philosophy
+## 🧭 Philosophy
 
 - Local-first, privacy-first: data and execution stay on your machine by default.
 - Idea-first workflow: move from a concept to a runnable paper with minimal friction.
 - Small, reversible steps: every change is transparent and easy to undo.
 - Tools should remove work: automation exists to delete toil, not add it.
 
-## Logic (how it works)
+## 🛠️ Logic (how it works)
 
 1. Chat -> Edit: describe the change, and PaperAgent edits the right files.
 2. Run -> Compile: execute Python/R, compile LaTeX, generate figures.
 3. Preview -> Iterate: inspect PDF + logs, fix fast, repeat.
 
-## Overview
+## 📚 Overview
 
 PaperAgent is centered on `webterm/`, a Tornado + WebSocket server that powers a browser-based PWA workspace:
 
@@ -58,7 +59,7 @@ PaperAgent is centered on `webterm/`, a Tornado + WebSocket server that powers a
 | Persistence | Stateless mode by default; optional Postgres-backed history/metadata |
 | Docs/i18n | Multi-language README set and `i18n/` directory in repo |
 
-## What you get
+## 🎯 What You Get
 
 - Web terminal connected to a Docker sandbox
 - LaTeX project scaffolding and one-click compile
@@ -66,7 +67,7 @@ PaperAgent is centered on `webterm/`, a Tornado + WebSocket server that powers a
 - PDF preview with logs
 - A clean, minimal PWA interface
 
-## Features
+## ⚙️ Features
 
 - Browser terminal with PTY resize support and persistent workflow controls.
 - Project control panel for workspace creation, LaTeX init, and compile flows.
@@ -86,7 +87,7 @@ PaperAgent is centered on `webterm/`, a Tornado + WebSocket server that powers a
 | PDF preview | `/api/pdf` serving compiled artifacts |
 | Controls | Create project, init LaTeX, compile, Git/SSH setup |
 
-## Project status
+## 📈 Project Status
 
 - PWA workspace: web terminal, PDF preview, editor.
 - Project Controls: create workspace, init LaTeX, compile, Git/SSH helpers.
@@ -94,11 +95,11 @@ PaperAgent is centered on `webterm/`, a Tornado + WebSocket server that powers a
 - File tree + CodeMirror editor with save/watch.
 - Docker-backed execution (optional) with LaTeX/Python/R toolchain.
 
-## Demo
+## 🎬 Demo
 
 ![PaperAgent demo](demos/demo-full.png)
 
-## Project Structure
+## 🗂️ Project Structure
 
 ```text
 PaperAgent/
@@ -132,7 +133,7 @@ PaperAgent/
 └─ overleaf/   (git submodule)
 ```
 
-## Prerequisites
+## 🧪 Prerequisites
 
 - OS: Linux recommended (Docker and shell tooling expected).
 - Python: use the existing Conda env (`paperagent`) when available.
@@ -156,7 +157,7 @@ PaperAgent/
 | Optional services | Docker, PostgreSQL |
 | Optional toolchains | LaTeX (`latexmk`), Python/R, Node + `@openai/codex` |
 
-## Installation
+## 🚀 Installation
 
 ### 1) Clone repository (with submodules)
 
@@ -212,7 +213,7 @@ For NVIDIA host setup (if needed):
 ./scripts/install_nvidia_host.sh
 ```
 
-## Usage
+## 🧑‍💻 Usage
 
 ### Run locally (recommended default)
 
@@ -259,7 +260,7 @@ In `--dev` mode, service worker caching is disabled to avoid stale assets.
 | `/api/codex/*` | Session lifecycle, history, status sync |
 | `/codex/ws` | WebSocket channel for Codex bridge events |
 
-## Configuration
+## 🔧 Configuration
 
 PaperAgent reads env vars from `.env` (or `ENV_FILE`) and process environment.
 
@@ -294,7 +295,7 @@ CODEX_HISTORY_MESSAGES=1000
 - `CODEX_CWD=/workspace`: fallback working directory when user/project path is unavailable.
 - `WEBTERM_CONTAINER=<name>`: override detected container name.
 
-## Examples
+## 📦 Examples
 
 ### Launch and verify terminal
 
@@ -323,7 +324,7 @@ curl -o main.pdf "http://127.0.0.1:8765/api/pdf?user=paperagent&project=demo-pap
 curl "http://127.0.0.1:8765/api/file?user=paperagent&project=demo-paper&path=latex/main.tex"
 ```
 
-## Development Notes
+## 🧪 Development Notes
 
 - Code style:
   - Python: 4-space indentation, small direct functions.
@@ -335,7 +336,7 @@ curl "http://127.0.0.1:8765/api/file?user=paperagent&project=demo-paper&path=lat
 - If you update PWA assets, bump service worker cache name in `webterm/static/sw.js`.
 - Treat `codex/` and `overleaf/` as submodules; avoid direct edits here unless intentional.
 
-## Troubleshooting
+## 🩺 Troubleshooting
 
 ### Docker shell permission denied
 
@@ -369,7 +370,7 @@ python server.py --host 0.0.0.0 --port 8766
 
 `--host 0.0.0.0` is for trusted networks only. Do not expose publicly without auth/TLS.
 
-## Roadmap
+## 🗺️ Roadmap
 
 Planned and in-progress direction (see `references/roadmap-blueprint.md` and related docs):
 
@@ -379,11 +380,11 @@ Planned and in-progress direction (see `references/roadmap-blueprint.md` and rel
 - Improve project controls and editor ergonomics.
 - Continue multilingual docs and website alignment.
 
-## Main project
+## 🌐 Main project
 
 - https://github.com/lachlanchen/the-art-of-lazying
 
-## Ecosystem links
+## 🔗 Ecosystem links
 
 - https://lazying.art 🎨 <img src="https://img.shields.io/badge/Main-Visit-0f766e?style=flat-square" alt="Main site">
 - https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
@@ -396,44 +397,7 @@ Planned and in-progress direction (see `references/roadmap-blueprint.md` and rel
 - https://glass.lazying.art 👓
 - https://ideas.onlyideas.art 🧪
 
-## Donate
-
-<div align="center">
-<table style="margin:0 auto; text-align:center; border-collapse:collapse;">
-  <tr>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;">
-      <a href="https://chat.lazying.art/donate">https://chat.lazying.art/donate</a>
-    </td>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;">
-      <a href="https://chat.lazying.art/donate"><img src="https://raw.githubusercontent.com/lachlanchen/the-art-of-lazying/main/figs/donate_button.svg" alt="Donate" height="44"></a>
-    </td>
-  </tr>
-  <tr>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;">
-      <a href="https://paypal.me/RongzhouChen">
-        <img src="https://img.shields.io/badge/PayPal-Donate-003087?logo=paypal&logoColor=white" alt="Donate with PayPal">
-      </a>
-    </td>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;">
-      <a href="https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400">
-        <img src="https://img.shields.io/badge/Stripe-Donate-635bff?logo=stripe&logoColor=white" alt="Donate with Stripe">
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;"><strong>WeChat</strong></td>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;"><strong>Alipay</strong></td>
-  </tr>
-  <tr>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;"><img alt="WeChat QR" src="https://raw.githubusercontent.com/lachlanchen/the-art-of-lazying/main/figs/donate_wechat.png" width="240"/></td>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;"><img alt="Alipay QR" src="https://raw.githubusercontent.com/lachlanchen/the-art-of-lazying/main/figs/donate_alipay.png" width="240"/></td>
-  </tr>
-</table>
-</div>
-
-Your support sustains my research, development, and ops so I can keep sharing more open projects and improvements.
-
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome.
 
@@ -445,7 +409,13 @@ Contributions are welcome.
 
 Note: submodule contribution policies are defined upstream in their own repositories (`codex/`, `overleaf/`).
 
-## License
+## ❤️ Support
+
+| Donate | PayPal | Stripe |
+| --- | --- | --- |
+| [![Donate](https://camo.githubusercontent.com/24a4914f0b42c6f435f9e101621f1e52535b02c225764b2f6cc99416926004b7/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f6e6174652d4c617a79696e674172742d3045413545393f7374796c653d666f722d7468652d6261646765266c6f676f3d6b6f2d6669266c6f676f436f6c6f723d7768697465)](https://chat.lazying.art/donate) | [![PayPal](https://camo.githubusercontent.com/d0f57e8b016517a4b06961b24d0ca87d62fdba16e18bbdb6aba28e978dc0ea21/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f50617950616c2d526f6e677a686f754368656e2d3030343537433f7374796c653d666f722d7468652d6261646765266c6f676f3d70617970616c266c6f676f436f6c6f723d7768697465)](https://paypal.me/RongzhouChen) | [![Stripe](https://camo.githubusercontent.com/1152dfe04b6943afe3a8d2953676749603fb9f95e24088c92c97a01a897b4942/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f5374726970652d446f6e6174652d3633354246463f7374796c653d666f722d7468652d6261646765266c6f676f3d737472697065266c6f676f436f6c6f723d7768697465)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
+
+## 📜 License
 
 Repository-level license file is not present at the root in the current tree.
 
@@ -453,7 +423,7 @@ Repository-level license file is not present at the root in the current tree.
 - Confirm licensing intent before redistributing substantial modified versions.
 - Submodules carry their own upstream licenses (for example, `overleaf/LICENSE`).
 
-## Acknowledgements
+## 🙏 Acknowledgements
 
 - [Overleaf](https://github.com/overleaf/overleaf) for collaborative LaTeX platform infrastructure ideas and components.
 - [OpenAI Codex CLI](https://github.com/openai/codex) for agentic terminal workflows.

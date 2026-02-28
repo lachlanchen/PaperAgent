@@ -1,11 +1,12 @@
 [English](../README.md) · [العربية](README.ar.md) · [Español](README.es.md) · [Français](README.fr.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Tiếng Việt](README.vi.md) · [中文 (简体)](README.zh-Hans.md) · [中文（繁體）](README.zh-Hant.md) · [Deutsch](README.de.md) · [Русский](README.ru.md)
 
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lachlanchen/lachlanchen/main/logos/banner.png" alt="PaperAgent banner" width="100%">
-</p>
+[![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://github.com/lachlanchen/lachlanchen/blob/main/figs/banner.png)
 
 [![Main Project](https://img.shields.io/badge/Main%20Project-the--art--of--lazying-0f766e?style=for-the-badge)](https://github.com/lachlanchen/the-art-of-lazying) [![Main Website](https://img.shields.io/badge/Main%20Website-lazying.art-0f766e?style=for-the-badge)](https://lazying.art)
+[![GitHub stars](https://img.shields.io/github/stars/lachlanchen/PaperAgent?style=for-the-badge&label=Stars&color=0f766e)](https://github.com/lachlanchen/PaperAgent/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/lachlanchen/PaperAgent?style=for-the-badge&label=Issues&color=7c3aed)](https://github.com/lachlanchen/PaperAgent/issues)
+[![Docs](https://img.shields.io/badge/Docs-README-2563eb?style=for-the-badge)](README.md)
 
 # PaperAgent
 
@@ -17,88 +18,89 @@
 [![Postgres Optional](https://img.shields.io/badge/PostgreSQL-Optional-1d4ed8?style=flat-square)](#prerequisites)
 [![License](https://img.shields.io/badge/License-Pending-lightgrey?style=flat-square)](#license)
 
-PaperAgent は、論文執筆のためのローカルファーストな Web ワークスペースです。ブラウザで LaTeX とコードを編集し、バックエンドで Python/R 実行や LaTeX コンパイルを行い、PDF とログを一か所で確認できます。
+PaperAgent は、論文作成のためのローカルファースト Web ワークスペースです。ブラウザで LaTeX とコードを編集し、バックエンドで Python/R を実行して LaTeX をコンパイルし、PDF とログをひとつの画面でプレビューできます。
 
-## Vision
+## 💡 ビジョン
 
-PaperAgent は、研究における雑務からすべての人を解放し、「Only Ideas」に集中できるように設計されています。  
-目標はシンプルです。思考は人間が担い、反復作業はシステムに任せること。  
-あなたはアイデアと物語に集中し、PaperAgent は実行ループを処理します。
+PaperAgent は、研究者の雑務から人を解放し「Only Ideas」を実現するために作られました。  
+目標はシンプルで、
+考えるのは人間、反復作業はシステムが担います。  
+あなたはアイデアと物語に集中し、PaperAgent が実行ループを回します。
 
-## Philosophy
+## 🧭 哲学
 
-- ローカルファースト、プライバシーファースト: 既定ではデータと実行はあなたのマシン上に留まります。
-- アイデアファーストなワークフロー: 構想から実行可能な論文までを最小限の摩擦で進めます。
-- 小さく可逆なステップ: すべての変更は透明で、簡単に元に戻せます。
-- ツールは作業を減らすべき: 自動化は手間を増やすためでなく、雑務を消すためにあります。
+- ローカルファースト、プライバシーファースト: データと実行は既定でローカルマシン内に留まります。
+- アイデアファーストのワークフロー: 構想から実行可能な論文へ、最小限の摩擦で進めます。
+- 小さく、可逆的なステップ: すべての変更は透明で、簡単に元に戻せます。
+- ツールは作業を減らすべき: 自動化は作業量を増やすためではなく、手作業を削減するためにあります。
 
-## Logic (how it works)
+## 🛠️ ロジック（動作イメージ）
 
-1. Chat -> Edit: 変更内容を説明すると、PaperAgent が適切なファイルを編集します。
+1. Chat -> Edit: 変更内容を伝えると、PaperAgent が適切なファイルを編集します。
 2. Run -> Compile: Python/R を実行し、LaTeX をコンパイルし、図を生成します。
-3. Preview -> Iterate: PDF とログを確認し、すばやく修正し、繰り返します。
+3. Preview -> Iterate: PDF とログを確認し、素早く修正を繰り返します。
 
-## Overview
+## 📚 概要
 
-PaperAgent の中心は `webterm/` で、Tornado + WebSocket サーバーによりブラウザベースの PWA ワークスペースを提供します。
+PaperAgent の中核は `webterm/` で、Tornado + WebSocket サーバーを使ったブラウザベースの PWA ワークスペースです。
 
-- 対話型シェル作業のための PTY ターミナルストリーミング (`/ws`)。
-- セッションベースのエージェントワークフロー向け Codex Bridge WebSocket/API (`/codex/ws`, `/api/codex/*`)。
-- ブラウザ内編集とプレビュー向けのファイル・ツリー・PDF API (`/api/file`, `/api/tree`, `/api/pdf`)。
-- ユーザー、プロジェクト、Git メタデータ、Codex 履歴のための任意の Postgres 永続化。
-- `webterm/docker-shell.sh` を使った任意の Docker シェル実行。
+- 対話型シェル作業向け PTY ターミナルストリーミング (`/ws`)
+- セッションベースのエージェントワークフロー向け Codex Bridge WebSocket/API (`/codex/ws`, `/api/codex/*`)
+- ブラウザ内編集とプレビュー向けファイル／ツリー／PDF API (`/api/file`, `/api/tree`, `/api/pdf`)
+- ユーザー、プロジェクト、Git メタデータ、Codex 履歴向けに任意で利用可能な Postgres 永続化
+- `webterm/docker-shell.sh` による任意の Docker シェル実行
 
-### At a glance
+### 一目でわかる概要
 
-| Area | What it provides |
+| 領域 | 提供内容 |
 |---|---|
-| Workspace | ブラウザターミナル + エディタ + ファイルツリー + PDF パネル |
-| Automation loop | プロンプト駆動の編集、コンパイル、ログ確認、反復 |
-| Runtime | 既定はホストシェル、任意で Docker シェル |
-| Persistence | 既定はステートレス; 任意で Postgres による履歴/メタデータ保持 |
-| Docs/i18n | 多言語 README 群とリポジトリ内の `i18n/` ディレクトリ |
+| ワークスペース | ブラウザターミナル + エディタ + ファイルツリー + PDF パネル |
+| 自動化ループ | プロンプト駆動の編集、コンパイル、ログ確認、反復 |
+| 実行基盤 | 既定はホストシェル、任意で Docker シェル |
+| 永続化 | 既定はステートレス。任意で Postgres を使った履歴・メタデータ保存 |
+| Docs/i18n | 多言語 README 一式とリポジトリ内 `i18n/` ディレクトリ |
 
-## What you get
+## 🎯 得られること
 
-- Docker サンドボックスに接続された Web ターミナル
-- LaTeX プロジェクト雛形の作成とワンクリックコンパイル
-- 図表生成や実験のための Python/R 実行
+- Web ターミナル（Docker サンドボックス連携）
+- LaTeX プロジェクトの初期セットアップとワンクリックコンパイル
+- 図や実験のための Python/R 実行
 - ログ付き PDF プレビュー
-- クリーンでミニマルな PWA インターフェース
+- シンプルでミニマルな PWA インターフェース
 
-## Features
+## ⚙️ 機能
 
-- PTY リサイズ対応のブラウザターミナルと永続的なワークフロー制御。
-- ワークスペース作成、LaTeX 初期化、コンパイルフローのためのプロジェクトコントロールパネル。
+- PTY リサイズ対応のブラウザターミナルと永続的ワークフロー制御。
+- ワークスペース作成、LaTeX 初期化、コンパイルフローのためのプロジェクト制御パネル。
 - 保存と任意の watch/reload ポーリングに対応したファイルツリー + CodeMirror エディタ。
-- `/home/<user>/Projects/<project>/latex/<file>.pdf` 向け PDF プレビューパイプライン。
-- セッション開始/再開、状態同期、任意の DB ログを備えた Codex Bridge。
-- UI の Git/SSH 補助機能（ID 保存、リモート事前入力、SSH キー生成/確認）。
-- Docker 対応のコマンド/ファイル操作（ホストシェル/ファイルシステムへのフォールバックあり）。
+- `/home/<user>/Projects/<project>/latex/<file>.pdf` 用の PDF プレビュー配信パイプライン。
+- セッション開始／再開、ステータス同期、任意の DB ログを備えた Codex Bridge。
+- UI での Git/SSH 補助機能（ID 保存、リモート値の事前入力、SSH キー生成／検証）。
+- Docker 対応のコマンド／ファイル操作とホストシェル／ファイルシステムへのフォールバック。
 
-### Feature map
+### 機能マップ
 
-| Capability | Details |
+| 機能 | 詳細 |
 |---|---|
-| Terminal | `/ws` 経由の WebSocket PTY ストリーム、対話型シェルワークフロー |
-| Agent bridge | `/codex/ws` + `/api/codex/*` セッションオーケストレーション |
-| Files | `/api/file` 読み書き、`/api/tree` 構造ブラウズ |
-| PDF preview | `/api/pdf` でコンパイル済み成果物を配信 |
-| Controls | プロジェクト作成、LaTeX 初期化、コンパイル、Git/SSH セットアップ |
+| ターミナル | `/ws` 経由の WebSocket PTY ストリーム、対話型シェルワークフロー |
+| エージェントブリッジ | `/codex/ws` + `/api/codex/*` によるセッション制御 |
+| ファイル | `/api/file` 読み書き、`/api/tree` による構造閲覧 |
+| PDF プレビュー | `/api/pdf` によるコンパイル成果物の配信 |
+| 制御 | プロジェクト作成、LaTeX 初期化、コンパイル、Git/SSH 設定 |
 
-## Project status
+## 📈 プロジェクトステータス
 
-- PWA ワークスペース: Web ターミナル、PDF プレビュー、エディタ。
-- Project Controls: ワークスペース作成、LaTeX 初期化、コンパイル、Git/SSH 補助。
-- Codex Bridge: セッション再開、DB 履歴一覧、`/status` 同期トグル。
-- 保存/watch 対応のファイルツリー + CodeMirror エディタ。
-- LaTeX/Python/R ツールチェーン付きの Docker 実行（任意）。
+- PWA ワークスペース: web ターミナル、PDF プレビュー、エディタ |
+- Project Controls: ワークスペース作成、LaTeX 初期化、コンパイル、Git/SSH 補助 |
+- Codex Bridge: セッション再開、DB 履歴一覧、/status 同期トグル |
+- 保存/watch 対応のファイルツリー + CodeMirror エディタ |
+- LaTeX/Python/R ツールチェーンを備えた Docker 実行（任意） |
 
-## Demo
+## 🎬 デモ
 
 ![PaperAgent demo](demos/demo-full.png)
 
-## Project Structure
+## 🗂️ プロジェクト構成
 
 ```text
 PaperAgent/
@@ -132,89 +134,90 @@ PaperAgent/
 └─ overleaf/   (git submodule)
 ```
 
-## Prerequisites
+## 🧪 前提条件
 
-- OS: Linux 推奨（Docker とシェルツール利用を想定）。
-- Python: 利用可能な場合は既存の Conda 環境 (`paperagent`) を使用。
+- OS: Linux 推奨（Docker やシェル系ツールが前提）
+- Python: 利用可能であれば既存の Conda 環境 (`paperagent`) を使用します。
 - 依存関係:
   - `tornado`
   - `psycopg[binary]`（任意だが DB バックエンド機能には推奨）
 - 任意のランタイムサービス:
   - Docker（サンドボックスシェルとコンテナ化プロジェクトパス向け）
-  - PostgreSQL（ユーザー/プロジェクト/Codex セッション履歴の永続化向け）
-- サンドボックス/コンテナ内での任意ツールチェーン:
+  - PostgreSQL（ユーザー／プロジェクト／Codex セッション履歴の永続化向け）
+- サンドボックス／コンテナ内で任意で使うツールチェーン:
   - LaTeX（`latexmk` と TeX パッケージ）
   - Python, R
   - Node + `@openai/codex`
 
-### Dependency matrix
+### 依存関係マトリクス
 
-| Type | Components |
+| 種別 | 構成 |
 |---|---|
-| Required | Python + `tornado` |
-| Recommended | DB バックエンド機能向け `psycopg[binary]` |
-| Optional services | Docker, PostgreSQL |
-| Optional toolchains | LaTeX (`latexmk`), Python/R, Node + `@openai/codex` |
+| 必須 | Python + `tornado` |
+| 推奨 | DB バックエンド機能向け `psycopg[binary]` |
+| 任意サービス | Docker, PostgreSQL |
+| 任意ツールチェーン | LaTeX (`latexmk`), Python/R, Node + `@openai/codex` |
 
-## Installation
+## 🚀 インストール
 
-### 1) Clone repository (with submodules)
+### 1) リポジトリをクローン（サブモジュール付き）
 
 ```bash
+
 git clone --recurse-submodules https://github.com/lachlanchen/PaperAgent.git
 cd PaperAgent
 ```
 
-サブモジュールなしでクローン済みの場合:
+既にサブモジュールなしでクローン済みの場合:
 
 ```bash
 git submodule update --init --recursive
 ```
 
-### 2) Python environment and packages
+### 2) Python 環境とパッケージ
 
 ```bash
 conda activate paperagent
 pip install tornado "psycopg[binary]"
 ```
 
-別案（env 内でない場合）:
+別案（env 外で実行する場合）:
 
 ```bash
 conda run -n paperagent pip install tornado "psycopg[binary]"
 ```
 
-### 3) Environment configuration
+### 3) 環境変数ファイルの設定
 
 ```bash
 cp .env.example .env
 ```
 
-あなたの環境に合わせて `.env` を編集します（DB 認証情報、Codex 既定値など）。
+自分の環境に合わせて `.env` を編集します（DB 認証情報、Codex のデフォルト値など）。
 
-### 4) Optional database bootstrap
+### 4) 任意のデータベース初期化
 
 ```bash
 ./scripts/init_db.sh
 ```
 
-このスクリプトはロール + DB を作成/更新し、`scripts/db_schema.sql` を適用します。
+このコマンドでロールと DB の作成/更新を行い、`scripts/db_schema.sql` を適用します。
 
-### 5) Optional Docker sandbox bootstrap
+### 5) 任意の Docker サンドボックス初期化
 
 ```bash
 ./scripts/setup_docker_env.sh
 ```
 
-NVIDIA ホスト設定（必要な場合）:
+NVIDIA ホストの設定が必要な場合:
 
 ```bash
 ./scripts/install_nvidia_host.sh
 ```
 
-## Usage
+## 🧑‍💻 使用方法
 
-### Run locally (recommended default)
+### ローカル実行（既定・推奨）
 
 ```bash
 cd webterm
@@ -223,47 +226,47 @@ python server.py --host 127.0.0.1 --port 8765
 
 開く: `http://127.0.0.1:8765`
 
-### Run with Docker shell target
+### Docker シェルを使って実行
 
 ```bash
 cd webterm
 python server.py --host 0.0.0.0 --port 8766 --shell ./docker-shell.sh
 ```
 
-### Dev auto-reload mode
+### 開発用オートリロードモード
 
 ```bash
 cd webterm
 python server.py --host 127.0.0.1 --port 8765 --dev
 ```
 
-`--dev` モードでは、古いアセットが残らないよう service worker キャッシュが無効になります。
+`--dev` モードでは、サービスワーカーのキャッシュを無効化し、古いアセットの再利用を防ぎます。
 
-### Typical UI flow
+### 典型的な UI 操作
 
-1. コントロールパネルに user と project を入力します。
+1. コントロールパネルにユーザー名とプロジェクト名を入力します。
 2. **Create Project + cd** をクリックして以下を作成:
    `/home/<user>/Projects/<project>/{code,data,figures,latex/latex_figures,artifacts}`
-3. **Init LaTeX** をクリックして `latex/main.tex` を生成します。
-4. **Compile LaTeX** (`latexmk`) を実行し、PDF プレビューを更新/表示します。
-5. ファイルツリー経由で CodeMirror 上のファイルを編集して保存します。
-6. Codex Bridge を使ってプロンプト駆動編集とセッション再開を行います。
+3. **Init LaTeX** をクリックして `latex/main.tex` を初期化します。
+4. **Compile LaTeX** (`latexmk`) を実行し、PDF プレビューを更新／開く。
+5. ファイルツリー経由で CodeMirror を使って編集し保存します。
+6. Codex Bridge でプロンプト駆動編集とセッション再開を行います。
 
-### API quick routes
+### API クイックルート
 
-| Endpoint | Purpose |
+| エンドポイント | 目的 |
 |---|---|
-| `/api/tree` | エディタパネル向けプロジェクトディレクトリツリーを照会 |
+| `/api/tree` | エディタパネル向けのプロジェクトディレクトリツリーを取得 |
 | `/api/file` | プロジェクトファイルの読み書き |
-| `/api/pdf` | レンダリング済み PDF 成果物を取得 |
-| `/api/codex/*` | セッションライフサイクル、履歴、状態同期 |
+| `/api/pdf` | コンパイル済み PDF 成果物を取得 |
+| `/api/codex/*` | セッションライフサイクル、履歴、ステータス同期 |
 | `/codex/ws` | Codex ブリッジイベント用 WebSocket チャネル |
 
-## Configuration
+## 🔧 設定
 
-PaperAgent は `.env`（または `ENV_FILE`）とプロセス環境から環境変数を読み込みます。
+PaperAgent は `.env`（または `ENV_FILE`）とプロセス環境変数から設定を読み込みます。
 
-### Core DB settings
+### コア DB 設定
 
 ```bash
 DB_HOST=localhost
@@ -273,7 +276,7 @@ DB_USER=lachlan
 DB_PASSWORD=change_me
 ```
 
-### Codex defaults
+### Codex の既定値
 
 ```bash
 CODEX_LOG_DB=1
@@ -285,61 +288,61 @@ CODEX_NVM_DIR=/root/.nvm
 CODEX_HISTORY_MESSAGES=1000
 ```
 
-### Additional useful toggles
+### 追加の便利トグル
 
-- `CODEX_AUTO_RESTORE=1`: 失われたセッション ID を再作成し、保存済み履歴を再生します。
-- `PROJECT_DB=1`: DB バックエンドのプロジェクトメタデータ永続化を有効化。
-- `WEBTERM_QUIET_LOGS=1`: ノイズの多いポーリング/静的アクセスログを抑制。
+- `CODEX_AUTO_RESTORE=1`: 欠落したセッション ID を再作成し、保存済み履歴を再生します。
+- `PROJECT_DB=1`: DB バックエンドでのプロジェクトメタデータ永続化を有効化します。
+- `WEBTERM_QUIET_LOGS=1`: ノイズの多いポーリング／静的アクセスログを抑制します。
 - `CODEX_CMD=codex`: Codex 実行コマンド。
-- `CODEX_CWD=/workspace`: user/project パスが使えない場合のフォールバック作業ディレクトリ。
-- `WEBTERM_CONTAINER=<name>`: 自動検出されたコンテナ名を上書き。
+- `CODEX_CWD=/workspace`: user/project パスが利用不可のときの代替作業ディレクトリ。
+- `WEBTERM_CONTAINER=<name>`: 検出済みコンテナ名を上書きします。
 
-## Examples
+## 📦 使用例
 
-### Launch and verify terminal
+### ターミナル起動と確認
 
 ```bash
 cd webterm
 python server.py --host 127.0.0.1 --port 8765
-# in browser terminal:
+# ブラウザ側ターミナルで:
 pwd
 ```
 
-### Query project tree API
+### プロジェクトツリー API の確認
 
 ```bash
 curl "http://127.0.0.1:8765/api/tree?user=paperagent&project=demo-paper&depth=4"
 ```
 
-### Fetch PDF (after compile)
+### コンパイル後に PDF を取得
 
 ```bash
 curl -o main.pdf "http://127.0.0.1:8765/api/pdf?user=paperagent&project=demo-paper&file=main.pdf"
 ```
 
-### Read file through API
+### API でファイルを読み取り
 
 ```bash
 curl "http://127.0.0.1:8765/api/file?user=paperagent&project=demo-paper&path=latex/main.tex"
 ```
 
-## Development Notes
+## 🧪 開発ノート
 
 - コードスタイル:
-  - Python: 4 スペースインデント、小さく直接的な関数。
-  - Frontend: 2 スペースインデント、kebab-case の CSS クラス名。
-- まだ正式な自動テストスイートはありません。手動確認が中心です。
-- 手動確認:
-  - PWA を開き、ターミナル接続後に `pwd` を実行。
-  - UI からのプロジェクト作成と LaTeX コンパイル動作を確認。
-- PWA アセットを更新した場合は、`webterm/static/sw.js` の service worker キャッシュ名を更新してください。
-- `codex/` と `overleaf/` はサブモジュールとして扱い、意図がない限り直接編集を避けてください。
+  - Python: 4 スペースインデント、短く直接的な関数。
+  - フロントエンド: 2 スペースインデント、CSS クラス名は kebab-case。
+- まだ正式な自動テストスイートはありません。主に手動チェックです。
+- 手動チェック項目:
+  - PWA を読み込んでターミナルを接続し `pwd` を実行。
+  - UI からプロジェクト作成と LaTeX コンパイルを確認。
+- PWA アセットを更新した場合は `webterm/static/sw.js` の service worker キャッシュ名を更新してください。
+- `codex/` と `overleaf/` はサブモジュールとして扱い、意図がない限り直接編集しないでください。
 
-## Troubleshooting
+## 🩺 トラブルシューティング
 
-### Docker shell permission denied
+### Docker shell の permission denied
 
-docker へのアクセスに失敗する場合は、シェルが docker グループに所属しているか確認してください。
+Docker へのアクセスに失敗する場合は、シェルが docker グループに所属しているか確認します。
 
 ```bash
 newgrp docker
@@ -347,43 +350,43 @@ cd webterm
 python server.py --host 0.0.0.0 --port 8766
 ```
 
-### PDF not found in preview
+### プレビューで PDF が見つからない
 
-- ターミナル上でコンパイルが正常完了したか確認。
-- `/home/<user>/Projects/<project>/latex/main.pdf` にファイルが存在するか確認。
-- PDF パネルを更新するか **Open** ボタンを使用。
+- ターミナル上でコンパイルが成功したか確認します。
+- ファイルが `/home/<user>/Projects/<project>/latex/main.pdf` に存在するか確認します。
+- PDF パネルを更新するか、**Open** ボタンを使います。
 
-### DB features not available
+### DB 機能が使えない
 
-- `.env` の DB 認証情報を確認。
-- Postgres が起動し、到達可能か確認。
-- ドライバをインストール: `pip install "psycopg[binary]"`。
-- 必要に応じて `./scripts/init_db.sh` を実行し、サーバーを再起動。
+- `.env` の DB 認証情報を確認します。
+- PostgreSQL が起動していて到達可能かを確認します。
+- ドライバをインストールします: `pip install "psycopg[binary]"`。
+- 必要なら `./scripts/init_db.sh` を実行してサーバーを再起動します。
 
-### Codex command not found
+### Codex コマンドが見つからない
 
-- UI インストーラ（NVM + Node LTS + `@openai/codex`）または手動で Codex をインストール。
-- 実行コンテキストに対して `CODEX_CMD` と `CODEX_NVM_DIR` が正しいか確認。
+- UI インストーラ（NVM + Node LTS + `@openai/codex`）または手動で Codex をインストールします。
+- 実行環境に応じて `CODEX_CMD` と `CODEX_NVM_DIR` が正しく設定されているか確認します。
 
-### LAN binding safety
+### LAN バインドの安全性
 
-`--host 0.0.0.0` は信頼できるネットワーク専用です。認証/TLS なしで公開しないでください。
+`--host 0.0.0.0` は信頼できるネットワークのみで使用してください。認証/TLS なしで公開しないでください。
 
-## Roadmap
+## 🗺️ ロードマップ
 
-計画中および進行中の方向性（`references/roadmap-blueprint.md` と関連ドキュメントを参照）:
+計画中および進行中の方針（`references/roadmap-blueprint.md` と関連ドキュメント参照）:
 
-- 論文自動化ループの多段化と再現性ワークフローの改善。
-- Codex Bridge セッション信頼性と可観測性の拡張。
-- サンドボックス/ランタイム設定経路（CPU/GPU バリアント）の強化。
-- プロジェクトコントロールとエディタ操作性の改善。
-- 多言語ドキュメントと Web サイト整合の継続。
+- 論文自動化ループのマルチステップ化と再現性ワークフローの改善。
+- Codex Bridge のセッション信頼性と観測性の向上。
+- サンドボックス／実行環境のセットアップパス改善（CPU/GPU バリアント）。
+- プロジェクトコントロールとエディタの操作性向上。
+- 多言語ドキュメントとウェブサイト整合の継続。
 
-## Main project
+## 🌐 メインプロジェクト
 
 - https://github.com/lachlanchen/the-art-of-lazying
 
-## Ecosystem links
+## 🔗 エコシステムリンク
 
 - https://lazying.art 🎨 <img src="https://img.shields.io/badge/Main-Visit-0f766e?style=flat-square" alt="Main site">
 - https://onlyideas.art 💡 <img src="https://img.shields.io/badge/Ideas-Visit-0f766e?style=flat-square" alt="OnlyIdeas">
@@ -396,65 +399,35 @@ python server.py --host 0.0.0.0 --port 8766
 - https://glass.lazying.art 👓
 - https://ideas.onlyideas.art 🧪
 
-## Donate
+## 🤝 コントリビュート
 
-<div align="center">
-<table style="margin:0 auto; text-align:center; border-collapse:collapse;">
-  <tr>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;">
-      <a href="https://chat.lazying.art/donate">https://chat.lazying.art/donate</a>
-    </td>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;">
-      <a href="https://chat.lazying.art/donate"><img src="https://raw.githubusercontent.com/lachlanchen/the-art-of-lazying/main/figs/donate_button.svg" alt="Donate" height="44"></a>
-    </td>
-  </tr>
-  <tr>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;">
-      <a href="https://paypal.me/RongzhouChen">
-        <img src="https://img.shields.io/badge/PayPal-Donate-003087?logo=paypal&logoColor=white" alt="Donate with PayPal">
-      </a>
-    </td>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;">
-      <a href="https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400">
-        <img src="https://img.shields.io/badge/Stripe-Donate-635bff?logo=stripe&logoColor=white" alt="Donate with Stripe">
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;"><strong>WeChat</strong></td>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;"><strong>Alipay</strong></td>
-  </tr>
-  <tr>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;"><img alt="WeChat QR" src="https://raw.githubusercontent.com/lachlanchen/the-art-of-lazying/main/figs/donate_wechat.png" width="240"/></td>
-    <td style="text-align:center; vertical-align:middle; padding:6px 12px;"><img alt="Alipay QR" src="https://raw.githubusercontent.com/lachlanchen/the-art-of-lazying/main/figs/donate_alipay.png" width="240"/></td>
-  </tr>
-</table>
-</div>
+コントリビューションは大歓迎です。
 
-ご支援は、私の研究・開発・運用を継続する力になります。今後もより多くのオープンプロジェクトと改善を共有していきます。
-
-## Contributing
-
-コントリビューションを歓迎します。
-
-- 問題提起や提案内容を記した issue を作成してください。
+- 問題や提案内容を記載した issue を作成してください。
 - 変更は焦点を絞って小さく保ってください。
-- このリポジトリのコミットスタイルに従ってください: `Add ...`, `Update ...`, `Expand ...`。
-- フロントエンド/UI の変更では、PR にスクリーンショットまたは GIF を添付してください。
-- README を更新する場合は、全言語版（`README.*.md`）の整合を保ってください。
+- このリポジトリのコミット規約に従ってください: `Add ...`, `Update ...`, `Expand ...`。
+- フロントエンド/UI 変更時は、PR にスクリーンショットまたは GIF を添付してください。
+- README を更新する場合は、全言語版（`README.*.md`）との整合を保ってください。
 
-注: サブモジュールのコントリビューション方針は、それぞれの上流リポジトリ（`codex/`, `overleaf/`）で定義されています。
+サブモジュールへのコントリビューション方針は、それぞれ上流リポジトリ（`codex/`, `overleaf/`）で定義されています。
 
-## License
+## 📜 ライセンス
 
-現在のツリーでは、リポジトリ直下にプロジェクトレベルのライセンスファイルは存在しません。
+ルートには現時点でリポジトリ全体のライセンスファイルがありません。
 
-- 想定: 現時点ではトップレベルのライセンスが未確定のまま共有されている可能性があります。
-- 大幅な改変版を再配布する前に、ライセンス方針を確認してください。
-- サブモジュールには各上流のライセンスが適用されます（例: `overleaf/LICENSE`）。
+- 想定: 本プロジェクトは現時点で最終的なトップレベルライセンスが未確定のまま共有されている可能性があります。
+- 大規模な改変版を再配布する前に、ライセンス方針を確認してください。
+- サブモジュールには上流のライセンスが適用されます（例: `overleaf/LICENSE`）。
 
-## Acknowledgements
+## 🙏 謝辞
 
-- [Overleaf](https://github.com/overleaf/overleaf): 協調 LaTeX プラットフォームのインフラ設計とコンポーネントに関する着想。
+- [Overleaf](https://github.com/overleaf/overleaf): 共同編集型 LaTeX 基盤のアイデアとコンポーネントを提供。
 - [OpenAI Codex CLI](https://github.com/openai/codex): エージェント型ターミナルワークフロー。
-- `the-art-of-lazying` エコシステム全体: プロダクトビジョンとプロジェクト横断統合。
+- `the-art-of-lazying` エコシステム全体: 製品ビジョンとクロスプロジェクト統合の基盤。
+
+
+## ❤️ Support
+
+| Donate | PayPal | Stripe |
+| --- | --- | --- |
+| [![Donate](https://camo.githubusercontent.com/24a4914f0b42c6f435f9e101621f1e52535b02c225764b2f6cc99416926004b7/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f6e6174652d4c617a79696e674172742d3045413545393f7374796c653d666f722d7468652d6261646765266c6f676f3d6b6f2d6669266c6f676f436f6c6f723d7768697465)](https://chat.lazying.art/donate) | [![PayPal](https://camo.githubusercontent.com/d0f57e8b016517a4b06961b24d0ca87d62fdba16e18bbdb6aba28e978dc0ea21/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f50617950616c2d526f6e677a686f754368656e2d3030343537433f7374796c653d666f722d7468652d6261646765266c6f676f3d70617970616c266c6f676f436f6c6f723d7768697465)](https://paypal.me/RongzhouChen) | [![Stripe](https://camo.githubusercontent.com/1152dfe04b6943afe3a8d2953676749603fb9f95e24088c92c97a01a897b4942/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f5374726970652d446f6e6174652d3633354246463f7374796c653d666f722d7468652d6261646765266c6f676f3d737472697065266c6f676f436f6c6f723d7768697465)](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
