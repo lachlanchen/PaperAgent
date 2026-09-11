@@ -1,8 +1,8 @@
 const translations = {
   en: {
-    page_title: 'PaperAgent Terminal',
+    page_title: 'PaperAgent — Local-First LaTeX, Code & PDF Workspace',
     page_description:
-      'PaperAgent Terminal is a local-first workspace for writing papers with code, LaTeX, and live PDF preview.',
+      'PaperAgent is a local-first browser workspace for LaTeX, Python/R, reproducible builds, live logs, and PDF preview. Explore the code and product demo.',
     brand_subtitle: 'Local-first research workspace',
     nav_features: 'Features',
     nav_workflow: 'Workflow',
