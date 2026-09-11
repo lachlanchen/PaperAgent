@@ -20,6 +20,10 @@
 
 PaperAgent は、論文作成のためのローカルファースト Web ワークスペースです。ブラウザで LaTeX とコードを編集し、バックエンドで Python/R を実行して LaTeX をコンパイルし、PDF とログをひとつの画面でプレビューできます。
 
+## 原稿ビルドのサポート
+
+PaperAgent を自分で動かす場合は、このリポジトリから始められます。1 本の原稿について、クリーンな LaTeX ビルドと確認可能な差分版が必要なら、[固定範囲の 250 USD スプリント](https://lazying.art/manuscript-sprint/?utm_source=github&utm_medium=repository&utm_campaign=manuscript_sprint_pilot&utm_content=paperagent_readme)で、無料の適合確認より前にサンプル、範囲、対象外事項を確認できます。
+
 ## 💡 ビジョン
 
 PaperAgent は、研究者の雑務から人を解放し「Only Ideas」を実現するために作られました。  

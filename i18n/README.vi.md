@@ -20,6 +20,10 @@
 
 PaperAgent là một môi trường làm việc web local-first để viết bài nghiên cứu: chỉnh sửa LaTeX và mã trực tiếp trong trình duyệt, chạy Python/R và biên dịch LaTeX ở backend, rồi xem trước PDF cùng logs tại một nơi.
 
+## Hỗ trợ dựng bản thảo
+
+Muốn tự vận hành PaperAgent? Hãy bắt đầu với kho mã này. Nếu bạn cần một bản dựng LaTeX sạch và bản đối chiếu có thể rà soát cho một bản thảo, [gói sprint phạm vi cố định 250 USD](https://lazying.art/manuscript-sprint/?utm_source=github&utm_medium=repository&utm_campaign=manuscript_sprint_pilot&utm_content=paperagent_readme) trình bày mẫu, phạm vi và phần loại trừ trước bước kiểm tra phù hợp miễn phí.
+
 ## Tầm nhìn
 
 PaperAgent được tạo ra để giải phóng mọi người khỏi công việc nghiên cứu lặp đi lặp lại, giúp tập trung vào "Only Ideas".

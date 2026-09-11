@@ -20,6 +20,10 @@
 
 PaperAgent هو مساحة عمل ويب محلية أولاً لكتابة الأوراق البحثية: عدّل LaTeX والكود من المتصفح، وشغّل Python/R وتجميع LaTeX في الخلفية، وعاين ملفات PDF مع السجلات في مكان واحد.
 
+## مساعدة في بناء المخطوطات
+
+هل تريد تشغيل PaperAgent بنفسك؟ ابدأ بهذا المستودع. وإذا احتجت إلى بناء LaTeX نظيف ونسخة فروق قابلة للمراجعة لمخطوطة واحدة، فإن [الخدمة محددة النطاق بسعر 250 دولارًا](https://lazying.art/manuscript-sprint/?utm_source=github&utm_medium=repository&utm_campaign=manuscript_sprint_pilot&utm_content=paperagent_readme) تعرض العينة والنطاق والاستثناءات قبل فحص الملاءمة المجاني.
+
 ## الرؤية
 
 تم بناء PaperAgent للتحرر من الأعمال الروتينية في البحث والتركيز على "Only Ideas".

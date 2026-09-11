@@ -20,6 +20,10 @@
 
 PaperAgent는 로컬 우선(local-first) 방식의 논문 작성 웹 워크스페이스입니다. 브라우저에서 LaTeX와 코드를 편집하고, 백엔드에서 Python/R 실행 및 LaTeX 컴파일을 수행하며, PDF와 로그를 한 곳에서 미리 볼 수 있습니다.
 
+## 원고 빌드 지원
+
+PaperAgent를 직접 실행하려면 이 저장소에서 시작하세요. 원고 한 편의 깔끔한 LaTeX 빌드와 검토 가능한 변경본이 필요하다면, [범위가 고정된 250 USD 스프린트](https://lazying.art/manuscript-sprint/?utm_source=github&utm_medium=repository&utm_campaign=manuscript_sprint_pilot&utm_content=paperagent_readme)에서 무료 적합성 확인 전에 샘플, 범위, 제외 항목을 확인할 수 있습니다.
+
 ## 💡 Vision
 
 PaperAgent는 연구의 반복적인 번거로운 일을 해소해 모두가 **Only Ideas**에 집중할 수 있도록 만들어졌습니다.\

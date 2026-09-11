@@ -20,6 +20,10 @@
 
 PaperAgent ist ein lokal ausgerichteter Web-Arbeitsbereich für wissenschaftliches Schreiben: Bearbeite LaTeX und Code im Browser, führe Python/R aus und kompiliere LaTeX im Backend, und prüfe PDFs mit Logs an einer Stelle.
 
+## Hilfe beim Manuskript-Build
+
+Möchtest du PaperAgent selbst betreiben? Beginne mit diesem Repository. Wenn du für ein Manuskript einen sauberen LaTeX-Build und eine prüfbare Redline brauchst, zeigt der [fest umrissene Sprint für 250 USD](https://lazying.art/manuscript-sprint/?utm_source=github&utm_medium=repository&utm_campaign=manuscript_sprint_pilot&utm_content=paperagent_readme) vor dem kostenlosen Fit-Check Beispiel, Umfang und Ausschlüsse.
+
 ## 💡 Vision
 
 PaperAgent ist darauf ausgelegt, alle im Forschungsalltag anfallenden Routinetätigkeiten auf ein Minimum zu reduzieren – damit nur noch „Only Ideas“ bleibt.

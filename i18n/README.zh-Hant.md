@@ -20,6 +20,10 @@
 
 PaperAgent 是一個本地優先的論文寫作網頁工作區：你可以在瀏覽器中編輯 LaTeX 與程式碼，在後端執行 Python/R 並編譯 LaTeX，並在同一頁面預覽 PDF 與日誌。
 
+## 論文建置協助
+
+想自行執行 PaperAgent，可以直接從本儲存庫開始。如果一篇論文需要乾淨的 LaTeX 建置和可審閱的修訂對照，[固定範圍的 250 美元服務](https://lazying.art/manuscript-sprint/?utm_source=github&utm_medium=repository&utm_campaign=manuscript_sprint_pilot&utm_content=paperagent_readme)會在免費適配檢查之前先說明範例、範圍與不包含的工作。
+
 ## 💡 Vision
 
 PaperAgent 的設計目的是要把研究者從繁瑣雜務中解放，回到「Only Ideas」。
